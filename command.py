@@ -1271,7 +1271,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "bugrep":		 (1, todo, ""),
     "tv":                (0, tv, ""),
     "geordi":		 (0, geordi, ""),
-    "je heet nu":        (200, leeg, "je heet nu <nick>, geef nieuwe nick"),
+    "je heet nu":        (500, leeg, "je heet nu <nick>, geef nieuwe nick"),
     "renick":            (200, randomnaam, "renick, verzint een willekeurige nick"),
     "opme":              (150, leeg, "opme, geef @"),
     "koffie?":           (121, leeg, "koffie?, vraag of ie koffie wil"),
