@@ -1311,6 +1311,130 @@ def tel(regel):
     return fresult;    
   return "Bla bla... functie mislukte er zal wel iets fout gegaan zijn";
 
+def valuta(regel):
+# insert spaces before float value if necessary
+  i=len(regel)+1;
+  t=0;
+  while (t<10):
+    if ((string.find(regel,str(t)) > 0)  and (string.find(regel,str(t)) < i)):
+      i=string.find(regel,str(t));
+    t+=1;
+  if (i==len(regel)+1):
+    i=-1;
+  if (i<0):
+    return "Euh... mis wat argumenten, heb tenminste een bedrag nodig en 2 valuta.";
+  if ((i>1) and (regel[i-1]!=' ')):
+    regel=regel[:i]+' '+regel[i:];
+  params=string.split(regel,' ');
+  if (len(params)<3):
+    return "Euh... mis wat argumenten, heb tenminste een bedrag nodig en 2 valuta.";
+# probeer syntax [van] <float> <currency> [to/naar/in] <currency>
+  cont=1;
+  pc=0; #param counter;
+  if (string.lower(params[pc])=="van"):
+    pc+=1;
+  try:
+    string.atof(params[pc]);
+  except:
+    cont=0;
+  if (cont==1):
+    amount=params[pc];
+    fromcurrency=params[pc+1];
+    if ((string.lower(params[pc+2])=="to") or (string.lower(params[pc+2])=="in") or (string.lower(params[pc+2])=="naar")):
+      pc+=1;
+    tocurrency=params[pc+2];
+  else:
+# probeer syntax [van] <currency> <float> [to/naar/in] <currency>
+    pc=0;
+    cont=1;
+    if (string.lower(params[pc])=="van"):
+      pc+=1;
+    fromcurrency=params[pc];
+    if (string.lower(params[pc])=="van"):
+      pc+=1;
+    try:
+      string.atof(params[pc+1]);
+    except:
+      cont=0;
+    if (cont==1):
+      amount=params[pc+1];
+      if ((string.lower(params[pc+2])=="to") or (string.lower(params[pc+2])=="in") or (string.lower(params[pc+2])=="naar")):
+        pc+=1;
+      tocurrency=params[pc+2];
+  if (cont==0):
+# parse nog steed mislukt probeer syntax [naar] <currency> [in/van/met/to/naar] <currency> <float>
+    cont=1;
+    pc=0;
+    if (string.lower(params[pc])=="naar"):
+      pc+=1;
+    tocurrency=params[pc];
+    if ((string.lower(params[pc+1])=="to") or (string.lower(params[pc+1])=="in") or (string.lower(params[pc+1])=="naar") or (string.lower(params[pc+1])=="met") or (string.lower(params[pc+1])=="van")):
+      pc+=1;
+    fromcurrency=params[pc+1];
+    try:
+      string.atof(params[pc+2]);
+    except:
+      cont=0;
+    amount=params[pc+2];
+  if (cont==0):
+    return "begrijp niet hoeveel van wat je in wat wilt omrekenen, gebruik <valuta> <float> [in] <valuta>";
+# probeer wat populair currency tekens en naam conversies
+  if ((fromcurrency=="$") or (string.lower(fromcurrency)=="us") or (string.lower(fromcurrency)=="us$")):
+    fromcurrency="USD";
+  if ((tocurrency=="$") or (string.lower(tocurrency)=="us") or (string.lower(tocurrency)=="us$")):
+    tocurrency="USD";
+  if ((string.lower(fromcurrency)=="a$") or (string.lower(fromcurrency)=="au$")):
+    fromcurrency="AUD";
+  if ((string.lower(tocurrency)=="a$") or (string.lower(tocurrency)=="au$")):
+    tocurrency="AUD";
+  if (string.lower(fromcurrency)=="nz$"):
+    fromcurrency="NZD";
+  if (string.lower(tocurrency)=="nz$"):
+    tocurrency="NZD";
+  if ((string.lower(fromcurrency)=="c$") or (string.lower(fromcurrency)=="ca$") or (string.lower(fromcurrency)=="can")):
+    fromcurrency="CAD";
+  if ((string.lower(tocurrency)=="c$") or (string.lower(tocurrency)=="ca$")  or (string.lower(tocurrency)=="can")):
+    tocurrency="CAD";
+  if ((string.lower(fromcurrency)=="euro") or (string.lower(fromcurrency)=="eu") or (string.lower(fromcurrency)=="euros")):
+    fromcurrency="EUR";
+  if ((string.lower(tocurrency)=="euro") or (string.lower(tocurrency)=="eu")  or (string.lower(tocurrency)=="euros")):
+    tocurrency="EUR";
+  if ((string.lower(fromcurrency)=="uk") or (string.lower(fromcurrency)=="gb") or (string.lower(fromcurrency)=="ukp") or (string.lower(fromcurrency)=="pond")):
+    fromcurrency="GBP";
+  if ((string.lower(tocurrency)=="uk") or (string.lower(tocurrency)=="gb") or (string.lower(tocurrency)=="ukp") or (string.lower(tocurrency)=="pond")):
+    tocurrency="EUR";
+  if ((string.lower(fromcurrency)=="fl") or (string.lower(fromcurrency)=="gulden") or (string.lower(fromcurrency)=="guldens")):
+    fromcurrency="NLG";
+  if ((string.lower(tocurrency)=="fl") or (string.lower(tocurrency)=="gulden") or (string.lower(tocurrency)=="guldens")):
+    tocurrency="NLG";
+  fromcurrency=string.upper(fromcurrency);
+  tocurrency=string.upper(tocurrency);
+  cmd = "echo -e \"Amount="+amount+"&From="+fromcurrency+"&To="+tocurrency+"\"";
+  cmd += " | lynx -post_data http://www.xe.com/ucc/convert.cgi";
+  inp,outp,stderr = os.popen3(cmd);
+  result = outp.read();
+  outp.close();
+  inp.close();
+  stderr.close();
+  if (string.find(result,"he following error occurred:")>0):
+    return "sorry, fout met je valuta, die ken ik niet, probeer eens de echte naam";
+  i=string.find(result,"GMT.")+4;
+  if (i<4):
+    i=string.find(result,"UTC.")+4;
+  if (string.find(result,"obsolete and is no longer",i)>0):
+    i=string.find(result,"]More info",i)+10;
+    lines=string.split(result[i:],'\n');
+    result="pff wat een ouderwetse valuta...\n";
+  else:
+    lines=string.split(result[i:],'\n');
+    result="";
+  result+=string.strip(lines[1])+" = ";
+  i=string.find(lines[2],"=")+1;
+  result+=string.strip(lines[2][i:]);
+  if (tocurrency==fromcurrency):
+    result="Grapjas ga lekker zelf met een 1:1 verhouding rekening,\n"+result;
+  return result;
+
 d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <woorden> of anagram en <woorden> om engels te forceren."),
     "verklaar":          (100, verklaar, "Zoekt op het internet wat <regel> is"),
     "dw":                (100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
@@ -1380,6 +1504,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "tijd":		 (0, tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
     "ns":                (500, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
     "trein":                (1200, trein, ""),
+    "valuta":            (200, valuta, "valuta <bedrag> <valuta> in <valuta>, rekent de bedragen om met de huidige wisselkoers"),
     "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
