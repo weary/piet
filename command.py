@@ -84,8 +84,27 @@ def makeenterfromnull(inp):
     return "\n";
   else:
     return inp;
+
+def SydWeer(woord):
+  cmd="lynx -dump http://www.smh.com.au/weather/sydney.html";
+  inp,outp,stderr = os.popen3(cmd);
+  result=outp.read();
+  inp.close();
+  outp.close();
+  stderr.close();
+  i=string.find(result,"tate Sum")+22;
+  j=string.find(result,"___",i);
+  result=string.split(string.strip(result[i:j]),'\n');
+  fresult="";
+  for s in result:
+    fresult+=string.strip(s)+" ";
+  return fresult;
   
 def weer(woord):
+  if (string.lower(woord)=="sydney") or  (string.lower(woord)=="syd"):
+     return SydWeer("");
+  if (string.lower(nick)[:6]=="semyon") and (string.lower(woord)!="nl"):
+     return SydWeer("");
   #cmd = "lynx -dump http://teletekst.nos.nl/cgi-bin/tt/nos/page/t/703";
   cmd = "lynx -dump http://www.weer.nl/indexnew.phtml"
   inp,outp,stderr = os.popen3(cmd);
