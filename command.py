@@ -155,6 +155,14 @@ def afk_hylke(woord):
   result=[[i[4:-5] for i in result_inner] for result_inner in result];
   return result;
 
+def changelog(dinges):
+  command="darcs cha --last=5 | sed -e '/^$/d;N;s/\\n//g;s/<[a-zA-Z]\\+@[a-zA-Z\\.]\\+>//;s/[\\t\\ ]\\+/ /g'";
+  inp = os.popen(command);
+  result=inp.read();
+  inp.close();
+  return "echt veel is er niet veranderd...\n"+result;
+
+
 def afk_eelco(woord):
   inf = open("afk.txt");
   lines = string.split(inf.read(), '\n');
@@ -1235,6 +1243,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "buchstabieren":     (0, spell_de, ""),
     "schreiben":         (0, spell_de, ""),
     "schreib":           (0, spell_de, ""),
+    "changelog":         (1000, changelog, "changelog, show the recent changes to piet"),
     "help":              (0, help, ""),
     "calc":              (0, calc, "calc <expressie> rekent iets uit via de internal piet-processer"),
     "alias":             (1000, alias, ""),
