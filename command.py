@@ -616,48 +616,39 @@ def discw(regel):
   if (len(params)<1) or (len(params[0])==0):
     return "gebruik dw <speler> met <speler> een spelersnaam op dw\n";
   else:
-    cmd="lynx -dump -width=200 \"http://discworld.imaginary.com:5678/finger.c?player=";
-    cmd+=params[0]+"\"";
-    inp,outp,stderr = os.popen3(cmd);
-    result = outp.read();
-    outp.close();
-    inp.close();
-    stderr.close();
-    printnext=0;
-    for line in string.split(result, '\n'):
-      line = string.strip(line);
-      if (printnext==0):
-        if string.rfind(line,"has not visited us yet") >= 1:
-          return "Ja en die speler bestaat dus niet op discworld he";
-      if (printnext>=1):
-        printnext=printnext+1;
-      if (printnext==3):
-        if string.rfind(line,"logged off") >= 1:
-          return line;
-        else:
-          print line;
-      if (printnext==4):
-        return line;
-      if string.rfind(line,"irst logg") >= 1:
-        printnext=printnext+1;
-    return "Error in discword function, of de site is offline, of Simon heeft zijn programmeerwerk niet goed gedaan";
-
+    tn = Telnet('discworld.imaginary.com', 4242);
+    tn.read_until("Your choice:");
+    tn.write("f\n");
+    tn.read_until("to finger?");
+    tn.write(params[0]+"\n");
+    result=tn.read_until("Press enter to continue");
+    i=string.find(result,"On since");
+    if (i>0):
+      j=string.find(result,".",i);
+      j=string.find(result,".",j+1);
+      return result[i:j];
+    i=string.find(result,"Last logged o");
+    j=string.find(result,".",i);    
+    return result[i:j];
+   
 def discwho(regel):
   tn = Telnet('discworld.imaginary.com', 4242);
   tn.write("u\nq\n");
-  result=tn.read_until("Press enter to continue");
+  outp=tn.read_until("Press enter to continue");
   tn.close();
-  result=string.split(result, '\n');
-  if (len(result)>=23):
-    result=string.join(result[23:]);
-  else:
-    return "geen idee wie er online zijn";
-  result=re.findall("Irk|Szwarts|Taido|Weary|Akhran|quences", result);
-  if (len(result)>0):
-    result=string.join(result, ", ");
-  else:
+  outp=string.lower(outp);
+  result="";
+  if (string.find(outp,"irk")>0):
+    result+="irk, ";
+  if (string.find(outp,"szwarts")>0):
+    result+="szwarts, ";
+  if (string.find(outp,"taido")>0):
+    result+="taido, ";
+  if (string.find(outp,"quences")>0):
+    result+="quences, ";
+  if (len(result)<=0):
     result="niemand!";
-  return result;
+  return result[:len(result)-2];
 
 def geordi(input):
   A=random.choice(("perform a level E diagnostic on", "run a level E diagnostic on","reroute the B C D to","redirect the B C D to","divert the B C D to","bypass","amplify","modify","polarize","reconfigure","extend","rebuild","vary","analyze","adjust","recalibrate"));
