@@ -1220,7 +1220,77 @@ def tel(regel):
   elif ((naam=="semyon") or (naam=="Semyon") or (naam=="simon")):
     return "simon's telefoonnummer is +61 2 98 03 37 59";
   else:
-    return "tel weary, socrates of S1MON, meer ken ik er niet, en ook niet minder";
+    params=string.split(regel," ");
+    i=0;
+
+#parse naam argument
+    naam="";
+    if (len(params)<1) or (len(params[0])==0):
+      return "mis naam argument";
+    if (params[i][0]=="\""):
+      while (params[i][len(params[i])-1]!="\""):
+        naam+=params[i]+" ";
+        i+=1;
+        if (len(params)==i):
+          return "Mis sluit \"";
+      naam+=params[i];
+      naam=naam[1:(len(naam)-1)];
+    else:
+      naam=params[i];
+    i+=1;
+
+#parse plaats argument
+    plaats="";
+    if (len(params)==i):
+      return "mis plaats argument";
+    if (params[i][0]=="\""):
+      while (params[i][len(params[i])-1]!="\""):
+        plaats+=params[i]+" ";
+        i+=1;
+        if (len(params)==i):
+          return "Mis sluit \"";
+      plaats+=params[i];
+      plaats=plaats[1:(len(plaats)-1)];
+    else:
+      plaats=params[i];
+    cmd="wget -O - -q \"";
+    cmd+="http://www.detelefoongids.nl/tginl.dll?action=white&type=search&resultsperpage=25&pagestart=1&name2=";
+    cmd+=naam;
+    cmd+="&name=&initials=&city=";
+    cmd+=plaats;
+    cmd+="&citycode=&dcity=";
+    cmd+=plaats;
+    cmd+="&areacode=&dname=";
+    cmd+=naam;
+    cmd+="&dwhere=";
+    cmd+=plaats;
+    cmd+="&country=&source=homepage\" | grep \"Adres=\"";
+#geen idee waarom het allemaal dubbel moet, vraag dat de kpn maar
+    inp,outp,stderr = os.popen3(cmd);
+    result = outp.read();
+    outp.close();
+    inp.close();
+    stderr.close();
+    if (len(result)<10):
+      return "Volgens de telefoongids woont er geen "+naam+" in "+plaats+", sorry";
+    fresult="";
+    i=0;
+    while (string.find(result,"<td",i)>=0):
+      if (i>0):
+        fresult+="\n";
+      i=string.find(result,"<td",i);
+      i=string.find(result,"Naam=",i)+5;
+      j=string.find(result,"Gidsnr=",i);
+      fresult+=result[i:j];
+
+    fresult=string.replace(fresult,"%20"," ");
+    fresult=string.replace(fresult,"&amp;"," ");
+    fresult=string.replace(fresult,"Adres=","");
+    fresult=string.replace(fresult,"PC=","");
+    fresult=string.replace(fresult,"Plaats=","");
+    fresult=string.replace(fresult,"Telnr=","");
+    return fresult;    
+  return "Bla bla... functie mislukte er zal wel iets fout gegaan zijn";
 
 d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <woorden> of anagram en <woorden> om engels te forceren."),
     "verklaar":          (100, verklaar, "Zoekt op het internet wat <regel> is"),
