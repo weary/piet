@@ -1,0 +1,2 @@
+add Neighbour leren todolijst editen
+S1MON: fix je code (vb: verklaar "bubblegum cute")

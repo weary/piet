@@ -1,0 +1,256 @@
+su#Switch User
+milf#<CENSUUR>
+ie#Internet Explorer
+agi#apt-get install
+aoeu#loadkeys qwerty
+atn#alcohol tolerantie niveau
+asdf#loadkeys dvorak
+ssh#Secure Shell
+soa#Studie Ontwijkende Activiteiten
+aoa#Afstudeer Ontwijkende Activiteiten, zie SOA
+GLSA#Gentoo Linux Security Advisory
+4EVR#Forever
+AAAAA#American Association Against Acronym Abuse
+ADR#Address
+AFAIC#As Far As I'm Concerned
+AFAIK#As Far As I Know
+AFAYC#As Far As You're Concerned
+AFK#Away From Keyboard
+AISI#As I See It
+AKA#Also Known As
+ALOL#Actually Laughing Out Loud
+AML#All My Love
+ANFSCD#And Now For Something Completely Different
+ASAP#As Soon As Possible
+ASL#Age/Sex/Location
+ASLMH#Age/Sex/Location/Music/Hobbies
+ATM#At The Moment
+AWOL#Absent Without Leave
+B/C#Because
+B4#Before
+BAK#Back At Keyboard
+BBFN#Bye Bye For Now
+BBL#Be Back Later
+BBS#Be Back Soon
+BBSL#Be Back Sooner or Later
+BCNU#Be Seeing You
+BCOZ#Because
+BEOS#Nudge
+BFN#Bye For Now
+BKA#Better Known As
+BRB#Be Right Back
+BRT#Be Right There
+BTW#By The Way
+BUAYA#To Sweet Talk You
+CFV#Call For Vote
+CU#See You (good bye)
+CUL#See You Later
+CUL8ER#See You Later
+CY#Calm Yourself
+CYA#Cover Your A__
+DH#Dear Hubby (Husband)
+DL#Download
+DMI#Don't Mention It
+DOD#We could tell you but then we'd have to kill you!
+DUCT#Did You See That?
+DYOFDW#Do Your Own F___ing Dirty Work
+EG#Evil Grin
+EL#Evil Laugh
+F2F#Face to Face
+FAQ#Frequently Asked Questions
+FAQL#Frequently Asked Questions List
+FAWC#For Anyone Who Cares
+FFK#Fong Fei Kei#To Stand You Up
+FOAF#Friend Of A Friend
+FTASB#Faster Than A Speeding Bullet
+FTF#Face To Face
+FTL#Faster Than Light
+FUBAR#F_____d Up Beyond All Recognition
+FWIW#For What It's Worth
+FYA#For Your Amusement
+FYI#For Your Information
+GA#Go Ahead
+GALGAL#Give A Little Get A Little
+GBH#Great Big Hug
+GD&R#Grinning, Ducking and Running (usually after snide remark)
+GG#Good Game
+GGN#Gotta Go Now
+GL#Good Luck
+GMTA#Great Minds Think Alike
+GR8#Great
+HIH#Hope It Helps
+HILIACACLO#Help I Lapsed Into A Coma And Can't Log Off
+HTH#Hope This Helps
+HUGZ#Hugs
+IAE#In Any Event
+IANAL#I Am Not A Lawyer
+IAT#I am Tired
+IC#I See
+ICBW#I Could Be Wrong
+IDK#I Don't Know
+IGTP#I Get The Point
+IHNO#I Have No Opinion
+IHTFP#I Have Truly Found Paradise (I Hate This F_____n Place)
+IIR#If I Recall
+IIRC#If I Recall Correctly
+IM#Instant Message
+IMAO#In My Arrogant Opinion
+IMHO#In My Humble Opinion
+IMNSHO#In My Not-So-Humble Opinion
+IMO#In My Opinion
+INPO#In No Particular Order
+IOW#In Other Words
+IRL#In Real Life
+IYKWIM#If You Know What I Mean
+IYKWIMAITYD#If You Know What I Mean And I Think You Do
+JK (or J/K)#Just Kidding
+JM2C#Just My 2 Cents
+JT#Just Teasing
+K#Okay
+KBD#Keyboard
+KEWL#Cool
+KOK#Knock
+KOTC#Kiss On The Cheek
+KOTL#Kiss On The Lips
+L8R#Later
+LMAO#Laughing My A__ Off
+LOL#Laughing Out Loud
+LOLA#Laugh Out Loud Again
+LOOL#Laughing Outragously Out Loud
+LWR#Launch When Ready
+LYLAS#Love You Like a Sister
+MOMPL#One Moment Please
+MOO#Multi-user Dungeon Object-Oriented
+MOTAS#Member Of The Appropriate Sex
+MOTOS#Member Of The Opposite Sex
+MOTSS#Member Of The Same Sex
+MSG#Message
+MTBF#Mean Time Between Failure
+MTFBWY#May The Force Be With You
+MUAK#Smooch
+MUD#Multiple User Dungeon
+MUSH#Multi User Shared Hallucination
+N/A#Not Acceptable
+N1#Nice One
+NDA#Non-Disclosure Agreement
+NM#Nevermind
+NP#No Problem
+NRN#No Reply Necessary
+NTK#Nice To Know
+OB-#Obligatory (as a prefix)
+OBJOKE#Obligatory Joke
+OIC#Oh, I See!
+OK#All Correct (I Approve)
+OMG#Oh My God
+ONNA#Oh No, Not Again
+ONNTA#Oh No, Not This Again
+OOI#Out Of Interest
+OS#Operating System
+OTOH#On The Other Hand
+OTOOH#On The Other Other Hand
+OUSU#Oh, You Shut Up
+PD#Public Domain
+PDA#Public Display of Affection
+PIAK#Slap In The Face
+PITA#Pain In The A__
+PLS#Please
+PM#Personal Message
+PMFJI#Pardon Me For Jumping In
+PMIGBOM#Put Mind In Gear Before Opening Mouth
+PMJI#Pardon My Jumping In
+POV#Point of View
+PPL#People
+PS#Post Script
+QL#Quit Laughing!
+QS#Quit Scrolling
+QT#Cutie
+RBAY#Right Back At Ya
+RE#Regards or Hello Again
+RFC#Request For Comments
+RFD#Request For Discussion
+RFI#Request For Information
+RIT#Alrighty
+RL#Real Life
+ROFL#Rolling On Floor Laughing
+ROFLASTC#Rolling On Floor Laughing And Scaring The Cat
+ROFLGO#Rolling On Floor Laughing Guts Out
+ROFLMAO#Rolling On Floor Laughing My A__ Off!
+ROFLOL#Rolling On Floor Laughing Out Loud
+ROTFL#Rolling On The Floor Laughing
+ROTFLABIC#Rolling On The Floor Laughing And Biting Into Carpet
+ROTFLOL#Rolling On The Floor Laughing Out Loud
+RTFAQ#Read The FAQ
+RTFM#Read The F___ing Manual
+RX#Regards (Regs)
+SCNR#Sorry Couldn't Resist
+SED#Said Enough Darling
+SF#Science Fiction
+SFETE#Smiling From Ear To Ear
+SG1#StarGate 1
+SMAIM#Send Me An Instant Message
+SME#Subject Matter Expert
+SNAFU#Situation Normal, All F___ed Up
+SNAILMAIL#Postal Mail Service
+SO#Significant Other (e.g., spouse, boy/girlfriend)
+SOHF#Sense Of Humor Failure
+SPAM#Stupid Persons' Advertisement
+SSEWBA#Someday Soon, Everything Will Be Acronyms
+SU#Shut Up
+SWAG#Scientific Wild A__ Guess
+SWALK#Sealed With A Loving Kiss
+TAS#Taking A Shower
+TFDS#That's For Darn Sure
+THANX#Thanks
+THX#Thanks
+TIA#Thanks In Advance
+TIC#Tongue In Cheek
+TNC#Tongue In Cheek
+TNX#Thanks
+TPTB#The Powers That Be
+TSR#Terminal and Stay Resindent
+TTFN#Ta Ta For Now
+TTYL#Talk To You Later
+TVM#Thanks Very Much
+TWIMC#To Whom It May Concern
+TY#Thank You
+TYVM#Thank You Very Much
+U#You
+U2#You Too?
+UR#Your
+VBG#Very Big Grin
+VBS#Very Big Smile
+VEG#Very Evil Grin
+VSF#Very Sad Face
+W/#With
+W/B#Write Back
+W/O#without
+WAD#Without A Doubt
+WB#Welcome Back
+WBS#Write Back Soon
+WEG#Wicked Evil Grin
+WISP#Winning Is So Pleasureable
+WNOHGB#Were No One Has Gone Before
+WOG#Werk Ontwijkend Gedrag
+WRT#With Respect To
+WT#Without Thinking
+WTG#Way To Ggo
+WTH#What The Heck
+WTTM#Without Thinking To Much
+WYSIWYG#What You See Is What You Get
+WYWH#Wish You Were Here
+XM#Excuse Me
+XME#Excuuuuse Me
+XO#Hugs, Kisses
+Y#Why
+YMMV#Your Mileage May Vary
+YTTDSFATCCSH#Yours Till The Desert Sands Freeze And The Camels Come
+Skating Home
+YW#Your Welcome
+YWIA#You're Welcome In Advance
+ZZZ#Sleeping, Bored, Tired
+hui#(h'ui), (oeb) excl; Uitdrukking van blijheid.
+PHY#physical network layer
+ts#teamspeak
+UML#Universal Modelling Language
+
+
