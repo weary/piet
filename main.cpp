@@ -6,8 +6,10 @@
 #include <stdarg.h>
 #include <crypt.h>
 #include <boost/format.hpp>
+#include <errno.h>
 #include "bot.h"
 #include "passwd.h"
+#include "lua_if.h"
 
 using boost::format;
 
@@ -18,7 +20,7 @@ pthread_t sender_thread;
 pthread_t receiver_thread;
 //pthread_t garbage_collector_thread;
 
-std::string pietnick = INITIALNICK;
+//std::string pietnick = g_config.get_initial_nick();
 
 int sok=0;
 
@@ -61,11 +63,16 @@ void printsockaddr(const sockaddr *buf, unsigned int size)
 
 int connect_to_server()
 {
+	std::string server=g_config.get_server();
+	std::string service=g_config.get_service();
   int sok=socket(PF_INET, SOCK_STREAM, 0);
-  printf("Got socket %d, looking up host %s for service %s\n", sok, SERVER, SERVICE);
+  printf("Got socket %d, looking up host \"%s\" for service \"%s\"\n",
+			sok,
+			server.c_str(),
+			service.c_str());
   addrinfo *ainfo=NULL;
   {
-    int result=getaddrinfo(SERVER, SERVICE, NULL, &ainfo);
+    int result=getaddrinfo(server.c_str(), service.c_str(), NULL, &ainfo);
     if (result!=0)
     {
       printf("Could not find host!\n%s", gai_strerror(result));
@@ -127,7 +134,7 @@ void create_threads(receiver_info *ri)
 int main(int argc, char *argv[])
 {
   try {
-  lua_create();
+		lua_inst.reset(new clua);
 
   //auth_map[std::string("piet")]=-10;
   auth_map[std::string("weary")]=1200;
@@ -137,7 +144,7 @@ int main(int argc, char *argv[])
   auth_map[std::string("Groentje")]=1000;
   auth_map[std::string("Neighbour")]=1000;
   auth_map[std::string("neb")]=1000;
-  auth_map[pietnick]=150; // <-- om te zorgen dat ie zichzelf het auth systeem niet uitlegt
+  auth_map[g_config.get_nick()]=150; // <-- om te zorgen dat ie zichzelf het auth systeem niet uitlegt
   auth_map[std::string("Bouncer")]=-1;
 
   receiver_info ri;
@@ -151,10 +158,10 @@ int main(int argc, char *argv[])
   
   initialising=false;
 
-  sendstr_prio(std::string("pass somepass\nnick ")+pietnick+"\nuser "+pietnick+" b c d\n");
+  sendstr_prio(std::string("pass somepass\nnick ")+g_config.get_nick()+"\nuser "+g_config.get_nick()+" b c d\n");
   sleep(30);
 
-  send(":%s JOIN %s \22aa\22\n", pietnick.c_str(), CHANNEL);
+  send(":%s JOIN %s \22aa\22\n", g_config.get_nick().c_str(), g_config.get_channel().c_str());
   while (!quit)
   {
     sleep(30);
@@ -168,7 +175,6 @@ int main(int argc, char *argv[])
   pthread_join(sender_thread, NULL);
   //pthread_kill(garbage_collector_thread, 9);
   //pthread_join(garbage_collector_thread, NULL);
-  lua_destroy();
   
   if (restart)
   {
@@ -266,19 +272,21 @@ void interpret(const char *input)
   }
 
   printf("interpret(\"%s\", \"%s\", \"%s\")\n", sender.c_str(), command.c_str(), params.c_str());
-  
+ 
+	std::string channel=g_config.get_channel();
   if (command=="PING")
   {
     sendstr_prio(std::string("PONG ")+params);
   }
-  else if ((command=="NICK")&&(sender==pietnick))
+  else if ((command=="NICK")&&(sender==g_config.get_nick()))
   {
     if (!params.empty())
     {
-      pietnick=params;
+			std::string pietnick=params;
       if (pietnick[0]==':') pietnick.erase(0,1);
       printf("NICKCHANGE!\n");
-      send(":%s PRIVMSG %s :server roept dat ik nu %s heet, het zal wel\n", pietnick.c_str(), CHANNEL, pietnick.c_str());
+      send(":%s PRIVMSG %s :server roept dat ik nu %s heet, het zal wel\n", pietnick.c_str(), channel.c_str(), pietnick.c_str());
+			g_config.set_nick(pietnick);
     }
   }
   else if (command=="NICK")
@@ -293,26 +301,26 @@ void interpret(const char *input)
     auth_map[sender]=otherauth;
     auth_map[newnick]=auth;
     if (auth>otherauth)
-      send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, %s heeft 't niet meer nodig lijkt me\n", pietnick.c_str(), CHANNEL, auth, newnick.c_str(), sender.c_str());
+      send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, %s heeft 't niet meer nodig lijkt me\n", g_config.get_nick().c_str(), channel.c_str(), auth, newnick.c_str(), sender.c_str());
     else if ((auth<otherauth)&&(auth>0))
-      send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, niet nickchangen om hogere auth te krijgen\n", pietnick.c_str(), CHANNEL, auth, newnick.c_str(), sender.c_str());
+      send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, niet nickchangen om hogere auth te krijgen\n", g_config.get_nick().c_str(), channel.c_str(), auth, newnick.c_str(), sender.c_str());
   }
   else if (command=="433")
   { // recv: ":irc.nl.uu.net 433 piet simon :Nickname is already in use."
-    send(":%s PRIVMSG %s :server roept dat die naam al in gebruik is!\n", pietnick.c_str(), CHANNEL);
+    send(":%s PRIVMSG %s :server roept dat die naam al in gebruik is!\n", g_config.get_nick().c_str(), channel.c_str());
   }
   else if (command=="432")
   {
-    send(":%s PRIVMSG %s :server roept dat ik een ongeldige nick probeer te gebruiken!\n", pietnick.c_str(), CHANNEL);
+    send(":%s PRIVMSG %s :server roept dat ik een ongeldige nick probeer te gebruiken!\n", g_config.get_nick().c_str(), channel.c_str());
   }
   else if (command=="PRIVMSG")
   {
-    std::string channel;
+    std::string chan;
     { // extract the sending channel
       unsigned int l=params.find_first_of(' ');
       if (l!=params.npos)
       {
-        channel=params.substr(0, l);
+        chan=params.substr(0, l);
         params.erase(0,l+1);
       }
     }
@@ -322,11 +330,11 @@ void interpret(const char *input)
         params.erase(0, l+1);
     }
     
-    Feedback(sender, Authenticate(sender, email), channel, params);
+    Feedback(sender, Authenticate(sender, email), chan, params);
   }
   else
   {
-    Feedback(sender, Authenticate(sender, email), CHANNEL, (pietnick+": SERVER "+command+" "+params));
+    Feedback(sender, Authenticate(sender, email), channel, (g_config.get_nick()+": SERVER "+command+" "+params));
   }
 }
 

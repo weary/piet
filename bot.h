@@ -5,19 +5,46 @@
 #include <string>
 #include <list>
 
-#define INITIALNICK "rarepiet"
+//#define INITIALNICK "rarepiet"
 
 //#define SERVER "irc.xs4all.nl"
 //#define SERVER "irc.snt.utwente.nl"
 //#define SERVER "irc.nl.uu.net"
-#define SERVER "130.89.169.34" // groentje
+//#define SERVER "130.89.169.34" // groentje
 //#define SERVER "eris.ircnet.org"
 
 //#define CHANNEL "#piettest"
-#define CHANNEL "#\22a\22e_mensen"
+//#define CHANNEL "#\22a\22e_mensen"
 
-#define SERVICE "ircd_groentje"
+//#define SERVICE "ircd_groentje"
 //#define SERVICE "ircd"
+
+class c_piet_config // global variable g_config can be used to access this one
+{
+	public:
+		c_piet_config();
+		~c_piet_config() {}
+
+		// initial configuration
+		const std::string &get_server() { return _server; }
+		const std::string &get_service() { return _service; }
+
+		const std::string &get_initial_nick() { return _initial_nick; }
+		const std::string &get_channel() { return _channel; }
+
+		// changing configuration
+		const std::string &get_nick() { return _nick; }
+		void set_nick(const std::string &nick) { _nick=nick; }
+
+	protected:
+		std::string _server;
+		std::string _service;
+		std::string _initial_nick;
+		std::string _channel;
+
+		std::string _nick;
+};
+extern c_piet_config g_config;
 
 //#define BOGUS
 inline std::string unenter(const std::string a)
@@ -49,7 +76,7 @@ extern bool initialising;
 extern bool quit;
 extern int sok;
 extern pthreadlist plist;
-extern std::string pietnick;
+//extern std::string pietnick;
 
 void *sender(void *);
 void *receiver(void *);
@@ -71,6 +98,3 @@ inline void sendstr_prio(const std::string msg) { sendstr(msg, true); }
 void sender_flush();
 unsigned int sendqueue_size();
 
-void lua_create();
-void lua_destroy();
-void lua_server_msg(const char *nick, int auth, const char * channel, const char *msg);

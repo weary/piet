@@ -17,9 +17,9 @@ void sendlines(const char *channel, char *line, int len)
     a=strchr(a, '\n');
     if (a) a++[0]=0;
     if (strncmp(b, "NICK ", 5)==0)
-      send(":%s NICK :%s\n", pietnick.c_str(), b+5);
+      send(":%s NICK :%s\n", g_config.get_nick().c_str(), b+5);
     else
-      send(":%s PRIVMSG %s :%s\n", pietnick.c_str(), channel, b);
+      send(":%s PRIVMSG %s :%s\n", g_config.get_nick().c_str(), channel, b);
   }
 }
 

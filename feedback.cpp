@@ -10,6 +10,7 @@
 #include <boost/format.hpp>
 #include "bot.h"
 #include "passwd.h"
+#include "lua_if.h"
 
 typedef std::map<std::string, int> tauth_map;
 extern tauth_map auth_map;
@@ -84,11 +85,11 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
   //   1. op een kanaal: "NICK: zeg hallo"
   //   2. rechtstreeks: "zeg hallo"
   // of onpersoonlijk, alle andere gevallen op een kanaal
-  bool on_channel=(channel!=pietnick);
+  bool on_channel=(channel!=g_config.get_nick());
   bool personal=!on_channel;
-  if (msg.substr(0, pietnick.length()+1)==(pietnick+":"))
+  if (msg.substr(0, g_config.get_nick().length()+1)==(g_config.get_nick()+":"))
   {
-    msg.erase(0, pietnick.length()+1);
+    msg.erase(0, g_config.get_nick().length()+1);
     personal=true;
   }
 
@@ -150,27 +151,27 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
         case(COM_QUIT):
           {
             if (params.empty())
-              send(":%s QUIT :off to a better life in oblivion\n", pietnick.c_str());
+              send(":%s QUIT :off to a better life in oblivion\n", g_config.get_nick().c_str());
             else 
-              send(":%s QUIT :%s\n", pietnick.c_str(), params.c_str());
+              send(":%s QUIT :%s\n", g_config.get_nick().c_str(), params.c_str());
             break;
           }
         case(COM_LEAVE):
           {
-            sendstr_prio(std::string(":")+pietnick+" PART "+(params.empty()?channel:params));
+            sendstr_prio(std::string(":")+g_config.get_nick()+" PART "+(params.empty()?channel:params));
             break;
           }
         case(COM_JOIN):
           {
             if (!params.empty())
-              sendstr_prio(std::string(":")+pietnick+" JOIN "+params);
+              sendstr_prio(std::string(":")+g_config.get_nick()+" JOIN "+params);
             else
-              send(":%s PRIVMSG %s :ehm %s, je bent vergeten een channel op te geven\n", pietnick.c_str(), channel.c_str(), nick.c_str());
+              send(":%s PRIVMSG %s :ehm %s, je bent vergeten een channel op te geven\n", g_config.get_nick().c_str(), channel.c_str(), nick.c_str());
             break;
           }
         case(COM_CTCPPING):
           {
-            sendstr_prio(std::string(":")+pietnick+" NOTICE "+channel+" :"+msg);
+            sendstr_prio(std::string(":")+g_config.get_nick()+" NOTICE "+channel+" :"+msg);
           }
           break;
         case(COM_EXEC):
@@ -181,30 +182,30 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
         case(COM_SHUTUP):
           {
             sender_flush();
-            send(":%s PRIVMSG %s :ok %s\n", pietnick.c_str(), channel.c_str(), nick.c_str());
+            send(":%s PRIVMSG %s :ok %s\n", g_config.get_nick().c_str(), channel.c_str(), nick.c_str());
           }
           break;
         case(COM_BESILENT):
           {
             silent_mode=true;
-            send(":%s PRIVMSG %s :ok %s\n", pietnick.c_str(), channel.c_str(), nick.c_str());
+            send(":%s PRIVMSG %s :ok %s\n", g_config.get_nick().c_str(), channel.c_str(), nick.c_str());
           }
           break;
         case(COM_SILENT):
           {
-            send(":%s PRIVMSG %s :ik probeer me %sstil te houden\n", pietnick.c_str(), channel.c_str(), (silent_mode?"":"niet "));
+            send(":%s PRIVMSG %s :ik probeer me %sstil te houden\n", g_config.get_nick().c_str(), channel.c_str(), (silent_mode?"":"niet "));
           }
           break;
         case(COM_UNSILENT):
           {
             silent_mode=false;
-            send(":%s PRIVMSG %s :bladiebladiebladiebla\n", pietnick.c_str(), channel.c_str());
+            send(":%s PRIVMSG %s :bladiebladiebladiebla\n", g_config.get_nick().c_str(), channel.c_str());
           }
           break;
         case(COM_BUSY_ASK):
           {
             if (plist.size()==0)
-              send(":%s PRIVMSG %s :ja, koffie is goed\n", pietnick.c_str(), channel.c_str());
+              send(":%s PRIVMSG %s :ja, koffie is goed\n", g_config.get_nick().c_str(), channel.c_str());
             else
             {
               std::string res="hmm, ja, koffie, maare, nog ff [";
@@ -226,41 +227,40 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
               }
               res+="] afmaken, maar daarna koffie\n";
               printf("BUSY_ASK: %s\n", res.c_str());
-              send(":%s PRIVMSG %s :%s\n", pietnick.c_str(), channel.c_str(), res.c_str());
+              send(":%s PRIVMSG %s :%s\n", g_config.get_nick().c_str(), channel.c_str(), res.c_str());
             }
           }
           break;
         case(COM_RENICK):
           {
-            send(":%s PRIVMSG %s :ik zal de server eens vragen of dat mag\n", pietnick.c_str(), channel.c_str());
-            send(":%s NICK :%s\n", pietnick.c_str(), params.c_str());
+            send(":%s PRIVMSG %s :ik zal de server eens vragen of dat mag\n", g_config.get_nick().c_str(), channel.c_str());
+            send(":%s NICK :%s\n", g_config.get_nick().c_str(), params.c_str());
           }
           break;
         case(COM_OPME):
           {
-            send(":%s MODE %s +o %s", pietnick.c_str(), channel.c_str(), nick.c_str());
-            send(":%s PRIVMSG %s :hoezo? ben ik dan operator ofzo? kan je dat zelf niet?\n", pietnick.c_str(), channel.c_str());
+            send(":%s MODE %s +o %s", g_config.get_nick().c_str(), channel.c_str(), nick.c_str());
+            send(":%s PRIVMSG %s :hoezo? ben ik dan operator ofzo? kan je dat zelf niet?\n", g_config.get_nick().c_str(), channel.c_str());
           }
           break;
         case(COM_RESTART):
           {
-            send(":% QUIT :ben zo terug (hopelijk)\n", pietnick.c_str());
+            send(":% QUIT :ben zo terug (hopelijk)\n", g_config.get_nick().c_str());
             restart=true;
           }
           break;
 
         case(COM_RELOADLUA):
           {
-            send(":%s PRIVMSG %s :nou snel dan\n", pietnick.c_str(), channel.c_str());
-            lua_destroy();
-            lua_create();
-            send(":%s PRIVMSG %s :ok, gedaan\n", pietnick.c_str(), channel.c_str());
+            send(":%s PRIVMSG %s :nou snel dan\n", g_config.get_nick().c_str(), channel.c_str());
+						lua_inst.reset();
+            send(":%s PRIVMSG %s :ok, gedaan\n", g_config.get_nick().c_str(), channel.c_str());
           }
           break;
         case(COM_SERVER):
           {
             msg=msg.substr(7);
-	          lua_server_msg(nick.c_str(), auth, channel.c_str(), msg.c_str());
+	          lua_inst->server_msg(nick.c_str(), auth, channel.c_str(), msg.c_str());
           }
 	  break;
         case(COM_AUTH):
@@ -292,7 +292,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
             if (((val==2)||(val==3)) && (newauth<=localauth) && (localauth>=auth_map[nick_]))
             {
               auth_map[nick_]=newauth;
-              send(":%s PRIVMSG %s :ok, %s heeft nu authenticatieniveau %d\n", pietnick.c_str(), channel.c_str(), nick_, auth_map[nick_]);
+              send(":%s PRIVMSG %s :ok, %s heeft nu authenticatieniveau %d\n", g_config.get_nick().c_str(), channel.c_str(), nick_, auth_map[nick_]);
             }
             else if ((params.empty())&&(localauth>=0))
             {
@@ -309,21 +309,21 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
                 i++;
               }
               if (result.empty())
-                send(":%s PRIVMSG %s :ik ken helemaal niemand!", pietnick.c_str(), channel.c_str());
+                send(":%s PRIVMSG %s :ik ken helemaal niemand!", g_config.get_nick().c_str(), channel.c_str());
               else
-                send(":%s PRIVMSG %s :bij mij zijn bekend: %s", pietnick.c_str(), channel.c_str(), result.c_str());
+                send(":%s PRIVMSG %s :bij mij zijn bekend: %s", g_config.get_nick().c_str(), channel.c_str(), result.c_str());
             }
             else if (localauth>=0)
             {
               if ((val==2)||((val==3)&&(passok==true)))
               {
-                send(":%s PRIVMSG %s :niet goed, mag niet\n", pietnick.c_str(), channel.c_str());
-                send(":%s PRIVMSG %s :%s: je mag tot level %d geven\n", pietnick.c_str(), channel.c_str(), nick.c_str(), localauth);
+                send(":%s PRIVMSG %s :niet goed, mag niet\n", g_config.get_nick().c_str(), channel.c_str());
+                send(":%s PRIVMSG %s :%s: je mag tot level %d geven\n", g_config.get_nick().c_str(), channel.c_str(), nick.c_str(), localauth);
               }
               else if (val==3)
-                send(":%s PRIVMSG %s :niet goed, mag niet, wachtwoordfout in \"%s\" denk ik\n", pietnick.c_str(), channel.c_str(), encrypted);
+                send(":%s PRIVMSG %s :niet goed, mag niet, wachtwoordfout in \"%s\" denk ik\n", g_config.get_nick().c_str(), channel.c_str(), encrypted);
               else
-                send(":%s PRIVMSG %s :niet goed, mag niet.\n", pietnick.c_str(), channel.c_str());
+                send(":%s PRIVMSG %s :niet goed, mag niet.\n", g_config.get_nick().c_str(), channel.c_str());
             }
             else
               printf("WARNING: %s heeft localauth %d en krijgt dus geen feedback\n", nick.c_str(), localauth);
@@ -334,13 +334,13 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
     else
     {
       std::string line=(format("%1%\n%2%\n%3%\n%4%\n") % nick % auth % channel % msg).str();
-      External(channel.c_str(), "/usr/bin/python /hd/knoppix/command.py", line.c_str());
+      External(channel.c_str(), "/usr/bin/python command.py", line.c_str());
     }
   } // end personal
   else if ((sendqueue_size()==0)&&(silent_mode==false))
   {
-    std::string line=(format("%1%\n%2%\n%3%\n") % nick % pietnick % msg).str();
-    External(channel.c_str(), "/usr/bin/python /hd/knoppix/react.py", line.c_str());
+    std::string line=(format("%1%\n%2%\n%3%\n") % nick % g_config.get_nick() % msg).str();
+    External(channel.c_str(), "/usr/bin/python react.py", line.c_str());
   }
 }
 
