@@ -1047,7 +1047,7 @@ def quote(regel):
   return "Syntax is fout voor quote";
 
 def trein(regel):
-	return ns("hilversum \"diemen zuid\" "+regel);
+	return ns(string.strip("hilversum \"diemen zuid\" "+regel));
 
 def ns(regel):
   params=string.split(regel," ");
