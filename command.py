@@ -1027,6 +1027,9 @@ def quote(regel):
     return "toegevoegt: \""+regel+"\"";
   return "Syntax is fout voor quote";
 
+def trein(regel):
+	return ns("hilversum \"diemen zuid\" "+regel);
+
 def ns(regel):
   params=string.split(regel," ");
   i=0;
@@ -1287,6 +1290,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "tel":               (1000, tel, "geef weary's mobielnr"),
     "tijd":		 (0, tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
     "ns":                (500, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
+    "trein":                (1200, trein, ""),
     "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
