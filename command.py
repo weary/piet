@@ -1217,8 +1217,8 @@ def tel(regel):
     return "socrates' telefoonnummer is 06-51825810";
   elif (naam=="weary"):
     return "weary's telefoonnummer is +31 6 5111 5487";
-  elif ((naam=="s1mon") or (naam=="sim0n") or (naam=="simon")):
-    return "simon's telefoonnummer is +31 6 22232996";
+  elif ((naam=="semyon") or (naam=="Semyon") or (naam=="simon")):
+    return "simon's telefoonnummer is +61 2 98 03 37 59";
   else:
     return "tel weary, socrates of S1MON, meer ken ik er niet, en ook niet minder";
 
