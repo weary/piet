@@ -10,7 +10,7 @@ boost::shared_ptr<clua> lua_inst;
 
 namespace {
 
-std::map<int, std::string> lua_split(const std::string &str, char splitchar)
+std::map<int, std::string> lua_split(const std::string str, char splitchar)
 {
   const char *p=str.c_str();
   const char *oldp=p;
@@ -35,7 +35,7 @@ void lua_sendspecial(std::vector<std::string> txt)
 }
 
 	
-void lua_send(clua *cl, const std::string &str)
+void lua_send(clua *cl, const std::string str)
 {
   //std::string s=":"+g_config.get_nick()+" PRIVMSG "+current_channel+" :"+str;
   send(":%s PRIVMSG %s :%s", g_config.get_nick().c_str(), cl->_current_channel.c_str(), str.c_str());
@@ -76,8 +76,10 @@ void clua::server_msg(const std::string &nick, int auth, const std::string &chan
   }
 
 	_current_channel=channel;
-	std::string script=(boost::format("servermsg(\"%1%\", %2%, \"%3%\", \"%4%\")") %
+	std::string script=(boost::format("servermsg(\'%1%\', %2%, \'%3%\', \'%4%\')") %
 		nick % auth % channel % msg).str();
+
+	printf("LD: going to execute script: %s\n", script.c_str());
 
 	try
 	{
