@@ -28,16 +28,14 @@ std::map<int, std::string> lua_split(const std::string str, char splitchar)
 
 void lua_sendspecial(std::vector<std::string> txt)
 {
-  std::string s;
-	std::vector<std::string>::const_iterator i;
-	for (i=txt.begin(); i!=txt.end(); ++i) s+=(*i);
+  std::string s=std::accumulate(txt.begin(), txt.end(), std::string());
   send(":%s %s", g_config.get_nick().c_str(), s.c_str());
 }
 
 	
 void lua_send(clua *cl, const std::string str)
 {
-  //std::string s=":"+g_config.get_nick()+" PRIVMSG "+current_channel+" :"+str;
+	assert(cl);
   send(":%s PRIVMSG %s :%s", g_config.get_nick().c_str(), cl->_current_channel.c_str(), str.c_str());
 }
 
@@ -65,25 +63,30 @@ clua::~clua()
 {
 }
 
-void clua::server_msg(const std::string &nick, int auth, const std::string &channel, const std::string &msg)
+void clua::server_msg(const std::string &nick_, int auth_, const std::string &channel_, const std::string &msg_)
 {
-  std::string m=msg;
-  std::string::size_type p=m.find(g_config.get_nick());
+	std::string msg=msg_;
+	std::string pietnick=g_config.get_nick();
+  std::string::size_type p=msg.find(pietnick);
   if (p!=std::string::npos)
   {
     printf("LUADEBUG: ah, m'n nick gevonden\n");
-    m=m.substr(0, p)+"piet"+m.substr(p+g_config.get_nick().length(), std::string::npos);
+    msg=msg.substr(0, p)+"piet"+msg.substr(p+pietnick.length(), std::string::npos);
   }
 
-	_current_channel=channel;
+	_current_channel=channel_;
+	_state["nick"]=nick_;
+	_state["auth"]=auth_;
+	_state["channel"]=channel_;
+	_state["msg"]=msg;
 	std::string script=(boost::format("servermsg(\'%1%\', %2%, \'%3%\', \'%4%\')") %
-		nick % auth % channel % msg).str();
+		nick_ % auth_ % channel_ % msg).str();
 
 	printf("LD: going to execute script: %s\n", script.c_str());
 
 	try
 	{
-		lua_inst->_state.run(script);
+		lua_inst->_state.run("servermsg(nick, auth, channel,msg)");
 	}
 	catch(std::exception &e)
 	{

@@ -4,11 +4,11 @@ leave_time={};
 in_netsplit={}; -- per nick "weg", "terug" of "op"
 
 function printtable(a,b)
-  print("table "..b..": ",a);
+	r="";
   for k,v in a do
-    print(k,v);
+		r=r.."("..k..":"..v..")";
   end;
-  print("end of table "..b);
+  print("table "..b..": "..r);
 end
 
 function maketimestring(verschil)

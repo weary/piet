@@ -253,14 +253,17 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
         case(COM_RELOADLUA):
           {
             send(":%s PRIVMSG %s :nou snel dan\n", g_config.get_nick().c_str(), channel.c_str());
-						lua_inst.reset();
+						lua_inst.reset(new clua);
             send(":%s PRIVMSG %s :ok, gedaan\n", g_config.get_nick().c_str(), channel.c_str());
           }
           break;
         case(COM_SERVER):
           {
             msg=msg.substr(7);
-	          lua_inst->server_msg(nick.c_str(), auth, channel.c_str(), msg.c_str());
+						if (!lua_inst)
+							send(":%s PRIVMSG %s :HelpHelpHelp, ik ben m'n instellingen kwijt!\n", g_config.get_nick().c_str(), channel.c_str());
+						else
+							lua_inst->server_msg(nick.c_str(), auth, channel.c_str(), msg.c_str());
           }
 	  break;
         case(COM_AUTH):
