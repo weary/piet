@@ -49,7 +49,7 @@ piet ping#1.0#pong
 pingt piet#1.0#pong
  brak#0.09090909#Zeker weer te veel gedronken gisteren?
  brak#0.1#Maar het brak-zijn is de prijs wel waard voor een avondje bier zuipen
- brak#0.1111111#ACTION is verbaast dat zo weinig bier iemand al zo snel plat kan krijgen
+ brak#0.1111111#ACTION is verbaasd dat zo weinig bier iemand al zo snel plat kan krijgen
 moet koken#0.2#Als het dan maar geen kleffe macroni rotzooi wordt
 eten koken#0.2#Als het dan maar geen kleffe macroni rotzooi wordt
 gaat koken#0.2#Als het dan maar geen kleffe macroni rotzooi wordt
@@ -176,8 +176,8 @@ koreaantjes#0.5#kom, laten we ze terugmailen
 korea#0.5#koreanen zijn toch van die aardige mensen
 twijfelt#0.5#twijfelen lijkt me overbodig
 all: ping#1.0#NICK: pong
-mp3#0.2#ACTION is verbaast dat NICK nog steeds niet over is op OGG
-MP3#0.2#ACTION is verbaast dat NICK nog steeds niet over is op OGG
+mp3#0.2#ACTION is verbaasd dat NICK nog steeds niet over is op OGG
+MP3#0.2#ACTION is verbaasd dat NICK nog steeds niet over is op OGG
  ogg#0.2#mp3 is toch nog veel handiger
 OGG#0.2#mp3 is toch nog veel handiger
 toch maar#0.7#ik heb liever van niet trouwens
@@ -201,6 +201,7 @@ geeft een roet alarm af#1.0#moet NICK nu alweer een ei bakken?
 geeft een roetalarm af#1.0#moet NICK nu alweer een ei bakken?
 te vroeg#0.2#zo vroeg is het nou ook weer niet hoor
 mooi is dat#1.0#ACTION vindt het ook schitterend
+t'is#0.2#Slainisme van graad 3 gespot
 t'is#0.25#ACTION probeert niks te zeggen van NICK's typo
 t'is#0.3#ACTION wurgt NICK langzaam met een speciaal geprepareerde ' na een t
 t'is#0.5#NICK bedoelt 't goed hoor, maar dat 'ie t' tikt was gewoon fout
@@ -246,14 +247,7 @@ bodempje#1.0#alleen maar een bodempje?
 !spel#1.0#ben geen snotbot zeg
 !help#1.0#ben geen snotbot zeg
 !tv#1.0#ben geen snotbot zeg
-!email simon#1.0#s.zwarts@twek.nl
-!email s1mon#1.0#s.zwarts@twek.nl
-!email sim0n#1.0#s.zwarts@twek.nl
-!email socrates#1.0#socrates@dnd.utwente.nl
-!email eelco#1.0#socrates@dnd.utwente.nl
-!tel eelco#1.0#er lopen veel te veel eelco's rond op deze aardbol
-!tel socrates#1.0#tell is met 2 l'en, en je kan ook gewoon wat tikken hoor
-rendt#1.0#je lijkt mij wel, rendt met dt
+rendt#1.0#rendt met dt, zeg, alsof er niet al genoeg overbodig letters over het kanaal vliegen
 jawel#0.5#nee, echt niet
 \o/#0.1666666#ACTION steekt ook blij z'n handen in de lucht
 \o/#0.3333333#ACTION juicht
@@ -286,4 +280,11 @@ kipei#0.5#kip
 kipei#1.0#ei
 ignore#0.5#ACTION negeert NICK
 huisgenoot#0.5#jaja, "huisgenoot", ik ken dat..
-
+nmapt#1.0#ACTION nmept keihard terug
+macaroni#0.6#yay! McRoni!
+zeurpiet#1.0#nee, piet
+dûm#0.5#doe's even 7bits ascii? deze troep hoef ik niet hoor
+ nite #0.4#niet is nite goed gespeld!
+ nite #0.8#ACTION is het daar mee eens, echt nite
+google #0.05#astalavista!
+hmk#0.5#ACTION groet hare majesteit
