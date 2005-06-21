@@ -41,7 +41,7 @@ function servermsg(nick, auth, channel, msg)
   if (a[1]=="JOIN") then 
     servermsg_join(nick, auth, channel, msg);
   elseif ((a[1]=="PART") or (a[1]=="QUIT")) then
-    netsplit_begin,netsplit_end=string.find(msg, "QUIT :[%w%.]+ [%w%.%*]+");
+    netsplit_begin,netsplit_end=string.find(msg, "QUIT :[%w%.%*]+ [%w%.%*]+");
     if ((netsplit_begin~=nil) and (netsplit_begin==1) and (netsplit_end==string.len(msg))) then
       print(nick.." gaat in netsplit mode\n");
       in_netsplit[nick]="weg";
@@ -95,21 +95,23 @@ function checkgemiddelde(naam, verschil)
 
   if ((count[duur]) and (count[duur]>1)) then
     gem=math.floor(totaal[duur]/count[duur]+0.5);
-    send("dat brengt het gemiddelde voor "..naam.." op "..maketimestring(gem).."\n");
+		return "gemiddeld "..maketimestring(gem).." nu.";
+    --send("dat brengt het gemiddelde voor "..naam.." op "..maketimestring(gem).."\n");
   end;
+	return "";
 end
 
 -- function called when received "JOIN" from server
 function servermsg_join(nick, auth, channel, msg)
   --nick=string.gsub(nick, "`", "'");
+  if (auth>150) then
+    sendspecial("MODE "..channel.." +o "..nick);
+  end;
+
   if (in_netsplit[nick]=="weg") then
     print(nick.." komt terug uit een netsplit");
     in_netsplit[nick]="terug";
     return;
-  end;
-
-  if (auth>150) then
-    sendspecial("MODE "..channel.." +o "..nick);
   end;
     
   if (leave_time[nick]) then
@@ -118,8 +120,9 @@ function servermsg_join(nick, auth, channel, msg)
     verschil=nu-leave_time[nick];
     if (verschil>0) then
       result=maketimestring(verschil);
-      send("Welkom "..nick..", wist je dat je hier "..result.." geleden ook al was?\n");
-      checkgemiddelde(nick, verschil);
+      reply="Welkom "..nick..", dat was weer "..result..".";
+      gemiddeld=checkgemiddelde(nick, verschil);
+			send(reply.." "..gemiddeld.."\n");
     else
       send("Blijkbaar is "..nick.." aan het fietsen\n");
     end;
