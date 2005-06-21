@@ -454,11 +454,22 @@ def tv(params):
   return("er is niks op tv");
 
 def news(params):
-  cmd="lynx -dump -width=500 http://www.trouw.nl/ANP/LAATSTE_NIEUWS/";
-  cmd=cmd+"| sed -ne \"/blokje.gif/{s/\\[[a-z0-9\\.]*\\]//g;s/\\ \\ //g;/^.*bal:/b;/^Tennis:/b;/^Schaatsen:/b;p}\"";
-  inp = os.popen(cmd);
-  result=inp.read();
-  return(result);
+	cmd="lynx -dump -width=500 http://podium.trouw.nl/novum/laatstenieuws.rss";
+	cmd+="|awk '{ result=result $0 } END { print result }' | sed 's/<\\/item>/<\\/item>\\n/g'" # get one item per line
+	cmd+="| sed -n 's/^.*<item>\(.*\)<\\/item>.*/\\1/;T;p'" # only the items
+	if (len(params)<1):
+		cmd+="| sed 's/.*<title>\(.*\)<\\/title>.*/\\1/'" # get the title
+	elif ((params=="-v") or (params=="verbose") or (params[0:4]=="uitg")):
+		cmd+="| sed 's/.*<title>\(.*\)<\\/title>.*";
+		cmd+="<description>\(.*\)<\\/description>.*/\\1\\n\\2\\n-/'"; # get the title+description
+	else:
+		cmd+="| grep '"+params+"'"; # only the requested items
+		cmd+="| sed 's/.*<description>\(.*\)<\\/description>.*/\\1/'" # get the description
+	inp = os.popen(cmd);
+	result = string.split(inp.read(), '\n');
+	if (len(result)<2):
+		result+="niks";
+	return string.join(result, '\n');
 
 def simon(params):
   cmd="w | grep simon | head -1 | wc -l | sed -e \"s/.*1.*/ja,\ een\ simon/;s/.*0.*/nee,\ nog\ niet/\"";
@@ -674,7 +685,7 @@ def discwho(regel):
   if (string.find(outp,"quences")>0):
     result+="quences, ";
   if (len(result)<=0):
-    result="niemand!";
+    return "niemand!";
   return result[:len(result)-2];
 
 def geordi(input):
@@ -832,17 +843,23 @@ def geef(regel):
   return "\001ACTION deelt "+params[0]+" "+string.join(params[1:],' ')+" uit";
 
 def calc(regel):
+  if regel[0:4]=="uit ":
+    regel=regel[4:];
+  regel=string.replace(regel, ",", ".");
   params=string.split(regel,' ');
   if (len(params)<1) or (len(params[0])==0):
     return "Internal piet processor halted, nothing to calculate bailing out";
   regel = string.strip(parse(regel, False, True));
   cmd="echo \""+regel+"\" | bc";
-  inp,outp,stderr=os.popen3(cmd);
-  result=outp.read();
-  outp.close();
+  inp,outp,errp = os.popen3(cmd);
+  result=string.strip(outp.read());
+  err=string.strip(errp.read());
   inp.close();
-  stderr.close();
-  return result;
+  outp.close();
+  errp.close();
+  if (len(err)>0):
+    return "ik snap d'r helemaal niks van, "+err[14:];
+  return "dat zal ongeveer "+result+" zijn";
 
 def dum(regel):
   r=random.random();
@@ -869,72 +886,140 @@ def temp(regel):
   for City in params:
     if (string.lower(City)=="e'de" or City=="enschede" or string.lower(City)=="twente" or string.lower(City)=="twenthe"):
       City="Enschede";
-    if (string.lower(City)=="r'dam" or City=="rotterdam" or string.lower(City)=="rdam"):
+    if (string.lower(City)=="r'dam" or City=="rotterdam"):
       City="Rotterdam";
+    if (string.lower(City)=="a'dam" or City=="amsterdam"):
+      City="Amsterdam";
+    if (string.lower(City)=="l'sum" or City=="loppersum"):
+      City="Loppersum";
+    if (string.lower(City)=="g'ing" or City=="groningen" or  string.lower(City)=="grunnen" or string.lower(City)=="g'ningen"):
+      City="Groningen";
+    if (string.lower(City)=="l'rden" or City=="leeuwarden" or string.lower(City)=="reduzuum" or string.lower(City)=="r'zum"):
+      City="Leeuwarden";
     if (string.lower(City)=="nsw" or City=="sydney"):
       City="Sydney";
     if (string.lower(City)=="h'sum" or City=="hilversum" or string.lower(City)=="hsum"):
       City="Hilversum";
+    if (string.lower(City)=="ny" or string.lower(City)=="new york"):
+      City="New York";
+    if (string.lower(City)=="p'burgh" or City=="pennsylvania" or string.lower(City)=="pittsburgh"):
+       City="Pittsburgh";
+     
     url="";
     if (City=="Enschede"):
       url="http://www.wunderground.com/global/stations/06290.html";
 # First Entry from table for Ensched
+      t=0;
+    if (City=="Loppersum"):
+      url="http://www.wunderground.com/global/stations/06280.html";
+      t=4;
+    if (City=="New York"):
+      url="http://www.wunderground.com/US/NY/New_York.html"
+      t=0;
+    if (City=="Groningen"):
+      url="http://www.wunderground.com/global/stations/06280.html";
       t=1;
+    if (City=="Leeuwarden"):
+      url="http://www.wunderground.com/global/stations/06270.html";
+      t=3;
     if (City=="Sydney"):
       url="http://www.wunderground.com/global/stations/94767.html";
 # Second Entry from table for Sydney
       t=2;
+    if (City=="Pittsburgh"):
+      url="http://www.wunderground.com/cgi-bin/findweather/getForecast?query=pittsburgh";
+      t=1;
     if (City=="Rotterdam"):
       url="http://www.wunderground.com/global/stations/06344.html";
       t=1;
+    if (City=="Amsterdam"):
+      url="http://www.wunderground.com/global/stations/06240.html";
+      t=0;
     if (City=="Hilversum"):
-      url="http://www.wunderground.com/cgi-bin/findweather/getForecast?query=hilversum";
-      t=2;
+      url="http://www.wunderground.com/global/stations/06260.html";
+      t=5;
     if (url==""):
       return "ken geen "+City;
     cmd="wget -O - -q "+url;
     i1=1;
     data="";
     tries=5;
-    while (i1<10 and tries>0):
-      inp,outp,stderr = os.popen3(cmd);
-      data = outp.read();
-      outp.close();
-      inp.close();
-      stderr.close();
-      i1=string.find(data,"<b>Updated:");
-      tries-=1;
-    if (tries<=0):
-      return "Site werkt niet mee... Geen info";
-#Add City name to string
-    result += City+", ";
-#Add local time to string
-    i1=1;
-    while (t>0):
-      i1 = string.find(data,"<b>Updated:",i1)+12;
-      t-=1;
-    i2 = string.find(data,"</b>",i1);
-    result += data[i1:i2]+": ";
-#Add temp info
-    i2 = string.find(data,"&#176;C",i2);
-    i2 = string.rfind(data[:i2],"</b>");
-    i1 = string.rfind(data[:i2],"<b>")+3;
-    result += data[i1:i2]+"°C, luchtvochtigheid = ";
-#Add humidity info
-    i2 = string.find(data,"%</",i2);
-    i1 = string.rfind(data[:i2],"<b>")+3;
-    result += data[i1:i2]+"%, wind = ";
-#Add Wind info
-    i1 = string.find(data,"<td",i2);
-    if (string.find(string.lower(data[i1:i1+150]),"calm")>1):
-      result+="Calm";
+    if (t<1):
+      result="";
+      while (i1<10 and tries>0):
+        inp,outp,stderr = os.popen3(cmd);
+        data = outp.read();
+        outp.close();
+        inp.close();
+        stderr.close();
+        i1=string.find(data,"Updated:");
+        tries-=1;
+      if (tries<=0):
+        return "Site werkt niet mee... Geen info";
+      result+=City+", ";
+      i1=string.find(data,"<b>",i1)+3;
+      i2=string.find(data," ",i1)+1;
+      i2=string.find(data," ",i2)+1;
+      i2=string.find(data," ",i2);
+      result+=data[i1:i2]+": ";
+      i1=string.find(data,"&nbsp;&#176;C",i2);
+      i1=string.rfind(data[:i1],"<b>")+3;
+      i2=string.find(data,"</b>",i1);
+      result+=data[i1:i2]+"°C, luchtvochtigheid = ";
+      i1=string.find(data,"Humidity",i1);
+      i1=string.find(data,"<b>",i1)+3;
+      i2=string.find(data,"</b>",i1);
+      result+=data[i1:i2]+", wind = ";
+      i1=string.find(data,"Wind:",i1);
+      if (string.find(data,"Calm",i1)>0 and string.find(data,"Calm",i1)-i1 < 100):
+        print string.find(data,"Calm",i1)-i1;
+        result+="Rustig";
+      else:
+        i1=string.find(data,"&nbsp;km/h",i1);
+        i1=string.rfind(data[:i1],"<b>")+3;
+        i2=string.find(data,"</b>",i1);
+        result+=data[i1:i2]+"km/h";
     else:
-      i2 = string.find(data,"km/h",i2);
-      i1 = string.rfind(data[:i2],"/")+1;
-      if (string.find(data[i1:i2],"nbsp;")>0):
-        i1 = string.rfind(data[:i2],"<b>")+3;
-        i2 = string.find(data,"</b",i1);
-      result+=data[i1:i2]+"km/h";
+      #not the main entry select one from the table
+      while (i1<10 and tries>0):
+        inp,outp,stderr = os.popen3(cmd);
+        data = outp.read();
+        outp.close();
+        inp.close();
+        stderr.close();
+        i1=string.find(data,"<b>Updated:");
+        tries-=1;
+      if (tries<=0):
+        return "Site werkt niet mee... Geen info";
+#Add City name to string
+      result += City+", ";
+#Add local time to string
+      i1=1;
+      while (t>0):
+        i1 = string.find(data,"<b>Updated:",i1)+12;
+        t-=1;
+      i2 = string.find(data,"</b>",i1);
+      result += data[i1:i2]+": ";
+#Add temp info
+      i2 = string.find(data,"&#176;C",i2);
+      i2 = string.rfind(data[:i2],"</b>");
+      i1 = string.rfind(data[:i2],"<b>")+3;
+      result += data[i1:i2]+"°C, luchtvochtigheid = ";
+#Add humidity info
+      i2 = string.find(data,"%</",i2);
+      i1 = string.rfind(data[:i2],"<b>")+3;
+      result += data[i1:i2]+"%, wind = ";
+#Add Wind info
+      i1 = string.find(data,"<td",i2);
+      if (string.find(string.lower(data[i1:i1+150]),"calm")>1):
+        result+="Rustig";
+      else:
+        i2 = string.find(data,"km/h",i2);
+        i1 = string.rfind(data[:i2],"/")+1;
+        if (string.find(data[i1:i2],"nbsp;")>0):
+          i1 = string.rfind(data[:i2],"<b>")+3;
+          i2 = string.find(data,"</b",i1);
+        result+=data[i1:i2]+"km/h";
     result+='\n';
   result=string.strip(result);
   return result;
@@ -1004,23 +1089,31 @@ def tijd(regel):
   result= "NL: "+str(localstruct[3])+":";
   if (localstruct[4] < 10):
     result += "0";
-  result+=str(tijdstruct[4])+"  NSW: ";
-  diff=(localstruct[3]-tijdstruct[3]);
+#  result+=str(tijdstruct[4])+"  NSW: ";
+  result+=str(tijdstruct[4])+"  PA: "; #PA
+  diff=(localstruct[3]-6);
   while (diff < 0):
     diff+=24;
-  if (diff==2):
-    if (localstruct[3]>15):
-      result += str(localstruct[3]-16);
-    else:
-      result += str(localstruct[3]+8);
-  else:
-    if (localstruct[3]>13):
-      result += str(localstruct[3]-14);
-    else:
-      result += str(localstruct[3]+10);
-  result +=":";
+  result+=str(diff)+":";
   if (localstruct[4] < 10):
     result += "0";
+  
+#  diff=(localstruct[3]-tijdstruct[3]);
+#  while (diff < 0):
+#    diff+=24;
+#  if (diff==2):
+#    if (localstruct[3]>15):
+#      result += str(localstruct[3]-16);
+#    else:
+#      result += str(localstruct[3]+8);
+#  else:
+#    if (localstruct[3]>13):
+#      result += str(localstruct[3]-14);
+#    else:
+#      result += str(localstruct[3]+10);
+#  result +=":";
+#  if (localstruct[4] < 10):
+#    result += "0";
   result += str(localstruct[4]);
   return result;
 
@@ -1045,6 +1138,19 @@ def quote(regel):
     outf.close;
     return "toegevoegt: \""+regel+"\"";
   return "Syntax is fout voor quote";
+
+def tv_nuenstraks(regel):
+	cmd = "lynx www.tvgids.nl/nustraks/ --width=2000 --dump | "
+	cmd+="sed -n '/Nederlandstalige zenders/,/Alle zenders/p' | " # cut needed part from html
+	cmd+="sed '1,3d;6~6d;9~6d;s/\[[0-9]*\]//' | " # cut inbetween lines for links and checkboxes away
+	cmd+="sed '1~4s/[:0-9]*[[:blank:]]*$//' | " # the start-time of the current program is in a strange place, remove it
+	cmd+="sed -n 's/^[[:blank:]]*//;N;N;N;s/[[:blank:]\\n][[:blank:]\\n]\+/<tab>/g;p' | " # join lines, replace blanks with <tab>
+	cmd+="grep -E '^Nederland|^RTL|^Yorin|^Veronica' | " # select correct channels
+	cmd+="sed 's/\(.*\)<tab>\(.*\)<tab>\(.*\)<tab>\(.*\)/  \\1, \\2, om \\3: \\4/'" # format output
+	inp = os.popen(cmd);
+	result = inp.read();
+	inp.close();
+	return result;#string.split(result,'\n');
 
 def trein(regel):
 	return ns(string.strip("hilversum \"diemen zuid\" "+regel));
@@ -1314,6 +1420,8 @@ def tel(regel):
 def valuta(regel):
 # insert spaces before float value if necessary
   i=len(regel)+1;
+  if (i<0):
+    return "Euh... mis wat argumenten, heb tenminste een bedrag nodig en 2 valuta.";
   t=0;
   while (t<10):
     if ((string.find(regel,str(t)) > 0)  and (string.find(regel,str(t)) < i)):
@@ -1321,8 +1429,6 @@ def valuta(regel):
     t+=1;
   if (i==len(regel)+1):
     i=-1;
-  if (i<0):
-    return "Euh... mis wat argumenten, heb tenminste een bedrag nodig en 2 valuta.";
   if ((i>1) and (regel[i-1]!=' ')):
     regel=regel[:i]+' '+regel[i:];
   params=string.split(regel,' ');
@@ -1379,9 +1485,9 @@ def valuta(regel):
   if (cont==0):
     return "begrijp niet hoeveel van wat je in wat wilt omrekenen, gebruik <valuta> <float> [in] <valuta>";
 # probeer wat populair currency tekens en naam conversies
-  if ((fromcurrency=="$") or (string.lower(fromcurrency)=="us") or (string.lower(fromcurrency)=="us$")):
+  if (fromcurrency=="$"):
     fromcurrency="USD";
-  if ((tocurrency=="$") or (string.lower(tocurrency)=="us") or (string.lower(tocurrency)=="us$")):
+  if (tocurrency=="$"):
     tocurrency="USD";
   if ((string.lower(fromcurrency)=="a$") or (string.lower(fromcurrency)=="au$")):
     fromcurrency="AUD";
@@ -1391,9 +1497,9 @@ def valuta(regel):
     fromcurrency="NZD";
   if (string.lower(tocurrency)=="nz$"):
     tocurrency="NZD";
-  if ((string.lower(fromcurrency)=="c$") or (string.lower(fromcurrency)=="ca$") or (string.lower(fromcurrency)=="can")):
+  if ((string.lower(fromcurrency)=="c$") or (string.lower(fromcurrency)=="ca$")):
     fromcurrency="CAD";
-  if ((string.lower(tocurrency)=="c$") or (string.lower(tocurrency)=="ca$")  or (string.lower(tocurrency)=="can")):
+  if ((string.lower(tocurrency)=="c$") or (string.lower(tocurrency)=="ca$")):
     tocurrency="CAD";
   if ((string.lower(fromcurrency)=="euro") or (string.lower(fromcurrency)=="eu") or (string.lower(fromcurrency)=="euros")):
     fromcurrency="EUR";
@@ -1431,8 +1537,6 @@ def valuta(regel):
   result+=string.strip(lines[1])+" = ";
   i=string.find(lines[2],"=")+1;
   result+=string.strip(lines[2][i:]);
-  if (tocurrency==fromcurrency):
-    result="Grapjas ga lekker zelf met een 1:1 verhouding rekening,\n"+result;
   return result;
 
 d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <woorden> of anagram en <woorden> om engels te forceren."),
@@ -1461,7 +1565,8 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "schreib":           (0, spell_de, ""),
     "changelog":         (1000, changelog, "changelog, show the recent changes to piet"),
     "help":              (0, help, ""),
-    "calc":              (0, calc, "calc <expressie> rekent iets uit via de internal piet-processer"),
+    "calc":              (0, calc, ""),
+    "reken":             (0, calc, "reken uit <expressie> rekent iets uit via de internal piet-processer"),
     "alias":             (1000, alias, ""),
     "stop":              (1000, leeg, "stop [<reden>], ga van irc"),
     "ga weg":            (1000, leeg, "ga weg [van <kanaal>], /leave <kanaal>"),
@@ -1486,7 +1591,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "geordi":		 (0, geordi, ""),
     "je heet nu":        (500, leeg, "je heet nu <nick>, geef nieuwe nick"),
     "renick":            (200, randomnaam, "renick, verzint een willekeurige nick"),
-    "opme":              (150, leeg, "opme, geef @"),
+    "opme":              (500, leeg, "opme, geef @"),
     "koffie?":           (121, leeg, "koffie?, vraag of ie koffie wil"),
     "simon?":            (150, simon, "simon?, kijkt of simon op sorcsoft ingelogd is"),
     "citaat":            (150, citaat, "citaat, geeft een random regel text die ooit gezegd is"),
@@ -1495,16 +1600,17 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "stil?":             (1000, leeg, "stil?, probeert piet zich stil te houden?"),
     "praat maar":        (1000, leeg, "praat maar, tegenovergestelde van \"wees stil\""),
     "lees lua":          (1000, leeg, "lees lua, herlees het lua script"),
-		"kies":              (100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
+    "kies":              (100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
+		"tv":								 (100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
     "mep":               (100, mep, ""),
     "geef":              (100, geef, ""),
     "dum":               (0, dum, ""),
     "wiki":		 (500, wiki, "wiki <woord> Freeware encyclopedie"),
     "tel":               (1000, tel, "geef weary's mobielnr"),
     "tijd":		 (0, tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
-    "ns":                (500, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
+    "ns":                (100, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
     "trein":                (1200, trein, ""),
-    "valuta":            (200, valuta, "valuta <bedrag> <valuta> in <valuta>, rekent de bedragen om met de huidige wisselkoers"),
+    "valuta":            (100, valuta, "valuta <bedrag> <valuta> in <valuta>, rekent de bedragen om met de huidige wisselkoers"),
     "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
