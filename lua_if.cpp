@@ -2,6 +2,7 @@
 #include <string>
 #include <ios>
 #include <fstream>
+#include <boost/format.hpp>
 #include <boost/bind.hpp>
 #include "bot.h"
 #include "lua_if.h"

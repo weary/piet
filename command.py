@@ -2,17 +2,26 @@
 # -*- coding: iso-8859-1 -*-
 
 import sys,string,random,re,os,time;
+import piet;
 from telnetlib import Telnet;
 
 todofile = "todo.txt";
 logfile = "log.txt";
 
-nick = string.strip(sys.stdin.readline());
-auth = int(string.strip(sys.stdin.readline()));
-channel = string.strip(sys.stdin.readline());
-msg = string.strip(sys.stdin.readline());
+nick = "";#string.strip(sys.stdin.readline());
+auth = 33;#int(string.strip(sys.stdin.readline()));
+channel = "";#string.strip(sys.stdin.readline());
+msg = "";#string.strip(sys.stdin.readline());
 d={};
-#print ("1", nick, auth, channel, msg);
+
+
+def error_handler(type, value, traceback):
+	global channel;
+	piet.send(channel, "arg! er heeft weer iemand zitten prutsen! wie is't? ik met even "+repr(value.args[0])+" op z'n voorhoofd tatoeëren\n");
+	sys.__excepthook__(type, value, traceback);
+
+sys.excepthook=error_handler;
+	
 
 def parse(param, first, magzeg):
   print "HELP! PIET STUK\n";
@@ -1334,7 +1343,15 @@ def ns(regel):
   if (Warning!=""):
     return string.strip("Waarschuwing: "+Warning+"\n"+returnstring);
   return string.strip(returnstring);
-  
+
+g_test="niets";
+
+def mytest(regel):
+	global g_test;
+	ding=g_test;
+	g_test=regel;
+	fiets
+	return "vorige: "+ding+"\n";
 
 def tel(regel):
   naam=string.lower(regel);
@@ -1612,11 +1629,11 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "trein":                (1200, trein, ""),
     "valuta":            (100, valuta, "valuta <bedrag> <valuta> in <valuta>, rekent de bedragen om met de huidige wisselkoers"),
     "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
+		"test": (100, mytest, "ding"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
 def parse(param_org, first, magzeg):
   global auth,nick;
-  #print ("parse entry:", param_org, first);
   command=string.split(param_org, ' ')[0];
   params=string.join(string.split(param_org, ' ')[1:],' ');
 
@@ -1630,7 +1647,7 @@ def parse(param_org, first, magzeg):
     else:
       params=param_org;
 
-  #print (command, params, int(auth), functie);
+  print (command, params, int(auth), functie);
   if (int(auth)<functie[0]):
     if (first):
       functie=d["onbekend_commando"];
@@ -1638,7 +1655,6 @@ def parse(param_org, first, magzeg):
       functie=d["zeg"];
       params=param_org;
   
-  #print ("parse, jump to:", functie);
   r="";
   if (int(auth)>=0):
     if (functie==d["zeg"]) and (magzeg==False):
@@ -1646,15 +1662,26 @@ def parse(param_org, first, magzeg):
     else:
       r=functie[1](params);
 
-  #print ("r = ", r);
   r2=string.split(r, '\n');
   if (len(r2)>15):
     l=str(len(r2));
     r=string.join(r2[:15], '\n')+"\n"+nick+": de rest verzin je zelf maar, 15 van de "+l+" regels vind ik zat\n";
   return r;
 
-#print ("2",nick, auth, channel, msg);
-print parse(msg, True, True);
 
-
+def do_command(nick_, auth_, channel_, msg_):
+	global nick,auth,channel,msg;
+	nick=nick_;
+	auth=int(auth_);
+	channel=channel_;
+	msg=msg_;
+	print "channel is now ", channel;
+	print "executing", nick, auth, channel, msg;
+	result=parse(msg, True, True);
+	piet.send(channel_, result);
+	
+#nick = string.strip(sys.stdin.readline());
+#auth = int(string.strip(sys.stdin.readline()));
+#channel = string.strip(sys.stdin.readline());
+#msg = string.strip(sys.stdin.readline());
 

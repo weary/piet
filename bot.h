@@ -58,7 +58,7 @@ inline std::string unenter(const std::string a)
   return(input);
 }
 
-struct tthread_data
+/*struct tthread_data
 {
   pthread_t thread;
   time_t kill_after;
@@ -71,11 +71,11 @@ struct tthread_data
 };
 
 typedef std::list<tthread_data *> pthreadlist;
-
+extern pthreadlist plist;
+*/
 extern bool initialising;
 extern bool quit;
 extern int sok;
-extern pthreadlist plist;
 //extern std::string pietnick;
 
 void *sender(void *);

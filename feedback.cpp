@@ -1,6 +1,6 @@
 
 
-#include <unistd.h>
+//#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,6 +10,7 @@
 #include <boost/format.hpp>
 #include "bot.h"
 #include "passwd.h"
+#include "python_handler.h"
 #include "lua_if.h"
 
 typedef std::map<std::string, int> tauth_map;
@@ -25,7 +26,6 @@ using boost::format;
 #define COM_LEAVE 1
 #define COM_JOIN 2
 #define COM_CTCPPING 51
-#define COM_EXEC 8
 #define COM_NEWS 11
 #define COM_SHUTUP 12
 #define COM_AUTH 13
@@ -55,7 +55,6 @@ const scommand commands[]= {
 { "ga weg van ", COM_LEAVE, 1000 },
 { "kom bij ",    COM_JOIN,  1000 },
 { "\001PING",    COM_CTCPPING, 100 },
-{ "doe ",        COM_EXEC,  1200 },
 { "kop dicht",   COM_SHUTUP,1000 },
 { "koffie?",     COM_BUSY_ASK, 121},
 { "auth",        COM_AUTH, -2500 },
@@ -174,11 +173,6 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
             sendstr_prio(std::string(":")+g_config.get_nick()+" NOTICE "+channel+" :"+msg);
           }
           break;
-        case(COM_EXEC):
-          {
-            External(channel.c_str(), params.c_str(), "");
-          }
-          break;
         case(COM_SHUTUP):
           {
             sender_flush();
@@ -204,30 +198,25 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
           break;
         case(COM_BUSY_ASK):
           {
-            if (plist.size()==0)
+						std::list<std::string> threads=python_handler::instance().threadlist();
+            if (threads.size()==0)
               send(":%s PRIVMSG %s :ja, koffie is goed\n", g_config.get_nick().c_str(), channel.c_str());
             else
             {
-              std::string res="hmm, ja, koffie, maare, nog ff [";
-              pthreadlist::const_iterator i;
+              std::ostringstream res;
+							res << "hmm, ja, koffie, maare, nog ff [";
+							std::list<std::string>::const_iterator i;
               bool first=true;
-              for (i=plist.begin(); i!=plist.end(); i++)
+              for (i=threads.begin(); i!=threads.end(); ++i)
               {
-                std::string input=(*i)->input;
-                input=unenter(input);
-                if (input.length()>30) input.erase(30), input+="...";
-                
-                if (!first) res+=", ";
-                res+="(";
-                res=res+"\"" + (*i)->cmd + "\" ";
-                res=res+"\"" + input + "\"";
-                res+=")";
+								if (!first) res << ", ";
+								res << *i;
                 
                 first=false;
               }
-              res+="] afmaken, maar daarna koffie\n";
-              printf("BUSY_ASK: %s\n", res.c_str());
-              send(":%s PRIVMSG %s :%s\n", g_config.get_nick().c_str(), channel.c_str(), res.c_str());
+              res << "] afmaken, maar daarna koffie\n";
+							std::cout << "BUSY_ASK: " << res.str();
+              send(":%s PRIVMSG %s :%s\n", g_config.get_nick().c_str(), channel.c_str(), res.str().c_str());
             }
           }
           break;
@@ -335,15 +324,18 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
       }
     }
     else
-    {
-      std::string line=(format("%1%\n%2%\n%3%\n%4%\n") % nick % auth % channel % msg).str();
-      External(channel.c_str(), "/usr/bin/python command.py", line.c_str());
-    }
+		{
+			std::string command=
+				(format("do_command('%1%', '%2%', '%3%', '%4%');") %
+				 nick % auth % channel % msg).str();
+			python_handler::instance().read_and_exec(channel, "command.py", command);
+		}
   } // end personal
   else if ((sendqueue_size()==0)&&(silent_mode==false))
   {
-    std::string line=(format("%1%\n%2%\n%3%\n") % nick % g_config.get_nick() % msg).str();
-    External(channel.c_str(), "/usr/bin/python react.py", line.c_str());
+    std::string line=(format("do_react('%1%', '%2%', '%3%', '%4%');\n") %
+				channel % nick % g_config.get_nick() % msg).str();
+		python_handler::instance().read_and_exec(channel, "react.py", line);
   }
 }
 
