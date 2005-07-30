@@ -899,10 +899,10 @@ def docommand(cmd):
 def temp(regel):
   params=string.split(regel, ' ');
   if (len(params)<1) or (len(params[0])==0):
-    params=string.split("Enschede Sydney",' ');
-
+    params=string.split("Enschede Pittsburgh",' ');
   result="";
   for City in params:
+    City=string.replace(City,"\"","'");
     if (string.lower(City)=="e'de" or City=="enschede" or string.lower(City)=="twente" or string.lower(City)=="twenthe"):
       City="Enschede";
     if (string.lower(City)=="r'dam" or City=="rotterdam"):
@@ -929,6 +929,14 @@ def temp(regel):
       url="http://www.wunderground.com/global/stations/06290.html";
 # First Entry from table for Ensched
       t=0;
+      cmd="lynx -dump http://www.wunderground.com/global/stations/06290.html | grep Losser"
+      inp,outp,stderr = os.popen3(cmd);
+      data = outp.read();
+      outp.close();
+      inp.close();
+      stderr.close();
+      if (len(data)>10):
+        t=1
     if (City=="Loppersum"):
       url="http://www.wunderground.com/global/stations/06280.html";
       t=4;
@@ -980,6 +988,8 @@ def temp(regel):
       i2=string.find(data," ",i1)+1;
       i2=string.find(data," ",i2)+1;
       i2=string.find(data," ",i2);
+      while (string.find(data[i1:i2],'>') > 0):
+        i1=string.find(data,">",i1)+1;
       result+=data[i1:i2]+": ";
       i1=string.find(data,"&nbsp;&#176;C",i2);
       i1=string.rfind(data[:i1],"<b>")+3;
