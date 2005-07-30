@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include <crypt.h>
 #include <boost/format.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include "bot.h"
 #include "passwd.h"
 #include "python_handler.h"
@@ -325,6 +326,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
     }
     else
 		{
+			boost::algorithm::replace_all(msg, "'", "\"");
 			std::string command=
 				(format("do_command('%1%', '%2%', '%3%', '%4%');") %
 				 nick % auth % channel % msg).str();
@@ -333,6 +335,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
   } // end personal
   else if ((sendqueue_size()==0)&&(silent_mode==false))
   {
+		boost::algorithm::replace_all(msg, "'", "\"");
     std::string line=(format("do_react('%1%', '%2%', '%3%', '%4%');\n") %
 				channel % nick % g_config.get_nick() % msg).str();
 		python_handler::instance().read_and_exec(channel, "react.py", line);
