@@ -4,6 +4,8 @@
 import sys,string,random,re,os,time;
 import piet;
 from telnetlib import Telnet;
+sys.path.append(".");
+from calc import supercalc;
 
 todofile = "todo.txt";
 logfile = "log.txt";
@@ -1480,8 +1482,8 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "schreib":           (0, spell_de, ""),
     "changelog":         (1000, changelog, "changelog, show the recent changes to piet"),
     "help":              (0, help, ""),
-    "calc":              (0, calc, ""),
-    "reken":             (0, calc, "reken uit <expressie> rekent iets uit via de internal piet-processer"),
+    "calc":              (0, supercalc, ""),
+    "reken":             (0, supercalc, "reken uit <expressie> rekent iets uit via de internal piet-processer"),
     "alias":             (1000, alias, ""),
     "stop":              (1000, leeg, "stop [<reden>], ga van irc"),
     "ga weg":            (1000, leeg, "ga weg [van <kanaal>], /leave <kanaal>"),
