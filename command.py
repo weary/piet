@@ -49,11 +49,32 @@ def convert(char):
     return char;
 
 def kies(params):
-  params = string.strip(parse(params, False, True));
-  list=string.split(params," ");
-  if (len(list)==0):
-    return "Ik kies een appel";
-  return random.choice(list);
+  if string.find(params,"\"") >= 0:
+    list=[]
+    while params!="":
+      if params[:1]=="\"":
+        i=string.find(params,"\"",1)
+        if i<0:
+          return "probleem met \""
+        else:
+          list+=[params[1:i]]
+          while params[i+1:i+2]==" ":
+            i+=1
+          params=params[i+1:]
+      else:
+        i=string.find(params," ",1)
+        if i<0:
+          i=len(params)
+        list+=[params[:i]]
+        while params[i:i+1]==" ":
+          i+=1
+        params=params[i:]     
+  else:
+    list=string.split(params," ")
+  choice=random.choice(list);
+  choice=string.strip(parse(choice, False, True));
+  return choice
+
 
 
 def vandale(woord):
