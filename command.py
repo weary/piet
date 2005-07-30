@@ -38,7 +38,7 @@ def onbekend_commando(param):
     return "ja\n";
   elif (random.random()>=0.95):
     return "nee\n";
-  return "euh...\n";
+  return "ja\n";
 
 def convert(char):
   if (char=="\xb4"):
