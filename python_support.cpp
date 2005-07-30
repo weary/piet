@@ -1,6 +1,7 @@
-#include "python_support.h"
-#include "python_handler.h"
 #include "bot.h"
+#include "python_handler.h"
+#include "python_support.h"
+#include "sender.h"
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -83,9 +84,10 @@ python_cmd::python_cmd()
 python_cmd::python_cmd(const std::string &channel_, const std::string &cmd_, int paramcount_) :
 	_channel(channel_), _cmd(cmd_), _args(NULL), _size(paramcount_), _index(0)//, _dbg_cmd(cmd_)
 {
+	python_handler::instance();
 	if (paramcount_)
 	{
-		python_lock guard;
+		python_lock guard(__PRETTY_FUNCTION__);
 		_args = python_object(PyTuple_New(paramcount_));
 	}
 }
@@ -94,7 +96,7 @@ python_cmd::python_cmd(const python_cmd &rhs_) :
 	_channel(rhs_._channel), _cmd(rhs_._cmd), _args(rhs_._args), _size(rhs_._size), _index(rhs_._index)//, _dbg_cmd(rhs_._dbg_cmd.str())
 {
 	{
-		python_lock guard;
+		python_lock guard(__PRETTY_FUNCTION__);
 		_args.incref();
 	}
 }
@@ -102,7 +104,7 @@ python_cmd::python_cmd(const python_cmd &rhs_) :
 python_cmd::~python_cmd()
 {
 	{
-		python_lock guard;
+		python_lock guard(__PRETTY_FUNCTION__);
 		_args.decref();
 	}
 }
@@ -110,7 +112,7 @@ python_cmd::~python_cmd()
 const python_cmd &python_cmd::operator =(const python_cmd &rhs_)
 {
 	{
-		python_lock guard;
+		python_lock guard(__PRETTY_FUNCTION__);
 		_args.decref();
 		_channel = rhs_._channel;
 		_cmd = rhs_._cmd;
@@ -135,7 +137,7 @@ python_cmd &python_cmd::operator << (int i)
 	assert(_size>0);
 	
 	{
-		python_lock guard;
+		python_lock guard(__PRETTY_FUNCTION__);
 		python_object obj(PyInt_FromLong(i));
 		add_param(obj);
 	}
@@ -147,7 +149,7 @@ python_cmd &python_cmd::operator << (const std::string &str_)
 {
 	assert(_size>0);
 	{
-		python_lock guard;
+		python_lock guard(__PRETTY_FUNCTION__);
 		python_object obj(PyString_FromString(str_.c_str()));
 		add_param(obj);
 	}
@@ -159,7 +161,7 @@ void python_cmd::operator()()
 	std::cout << "PY: exec(" << *this << ")\n";
 
 	{
-		python_lock guard;
+		python_lock guard(__PRETTY_FUNCTION__);
 		assert(_index==_size);
 		assert(!_cmd.empty());
 
@@ -193,16 +195,39 @@ std::ostream &operator <<(std::ostream &os_, const python_cmd &pc_)
 	return os_;
 }
 
-python_lock::python_lock()
+python_lock::python_lock(const std::string &occasion_)
+	: _occasion(occasion_)
 {
-	std::cout << "acquiring python lock\n" << std::flush;
+	int lockcount = (int)pthread_getspecific(_key);
+	pthread_setspecific(_key, (void *)(lockcount+1));
+	//std::cout << "PL: acquiring python lock for " << _occasion;
+	//if (lockcount) std::cout << ", already had " << lockcount;
+	//std::cout << ".\n" << std::flush;
 	if (lockcount==0) PyEval_AcquireLock();
-	++lockcount;
+	//std::cout << "PL: acquired\n" << std::flush;
 }
 python_lock::~python_lock()
 {
-	std::cout << "releasing python lock\n" << std::flush;
-	--lockcount;
+	int lockcount = ((int)pthread_getspecific(_key)) - 1;
+	pthread_setspecific(_key, (void *)(lockcount));
+	//std::cout << "PL: releasing python lock for " << _occasion;
+	//if (lockcount) std::cout << ", but still " << lockcount << " left, so no real release";
+	//std::cout << ".\n" << std::flush;
 	if (lockcount==0) PyEval_ReleaseLock();
+	//std::cout << "PL: released\n" << std::flush;
 }
-int python_lock::lockcount=0; //XXX: should be thread-local!!
+
+void python_lock::global_init()
+{
+	//std::cout << "PL: initialising python locks\n" << std::flush;
+	assert(pthread_key_create(&_key, NULL)==0);
+}
+
+void python_lock::global_deinit()
+{
+	//std::cout << "PL: de-initialising python locks\n" << std::flush;
+	pthread_key_delete(_key);
+}
+
+pthread_key_t python_lock::_key;
+

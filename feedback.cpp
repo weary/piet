@@ -1,18 +1,20 @@
 
 
 //#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <stdarg.h>
-#include <crypt.h>
-#include <boost/format.hpp>
-#include <boost/algorithm/string/replace.hpp>
 #include "bot.h"
+#include "sender.h"
+#include "lua_if.h"
 #include "passwd.h"
 #include "python_handler.h"
-#include "lua_if.h"
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/format.hpp>
+#include <crypt.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdarg.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 typedef std::map<std::string, int> tauth_map;
 extern tauth_map auth_map;
@@ -50,8 +52,10 @@ struct scommand
 
 const scommand commands[]= {
 { "stop",        COM_QUIT,  1000 },
+{ "sterf",       COM_QUIT,  1000 },
 { "donder op",   COM_QUIT,  1000 },
 { "herstart",    COM_RESTART, 1000 },
+{ "herlaars",    COM_RESTART, 1000 },
 { "ga weg",      COM_LEAVE, 1000 },
 { "ga weg van ", COM_LEAVE, 1000 },
 { "kom bij ",    COM_JOIN,  1000 },
@@ -68,12 +72,6 @@ const scommand commands[]= {
 { "SERVER",      COM_SERVER, 0 }
 };
 
-void strip_leading_spaces(std::string &a)
-{ // strip leading spaces
-  unsigned int a2=a.find_first_not_of(' ');
-  if (a2!=a.npos) a.erase(0, a2);
-}
-	
 
 void Feedback(const std::string &nick, int auth, const std::string &channel_in, const std::string &msg_in)
 {
@@ -122,10 +120,8 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
 
   if (personal)
   {
+		boost::algorithm::trim(msg);
     printf("This is a personal message, msg = \"%s\"\n", msg.c_str());
-    
-    strip_leading_spaces(msg);
-    printf("removed leading spaces, msg = \"%s\"\n", msg.c_str());
 
     // commando opzoeken in de tabel
     int com_index=-1;
@@ -138,20 +134,24 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
         params=msg.c_str()+strlen(commands[i].name);
       }
     }
-    strip_leading_spaces(params);
-    printf("removed leading spaces, params = \"%s\"\n", params.c_str());
+		boost::algorithm::trim(params);
 
     // it is a build in command
     if ((com_index>=0)&&(auth>=commands[com_index].auth))
     {
-      printf("Commando: \"%s\"\nParams: \"%s\"\n", commands[com_index].name, params.c_str());
+			std::cout << "Command: \"" << commands[com_index].name << "\", Params: \"" << params << "\"\n";
     
       switch(commands[com_index].command)
       {
         case(COM_QUIT):
           {
             if (params.empty())
-              send(":%s QUIT :off to a better life in oblivion\n", g_config.get_nick().c_str());
+						{
+							if (commands[com_index].name==std::string("sterf"))
+								send(":%s QUIT :helaas geen natuurlijke dood gestorven\n", g_config.get_nick().c_str());
+							else
+								send(":%s QUIT :off to a better life in oblivion\n", g_config.get_nick().c_str());
+						}
             else 
               send(":%s QUIT :%s\n", g_config.get_nick().c_str(), params.c_str());
             break;

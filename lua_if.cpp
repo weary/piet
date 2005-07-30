@@ -1,11 +1,12 @@
 
-#include <string>
-#include <ios>
-#include <fstream>
-#include <boost/format.hpp>
-#include <boost/bind.hpp>
 #include "bot.h"
+#include "sender.h"
 #include "lua_if.h"
+#include <boost/bind.hpp>
+#include <boost/format.hpp>
+#include <fstream>
+#include <ios>
+#include <string>
 
 boost::shared_ptr<clua> lua_inst;
 
@@ -71,7 +72,7 @@ void clua::server_msg(const std::string &nick_, int auth_, const std::string &ch
   std::string::size_type p=msg.find(pietnick);
   if (p!=std::string::npos)
   {
-    printf("LUADEBUG: ah, m'n nick gevonden\n");
+    //printf("LUADEBUG: ah, m'n nick gevonden\n");
     msg=msg.substr(0, p)+"piet"+msg.substr(p+pietnick.length(), std::string::npos);
   }
 

@@ -1,5 +1,6 @@
 #include "python_handler.h"
 #include "bot.h"
+#include "sender.h"
 #include <signal.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
@@ -33,7 +34,12 @@ std::ostream &operator <<(std::ostream &os_, const pythonthread_data_t &td_)
 	os_ << "threaddata["
 		"chan=" << td_.channel << ", "
 		"file=" << td_.file << ", "
-		"cmd=" << td_.cmd << "]";
+		"cmd=" << td_.cmd << ", ";
+	if (td_.ready)
+		os_ << "ready";
+	else
+		os_ << "not ready";
+	os_ << "]";
 	return os_;
 }
 
@@ -61,7 +67,7 @@ void *python_threadfunc(void *p)
 	std::string chan=data->channel;
 
 	{
-		python_lock guard;
+		python_lock guard("threadfunc");
 
 		PyInterpreterState * mainInterpreterState = data->main_thread_state->interp;
 		PyThreadState * myThreadState = PyThreadState_New(mainInterpreterState);
@@ -99,7 +105,7 @@ static PyObject * piet_send(PyObject *self, PyObject *args)
 {
 	char *cp_channel, *cp_msg;
 
-	python_lock guard;
+	python_lock guard(__PRETTY_FUNCTION__);
 	// parse the incoming arguments
 	if (!PyArg_Parse(args, "(ss)", &cp_channel, &cp_msg))
 	{
@@ -124,7 +130,7 @@ static PyObject * piet_nick(PyObject *self, PyObject *args)
 {
 	char *nick;
 
-	python_lock guard;
+	python_lock guard(__PRETTY_FUNCTION__);
 
 	// parse the incoming arguments
 	if (!PyArg_Parse(args, "(s)", &nick))
@@ -153,6 +159,8 @@ python_handler::python_handler() :
 	Py_Initialize();
 	PyEval_InitThreads();
 
+	python_lock::global_init();
+
 	_main_thread_state = PyThreadState_Get();
 
 	PyImport_AddModule("piet");
@@ -165,6 +173,7 @@ python_handler::~python_handler()
 {
 	PyEval_AcquireLock();
 	Py_Finalize();
+	python_lock::global_deinit();
 }
 
 void python_handler::read_and_exec(
@@ -245,7 +254,7 @@ std::list<std::string> python_handler::threadlist()
 
   pythonthreadlist_t::const_iterator i=plist.begin();
   for (i=plist.begin(); i!=plist.end(); ++i)
-		result.push_back(boost::lexical_cast<std::string>((*i)->cmd));
+		result.push_back(boost::lexical_cast<std::string>(**i));
 
 	return result;
 }

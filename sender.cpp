@@ -9,15 +9,45 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <map>
+#include "sender.h"
 #include "bot.h"
 
 
 typedef std::list<std::string> stringlist;
-stringlist send_list;
-pthread_mutex_t sendqueue_mutex = PTHREAD_MUTEX_INITIALIZER;
+static stringlist send_list;
+static pthread_mutex_t sendqueue_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_t sender_thread;
+
+// the thread function..
+static void *sender(void *data);
+
+struct senderthread_data_t
+{
+	int _sok;
+};
+
+void create_send_thread(int sok)
+{
+  int result;
+	senderthread_data_t *sd=new senderthread_data_t;
+	sd->_sok=sok;
+  result=pthread_create(&sender_thread, NULL, sender, sd);
+  if (result)
+  {
+    printf("failed to create sender thread, error code %d\n", result);
+    throw;
+  }
+  printf("Send thread created\n");
+}
+
+void join_send_thread()
+{
+	pthread_join(sender_thread, NULL);
+}
+
 
 // put a header+textline in the queue, lines should be <=450 chars
-void add_to_sendlist(const std::string header, const std::string textline, bool high_prio)
+static void add_to_sendlist(const std::string header, const std::string textline, bool high_prio)
 {
   printf("SEND: add_to_sendlist(\"%.45s\", \"%.45s\", %s)\n", unenter(header).c_str(), unenter(textline).c_str(), (high_prio?"TRUE":"FALSE"));
 
@@ -33,7 +63,7 @@ void add_to_sendlist(const std::string header, const std::string textline, bool 
 
 // split text into 450-character pieces and add it to the send queue
 // header and high_prio are just passed through
-void send_one_line(const std::string header, std::string text, bool high_prio)
+static void send_one_line(const std::string header, std::string text, bool high_prio)
 {
   printf("SEND: send_one_line(\"%.45s\", \"%.45s\", %s)\n", unenter(header).c_str(), unenter(text).c_str(), (high_prio?"TRUE":"FALSE"));
 
@@ -99,9 +129,11 @@ void send(const char *fmt, ...)
 
 
 // separate thread that checks the send queue
-void *sender(void *vsi)
+static void *sender(void *vsi)
 {
-  while (initialising) sleep(1);
+	senderthread_data_t *td=reinterpret_cast<senderthread_data_t *>(vsi);
+	int sok=td->_sok;
+	delete(td); // right, can't forget to delete that anymore :)
 
   int counter=8;
   pthread_mutex_init(&sendqueue_mutex, NULL);
@@ -109,16 +141,13 @@ void *sender(void *vsi)
   {
     sleep(1);
     if (counter<8) 
-		{
-		  counter++;
-	  }
+		  ++counter;
+
     pthread_mutex_lock(&sendqueue_mutex);
     while ((send_list.size()>0) && (counter>=2))
     {
-#ifndef BOGUS
       send(sok, send_list.front().c_str(), send_list.front().length(), 0);
       counter-=2;
-#endif
       send_list.pop_front();
     }
     pthread_mutex_unlock(&sendqueue_mutex);
@@ -128,7 +157,7 @@ void *sender(void *vsi)
 }
 
 
-// remove all messages from the outgoing queue
+// remove all pending items from send-queue
 void sender_flush()
 {
   pthread_mutex_lock(&sendqueue_mutex);

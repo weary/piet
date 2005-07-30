@@ -1,38 +1,28 @@
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <stdarg.h>
-#include <crypt.h>
-#include <boost/format.hpp>
-#include <errno.h>
 #include "bot.h"
-#include "passwd.h"
 #include "lua_if.h"
+#include "passwd.h"
+#include "sender.h"
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/format.hpp>
+#include <crypt.h>
+#include <errno.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdarg.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/poll.h>
+#include <unistd.h>
 
 using boost::format;
 
 typedef std::map<std::string, int> tauth_map;
 tauth_map auth_map;
 
-pthread_t sender_thread;
-pthread_t receiver_thread;
-//pthread_t garbage_collector_thread;
-
-//std::string pietnick = g_config.get_initial_nick();
-
-int sok=0;
-
-struct receiver_info
-{
-  int s;
-};
-
-bool initialising=true;
 bool quit=false;
 bool restart=false;
 
+void interpret(const std::string &input);
 
 // print the information in the sockaddr
 void printsockaddr(const sockaddr *buf, unsigned int size)
@@ -109,148 +99,131 @@ int connect_to_server()
   return(sok);
 }
   
-void create_threads(receiver_info *ri)
+static std::string receive(int sok)
 {
-  int result;
-  result=pthread_create(&sender_thread, NULL, sender, NULL);
-  if (result)
-  {
-    printf("failed to create sender thread, error code %d\n", result);
-    throw;
-  }
-  result=pthread_create(&receiver_thread, NULL, receiver, ri);
-  if (result)
-  {
-    printf("failed to create receiver thread, error code %d\n", result);
-    throw;
-  }
-  //result=pthread_create(&garbage_collector_thread, NULL, garbage_collector, NULL);
-  //if (result) { printf("failed to create garbage collector thread, error code %d\n", result); return(-2); }
-  printf("Threads created\n");
+	char buf[65536];
+	int len=recv(sok, buf, 65536, 0);
+	if (len<=0)
+	{
+		quit=true;
+		return "";
+	}
+	else
+		return std::string(buf, buf+len);
 }
+
+static void process_receive(std::string &buf)
+{
+	boost::algorithm::replace_all(buf, "\r", "");
+
+	std::string::size_type enter;
+	while (enter=buf.find('\n'), enter!=std::string::npos)
+	{
+		std::string line=buf.substr(0, enter);
+		buf.erase(0, enter+1);
+		std::cout << "recv: \"" << line << "\"\n" << std::flush;
+		interpret(line);
+	}
+}  
 
 
 
 int main(int argc, char *argv[])
 {
-  try {
+	try
+	{
 		lua_inst.reset(new clua);
 
-  //auth_map[std::string("piet")]=-10;
-  auth_map[std::string("weary")]=1200;
-  auth_map[std::string("Semyon")]=1000;
-  auth_map[std::string("Socrates")]=1000;
-  auth_map[std::string("Slaine")]=1000;
-  auth_map[std::string("Groentje")]=1000;
-  auth_map[std::string("Neighbour")]=1000;
-  auth_map[std::string("neb")]=1000;
-  auth_map[g_config.get_nick()]=150; // <-- om te zorgen dat ie zichzelf het auth systeem niet uitlegt
-  auth_map[std::string("Bouncer")]=-1;
+		//auth_map[std::string("piet")]=-10;
+		auth_map[std::string("weary")]=1200;
+		auth_map[std::string("Semyon")]=1000;
+		auth_map[std::string("Socrates")]=1000;
+		auth_map[std::string("Slaine")]=1000;
+		auth_map[std::string("Groentje")]=1000;
+		auth_map[std::string("Neighbour")]=1000;
+		auth_map[std::string("neb")]=1000;
+		auth_map[std::string("chm")]=1000;
+		auth_map[g_config.get_nick()]=150; // <-- om te zorgen dat ie zichzelf het auth systeem niet uitlegt
+		auth_map[std::string("Bouncer")]=-1;
 
-  receiver_info ri;
+		int sok=connect_to_server();
 
-  create_threads(&ri);
+		create_send_thread(sok);
 
-#ifndef BOGUS
-  sok=connect_to_server();
-  ri.s=sok;
-#endif
-  
-  initialising=false;
+		sendstr_prio(std::string("pass somepass\nnick ")+g_config.get_nick()+"\nuser "+g_config.get_nick()+" b c d\n");
 
-  sendstr_prio(std::string("pass somepass\nnick ")+g_config.get_nick()+"\nuser "+g_config.get_nick()+" b c d\n");
-  sleep(30);
+		int garbagecollect_count=30;
+		std::string recv_buf;
+		while (!quit)
+		{
+			pollfd polls[1];
+			polls[0].fd=sok; polls[0].events=POLLIN|POLLPRI; polls[0].revents=0;
+			int n=poll(polls, 1, 1000/*ms*/);
+			if (n<0)
+			{ // error
+				printf("poll failed\n"); quit=true;
+			}
+			else if (n==0)
+			{ // timeout
+			}
+			else if (polls[0].revents&(POLLERR|POLLHUP|POLLNVAL))
+			{
+				std::cout << "something happened to the socked, revents=" << polls[0].revents << ", ignoring\n";
+			}
+			else if (polls[0].revents&(POLLIN|POLLPRI))
+			{ // something to receive on sok
+				recv_buf+=receive(sok);
+				process_receive(recv_buf);
+			}
 
-  send(":%s JOIN %s \22aa\22\n", g_config.get_nick().c_str(), g_config.get_channel().c_str());
-  while (!quit)
-  {
-    sleep(30);
-    collect_garbage();
-  }
-  printf("exit't main while, continuing to quit\n");
-  
-  killall();
+			if (--garbagecollect_count==0)
+			{
+				collect_garbage();
+				garbagecollect_count=30;
+			}
+		}
+		printf("exit't main while, continuing to quit\n");
 
-  pthread_join(receiver_thread, NULL);
-  pthread_join(sender_thread, NULL);
-  //pthread_kill(garbage_collector_thread, 9);
-  //pthread_join(garbage_collector_thread, NULL);
-  
-  if (restart)
-  {
-    printf("restarting %s\n", argv[0]);
-    execlp(argv[0], "");
-  }
+		killall();
 
+		join_send_thread();
 
-  } catch(...) {
-    printf("terminated through exception\n");
-    return(-1);
-  }
+		if (restart)
+		{
+			std::string cmdline=argv[0];
+			printf("restarting %s\n", cmdline.c_str());
+			int err=execlp(cmdline.c_str(), "");
+			if (err==-1) // this point can only be reached by an error
+			{
+				perror("failed to restart");
+			}
+		}
+
+	}
+	catch(const std::exception &e)
+	{
+		printf("terminated through exception: %s\n", e.what());
+		return(-1);
+	}
+	catch(...)
+	{
+		printf("terminated through exception\n");
+		return(-1);
+	}
 }
 
-void *receiver(void *vri)
-{
-  while (initialising) sleep(1);
 
-  receiver_info *ri=(receiver_info *)vri;
-#ifdef BOGUS
-  printf("receiver thread started in BOGUS mode\n");
-#else // BOGUS
-  printf("receiver thread started, using socket %d\n", ri->s);
-  char buf[65536];
-  char buf2[65536*2];
-  
-  int len,len2;
-  len2=0;
-  while(len=recv(ri->s, buf, 65536, 0),len>0)
-  {
-    memcpy(buf2+len2, buf, len);
-    len2+=len;
-    buf2[len2]=0;
-    char *enter;
-    while (enter=strchr(buf2, '\n'),((enter)||(len2>65536)))
-    {
-      if ((len2>65536)&&(!enter)) enter=buf2+65536;
-      if (enter)
-      {
-        if ((enter>buf2)&&(enter[-1]==0xd)) enter[-1]=0;
-        enter[0]=0;
-        printf("recv: \"%s\"\n", buf2);
-        fflush(stdout);
-        interpret(buf2);
-        strcpy(buf2, enter+1);
-        len2=strlen(buf2);
-      }
-    }
-  }
-  quit=true;
-#endif
-  return(NULL);
-}
-
-std::string to_string(int a)
-{
-  char line[64];
-  sprintf(line, "%d", a);
-  return(std::string(line));
-}
-
-void interpret(const char *input)
+void interpret(const std::string &input)
 {
   std::string sender;
   std::string email;
-  std::string command;
-  std::string params;
+	std::string remainder=input;
   if (input[0]==':')
   { // extract the sender nick and email (":nick!email ")
-    sender=input+1;
-    unsigned int l=sender.find_first_of(' ');
-    if (l!=sender.npos)
-    {
-      sender.erase(l);
-      input+=sender.length()+2;
-    }
+    unsigned int l=input.find_first_of(' ');
+    sender=input.substr(1,l);
+		remainder=input.substr((l==std::string::npos?l:l+1));
+
     l=sender.find_first_of('!');
     if (l!=sender.npos)
     {
@@ -258,18 +231,10 @@ void interpret(const char *input)
       sender.erase(l);
     }
   }
-  { // extract the command
-    command=input;
-    unsigned int l=command.find_first_of(' ');
-    if (l!=sender.npos)
-    {
-      command.erase(l);
-      input+=command.length()+1;
-    }
-  }
-  { // put the remainer in params
-    params=input;
-  }
+	// extract the command
+	unsigned int l=remainder.find_first_of(' ');
+	std::string command=remainder.substr(0, l);
+	std::string params=remainder.substr((l==std::string::npos?l:l+1));
 
   printf("interpret(\"%s\", \"%s\", \"%s\")\n", sender.c_str(), command.c_str(), params.c_str());
  
@@ -313,6 +278,10 @@ void interpret(const char *input)
   {
     send(":%s PRIVMSG %s :server roept dat ik een ongeldige nick probeer te gebruiken!\n", g_config.get_nick().c_str(), channel.c_str());
   }
+  else if (command=="422" || command=="376")
+	{
+		send(":%s JOIN %s \22aa\22\n", g_config.get_nick().c_str(), g_config.get_channel().c_str());
+	}
   else if (command=="PRIVMSG")
   {
     std::string chan;

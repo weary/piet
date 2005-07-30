@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import string,random,os,math;
+import string,random,os,math,re;
 
 def unitinvertcheck(unit1,unit2):
   for i in ["1","2","3","4","5","6","7","8","9"]:

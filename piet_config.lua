@@ -4,8 +4,8 @@
 
 --server="groentje.student.utwente.nl";
 --service="ircd_groentje";
-server="irc.xs4all.nl";
-service="ircd";
+server="sin";
+service="irc.xs4all.nl";
 initial_nick="rarepiet";
 channel="#ae_mensen"
 
