@@ -6,6 +6,6 @@
 --service="ircd_groentje";
 server="irc.xs4all.nl";
 service="ircd";
-initial_nick="noodpiet";
-channel="#piettest"
+initial_nick="rarepiet";
+channel="#ae_mensen"
 

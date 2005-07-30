@@ -42,6 +42,9 @@ function servermsg(nick, auth, channel, msg)
     servermsg_join(nick, auth, channel, msg);
   elseif ((a[1]=="PART") or (a[1]=="QUIT")) then
     netsplit_begin,netsplit_end=string.find(msg, "QUIT :[%w%.%*]+ [%w%.%*]+");
+		if (netsplit_begin==nil) then netsplit_begin="niets"; end;
+		if (netsplit_end==nil) then netsplit_end="niets"; end;
+		print("netsplit_begin="..netsplit_begin..", netsplit_end="..netsplit_end..", len(msg)="..string.len(msg));
     if ((netsplit_begin~=nil) and (netsplit_begin==1) and (netsplit_end==string.len(msg))) then
       print(nick.." gaat in netsplit mode\n");
       in_netsplit[nick]="weg";
