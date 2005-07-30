@@ -173,7 +173,7 @@ void python_handler::exec(const std::string &channel_, const std::string &code_)
 
 void python_handler::cleanup()
 {
-	// shoot every dying man^Wthread
+	// clean up the corpses
 
 	std::cout << "GC: sequence started\n";
   
