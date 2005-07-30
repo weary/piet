@@ -326,19 +326,16 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
     }
     else
 		{
-			boost::algorithm::replace_all(msg, "'", "\"");
-			std::string command=
-				(format("do_command('%1%', '%2%', '%3%', '%4%');") %
-				 nick % auth % channel % msg).str();
-			python_handler::instance().read_and_exec(channel, "command.py", command);
+			python_cmd cmd(channel, "do_command", 4);
+			cmd << nick << auth << channel << msg;
+			python_handler::instance().read_and_exec(channel, "command.py", cmd);
 		}
   } // end personal
   else if ((sendqueue_size()==0)&&(silent_mode==false))
-  {
-		boost::algorithm::replace_all(msg, "'", "\"");
-    std::string line=(format("do_react('%1%', '%2%', '%3%', '%4%');\n") %
-				channel % nick % g_config.get_nick() % msg).str();
-		python_handler::instance().read_and_exec(channel, "react.py", line);
-  }
+	{
+		python_cmd cmd(channel, "do_react", 4);
+		cmd << channel << nick << g_config.get_nick() << msg;
+		python_handler::instance().read_and_exec(channel, "react.py", cmd);
+	}
 }
 

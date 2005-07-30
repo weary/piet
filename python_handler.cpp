@@ -3,13 +3,21 @@
 #include <signal.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/lexical_cast.hpp>
 #include <list>
 #include <iostream>
 
 namespace
 {
+
 struct pythonthread_data_t
 {
+	pythonthread_data_t(PyThreadState *threadstate_) : main_thread_state(threadstate_)
+	{
+		assert(threadstate_);
+	}
+	~pythonthread_data_t() {}
+
   pthread_t thread;
   bool ready;
 	PyThreadState * main_thread_state;
@@ -17,13 +25,26 @@ struct pythonthread_data_t
   // voor de thread
   std::string channel;
   std::string file;
-  std::string cmd;
+  python_cmd cmd;
 };
 
-typedef boost::shared_ptr<pythonthread_data_t> pythonthread_data_ptr;
-struct pythonthreadlist_t : public std::list<pythonthread_data_ptr>
+std::ostream &operator <<(std::ostream &os_, const pythonthread_data_t &td_)
 {
-};
+	os_ << "threaddata["
+		"chan=" << td_.channel << ", "
+		"file=" << td_.file << ", "
+		"cmd=" << td_.cmd << "]";
+	return os_;
+}
+
+}
+
+
+namespace
+{
+
+typedef boost::shared_ptr<pythonthread_data_t> pythonthread_data_ptr;
+typedef std::list<pythonthread_data_ptr> pythonthreadlist_t;
 
 static pythonthreadlist_t plist;
 
@@ -36,36 +57,37 @@ void *python_threadfunc(void *p)
 {
 	assert(p);
 	pythonthread_data_t *data=(pythonthread_data_t *)p;
+	std::cout << "threadfunc, data:\n" << *data << "\n";
 	std::string chan=data->channel;
 
-	PyEval_AcquireLock();
-	
-	PyInterpreterState * mainInterpreterState = data->main_thread_state->interp;
-	PyThreadState * myThreadState = PyThreadState_New(mainInterpreterState);
-	PyThreadState_Swap(myThreadState);
-
-	if (!data->file.empty())
 	{
-		std::cout << "PY: reading file \"" << data->file << "\"\n";
-		FILE *f=fopen(data->file.c_str(), "r");
-		if (!f)
-			privmsg(chan, "Failed to open \""+data->file+"\"\n");
-		else
+		python_lock guard;
+
+		PyInterpreterState * mainInterpreterState = data->main_thread_state->interp;
+		PyThreadState * myThreadState = PyThreadState_New(mainInterpreterState);
+		PyThreadState_Swap(myThreadState);
+
+		if (!data->file.empty())
 		{
-			PyRun_SimpleFile(f, data->file.c_str());
-			fclose(f);
+			std::cout << "PY: reading file \"" << data->file << "\"\n" << std::flush;
+			FILE *f=fopen(data->file.c_str(), "r");
+			if (!f)
+				privmsg(chan, "Failed to open \""+data->file+"\"\n");
+			else
+			{
+				PyRun_SimpleFile(f, data->file.c_str());
+				fclose(f);
+			}
 		}
-	}
-	if (!data->cmd.empty())
-	{
-		std::cout << "PY: executing \"" << data->cmd << "\"\n";
-		PyRun_SimpleString(data->cmd.c_str());
-	}
+		if (!data->cmd._cmd.empty())
+		{
+			data->cmd();
+		}
 
-	PyThreadState_Swap(NULL);
-	PyThreadState_Clear(myThreadState);
-	PyThreadState_Delete(myThreadState);
-	PyEval_ReleaseLock();
+		PyThreadState_Swap(NULL);
+		PyThreadState_Clear(myThreadState);
+		PyThreadState_Delete(myThreadState);
+	}
 
 	data->ready=true;
 
@@ -76,6 +98,8 @@ void *python_threadfunc(void *p)
 static PyObject * piet_send(PyObject *self, PyObject *args)
 {
 	char *cp_channel, *cp_msg;
+
+	python_lock guard;
 	// parse the incoming arguments
 	if (!PyArg_Parse(args, "(ss)", &cp_channel, &cp_msg))
 	{
@@ -88,7 +112,7 @@ static PyObject * piet_send(PyObject *self, PyObject *args)
   tokenizer tokens(msg, sep);
   for (tokenizer::iterator it = tokens.begin(); it != tokens.end(); ++it)
 	{
-		std::cout << "tokenized: -" << *it << "*\n";
+		std::cout << "PY: sendline: " << *it << "*\n";
 		privmsg(channel, *it);
 	}
 	
@@ -99,6 +123,9 @@ static PyObject * piet_send(PyObject *self, PyObject *args)
 static PyObject * piet_nick(PyObject *self, PyObject *args)
 {
 	char *nick;
+
+	python_lock guard;
+
 	// parse the incoming arguments
 	if (!PyArg_Parse(args, "(s)", &nick))
 	{
@@ -143,10 +170,9 @@ python_handler::~python_handler()
 void python_handler::read_and_exec(
 		const std::string &channel_,
 		const std::string &file_,
-		const std::string &cmd_)
+		const python_cmd &cmd_)
 {
-	pythonthread_data_ptr p(new pythonthread_data_t);
-	p->main_thread_state=_main_thread_state;
+	pythonthread_data_ptr p(new pythonthread_data_t(_main_thread_state));
   p->channel=channel_;
 	p->file=file_;
   p->cmd=cmd_;
@@ -163,10 +189,10 @@ void python_handler::read_and_exec(
 
 void python_handler::read(const std::string &channel_, const std::string &file_)
 {
-	read_and_exec(channel_, file_, std::string());
+	read_and_exec(channel_, file_, python_cmd());
 }
 
-void python_handler::exec(const std::string &channel_, const std::string &code_)
+void python_handler::exec(const std::string &channel_, const python_cmd &code_)
 {
 	read_and_exec(channel_, std::string(), code_);
 }
@@ -219,7 +245,7 @@ std::list<std::string> python_handler::threadlist()
 
   pythonthreadlist_t::const_iterator i=plist.begin();
   for (i=plist.begin(); i!=plist.end(); ++i)
-		result.push_back((*i)->cmd);
+		result.push_back(boost::lexical_cast<std::string>((*i)->cmd));
 
 	return result;
 }

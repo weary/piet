@@ -1,0 +1,208 @@
+#include "python_support.h"
+#include "python_handler.h"
+#include "bot.h"
+#include <string>
+#include <sstream>
+#include <iostream>
+
+namespace
+{
+void privmsg(const std::string &channel_, const std::string str_)
+{
+	send(":%s PRIVMSG %s :%s\n", g_config.get_nick().c_str(), channel_.c_str(), str_.c_str());
+}
+
+std::string obj2str(PyObject *obj)
+{
+	std::ostringstream str;
+	if (!obj)
+	{
+		str << "NULL";
+	}
+	else if (PyTuple_Check(obj))
+	{
+		PyTupleObject *t=reinterpret_cast<PyTupleObject *>(obj);
+		int n=t->ob_size;
+		str << "tuple<" << n << ">";
+		for (int m=0; m<n; ++m)
+			str << (m==0?'(':',') << obj2str(t->ob_item[m]);
+		str << ')';
+	}
+	else if (PyString_Check(obj))
+	{
+		str << '\"' << PyString_AsString(obj) << '\"';
+	}
+	else if (PyInt_Check(obj))
+	{
+		str << PyInt_AsLong(obj);
+	}
+	else if (PyFunction_Check(obj))
+	{
+		PyFunctionObject *t=reinterpret_cast<PyFunctionObject *>(obj);
+		str << "function<" << obj2str(t->func_name) << ">";
+	}
+	else if (PyClass_Check(obj))
+	{
+		PyClassObject *t=reinterpret_cast<PyClassObject *>(obj);
+		str << "class(" <<
+			obj2str(t->cl_bases) << ", " <<
+			obj2str(t->cl_dict) << ", " <<
+			obj2str(t->cl_name) << ")";
+	}
+	else
+	{
+		str << "obj<" << obj->ob_type->tp_name << ">";
+	}
+
+	if (obj)
+		str << 'x' << obj->ob_refcnt;
+
+	return str.str();
+}
+}
+
+std::ostream &operator <<(std::ostream &os_, const python_object &ob_)
+{
+	os_ << obj2str(ob_._obj);
+	return os_;
+}
+
+python_object::python_object() : _obj(NULL)
+{}
+
+python_object::python_object(PyObject *obj_) : _obj(obj_)
+{
+	assert(!_obj || obj_->ob_refcnt>0);
+}
+
+python_cmd::python_cmd()
+{
+	python_cmd::python_cmd(std::string(), std::string(), 0);
+}
+
+python_cmd::python_cmd(const std::string &channel_, const std::string &cmd_, int paramcount_) :
+	_channel(channel_), _cmd(cmd_), _args(NULL), _size(paramcount_), _index(0)//, _dbg_cmd(cmd_)
+{
+	if (paramcount_)
+	{
+		python_lock guard;
+		_args = python_object(PyTuple_New(paramcount_));
+	}
+}
+
+python_cmd::python_cmd(const python_cmd &rhs_) :
+	_channel(rhs_._channel), _cmd(rhs_._cmd), _args(rhs_._args), _size(rhs_._size), _index(rhs_._index)//, _dbg_cmd(rhs_._dbg_cmd.str())
+{
+	{
+		python_lock guard;
+		_args.incref();
+	}
+}
+
+python_cmd::~python_cmd()
+{
+	{
+		python_lock guard;
+		_args.decref();
+	}
+}
+
+const python_cmd &python_cmd::operator =(const python_cmd &rhs_)
+{
+	{
+		python_lock guard;
+		_args.decref();
+		_channel = rhs_._channel;
+		_cmd = rhs_._cmd;
+		_args = rhs_._args;
+		_size = rhs_._size;
+		_index = rhs_._index;
+		_args.incref();
+	}
+	return *this;
+}
+
+void python_cmd::add_param(const python_object &ob_)
+{
+	assert(_index<_size);
+	
+	PyTuple_SetItem(_args, _index, ob_);
+	++_index;
+}
+
+python_cmd &python_cmd::operator << (int i)
+{
+	assert(_size>0);
+	
+	{
+		python_lock guard;
+		python_object obj(PyInt_FromLong(i));
+		add_param(obj);
+	}
+
+	return *this;
+}
+
+python_cmd &python_cmd::operator << (const std::string &str_)
+{
+	assert(_size>0);
+	{
+		python_lock guard;
+		python_object obj(PyString_FromString(str_.c_str()));
+		add_param(obj);
+	}
+	return *this;
+}
+
+void python_cmd::operator()()
+{
+	std::cout << "PY: exec(" << *this << ")\n";
+
+	{
+		python_lock guard;
+		assert(_index==_size);
+		assert(!_cmd.empty());
+
+		python_object dict(PyImport_GetModuleDict());
+		python_object module(PyDict_GetItemString(dict, "__main__"));
+		python_object moduledict(PyModule_GetDict(module));
+		python_object func(PyDict_GetItemString(moduledict, _cmd.c_str()));
+		assert(PyCallable_Check(func));
+		func.incref();
+
+		python_object retval(PyObject_CallObject(func, _args));
+		if (retval)
+			retval.decref();
+		else
+		{
+			PyObject *type_o, *value_o, *traceback_o;
+			PyErr_Fetch(&type_o, &value_o, &traceback_o);
+			python_object type(type_o), value(value_o), traceback(traceback_o);
+			std::cout << "PY: ERROR: " << value << "\nerror class: " << type << "\ntraceback: " << traceback << "\n";
+			privmsg(_channel, "ACTION rent gillend rond en roept moord, brand en " + obj2str(value) +"\n");
+		}
+
+		func.decref();
+	}
+	std::cout << "PY: exec(" << *this << ") finished\n";
+}
+
+std::ostream &operator <<(std::ostream &os_, const python_cmd &pc_)
+{
+	os_ << pc_._cmd << "(" << pc_._args << ")";
+	return os_;
+}
+
+python_lock::python_lock()
+{
+	std::cout << "acquiring python lock\n" << std::flush;
+	if (lockcount==0) PyEval_AcquireLock();
+	++lockcount;
+}
+python_lock::~python_lock()
+{
+	std::cout << "releasing python lock\n" << std::flush;
+	--lockcount;
+	if (lockcount==0) PyEval_ReleaseLock();
+}
+int python_lock::lockcount=0; //XXX: should be thread-local!!
