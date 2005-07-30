@@ -78,7 +78,8 @@ python_object::python_object(PyObject *obj_) : _obj(obj_)
 
 python_cmd::python_cmd()
 {
-	python_cmd::python_cmd(std::string(), std::string(), 0);
+	static std::string emptystring;
+	python_cmd::python_cmd(emptystring, emptystring, 0);
 }
 
 python_cmd::python_cmd(const std::string &channel_, const std::string &cmd_, int paramcount_) :
