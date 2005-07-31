@@ -2,6 +2,7 @@
 #define __PIET_PYTHON_H__
 
 #include "python_support.h"
+#include <map>
 #include <list>
 #include <string>
 
@@ -16,7 +17,6 @@ struct python_handler
 	}
 
 	void read(const std::string &channel_, const std::string &file_);
-
 	void exec(const std::string &channel_, const python_cmd &code_);
 
 	void cleanup();
@@ -31,6 +31,9 @@ struct python_handler
 	python_handler();
 	
 	PyThreadState * _main_thread_state;
+
+	typedef std::map<std::string, time_t> modification_map_t;
+	modification_map_t _modification_map;
 };
 
 

@@ -13,7 +13,6 @@ logfile = "log.txt";
 nick = "";#string.strip(sys.stdin.readline());
 auth = 33;#int(string.strip(sys.stdin.readline()));
 channel = "";#string.strip(sys.stdin.readline());
-msg = "";#string.strip(sys.stdin.readline());
 d={};
 
 
@@ -1372,7 +1371,6 @@ def mytest(regel):
 	global g_test;
 	ding=g_test;
 	g_test=regel;
-	fiets
 	return "vorige: "+ding+"\n";
 
 def tel(regel):
@@ -1541,7 +1539,6 @@ def parse(param_org, first, magzeg):
   command=string.split(param_org, ' ')[0];
   params=string.join(string.split(param_org, ' ')[1:],' ');
 
-
   functie=d["zeg"];
   try:
     functie=d[command];
@@ -1572,20 +1569,24 @@ def parse(param_org, first, magzeg):
     r=string.join(r2[:15], '\n')+"\n"+nick+": de rest verzin je zelf maar, 15 van de "+l+" regels vind ik zat\n";
   return r;
 
+prev_command="niets";
 
 def do_command(nick_, auth_, channel_, msg_):
-	global nick,auth,channel,msg;
+	global nick,auth,channel,prev_command;
 	nick=nick_;
 	auth=int(auth_);
 	channel=channel_;
-	msg=msg_;
+	if (msg_[0:2]=="s/"):
+		regexparts=string.split(msg_,"/");
+		if (len(regexparts)==3) or (len(regexparts)==4):
+			if (prev_command=="niets"):
+				piet.send(channel_, "geen vorig commando, wat wil je nou?\n");
+				return;
+			msg_=re.sub(regexparts[1], regexparts[2], prev_command);
+
+	prev_command=msg_;
 	print "channel is now ", channel;
-	print "executing", nick, auth, channel, msg;
-	result=parse(msg, True, True);
+	print "executing", nick, auth, channel, msg_;
+	result=parse(msg_, True, True);
 	piet.send(channel_, result);
-	
-#nick = string.strip(sys.stdin.readline());
-#auth = int(string.strip(sys.stdin.readline()));
-#channel = string.strip(sys.stdin.readline());
-#msg = string.strip(sys.stdin.readline());
 

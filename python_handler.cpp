@@ -5,6 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 #include <list>
 #include <iostream>
 
@@ -176,6 +177,13 @@ python_handler::~python_handler()
 	python_lock::global_deinit();
 }
 
+std::string mystrerror(int errnum)
+{
+	char buf[1024];
+	assert(strerror_r(errnum, buf, 1024)==0);
+	return buf;
+}
+
 void python_handler::read_and_exec(
 		const std::string &channel_,
 		const std::string &file_,
@@ -186,6 +194,32 @@ void python_handler::read_and_exec(
 	p->file=file_;
   p->cmd=cmd_;
   p->ready=false;
+
+	struct stat st;
+	int r=stat(file_.c_str(), &st);
+	if (r!=0)
+	{
+		privmsg(channel_, (boost::format("Ik kan \"%1%\" niet bereiken! (%2%)\n") %
+					file_ % mystrerror(errno)).str());
+		p->file.clear(); // don't read
+	}
+	else
+	{
+		modification_map_t::iterator i=_modification_map.find(file_);
+		if (i==_modification_map.end())
+		{ // new file, just read, no message
+			_modification_map[file_]=st.st_mtime;
+		}
+		else if (i->second==st.st_mtime)
+		{
+			p->file.clear(); // don't read
+		}
+		else
+		{
+			privmsg(channel_, "ho! eerst de geweldige nieuwe "+file_+" lezen\n");
+			i->second=st.st_mtime;
+		}
+	}
 
   int result=pthread_create(&(p->thread), NULL, python_threadfunc, p.get());
   if (result)
@@ -254,7 +288,15 @@ std::list<std::string> python_handler::threadlist()
 
   pythonthreadlist_t::const_iterator i=plist.begin();
   for (i=plist.begin(); i!=plist.end(); ++i)
-		result.push_back(boost::lexical_cast<std::string>(**i));
+	{
+		result.push_back(
+				(boost::format("%1% voor %2% uit %3%%4%") %
+				 boost::lexical_cast<std::string>((*i)->cmd) %
+				 (*i)->channel %
+				 (*i)->file %
+				 ((*i)->ready?" (eigenlijk al klaar)":"")
+				).str());
+	}
 
 	return result;
 }
