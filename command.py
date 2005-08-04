@@ -15,6 +15,22 @@ auth = 33;#int(string.strip(sys.stdin.readline()));
 channel = "";#string.strip(sys.stdin.readline());
 d={};
 
+def db_get(table, key):
+	try:
+		result=piet.db("SELECT value FROM "+table+" WHERE key=\""+key+"\"");
+		return result[1];
+	except:
+		return None;
+
+def db_set(table, key, value):
+	try:
+		piet.db("REPLACE INTO "+table+" values('"+str(key)+"', '"+str(value)+"')");
+		return;
+	except:
+		piet.db("CREATE TABLE "+table+"(key string primary key, value string)");
+		piet.db("REPLACE INTO "+table+" values('"+str(key)+"', '"+str(value)+"')");
+		return;
+
 
 def error_handler(type, value, traceback):
 	global channel;

@@ -29,6 +29,15 @@ std::string obj2str(PyObject *obj)
 			str << (m==0?'(':',') << obj2str(t->ob_item[m]);
 		str << ')';
 	}
+	else if (PyList_Check(obj))
+	{
+		PyListObject *t=reinterpret_cast<PyListObject *>(obj);
+		int n=t->ob_size;
+		str << "list<" << n << ">";
+		for (int m=0; m<n; ++m)
+			str << (m==0?'(':',') << obj2str(t->ob_item[m]);
+		str << ')';
+	}
 	else if (PyString_Check(obj))
 	{
 		str << '\"' << PyString_AsString(obj) << '\"';
@@ -41,6 +50,10 @@ std::string obj2str(PyObject *obj)
 	{
 		PyFunctionObject *t=reinterpret_cast<PyFunctionObject *>(obj);
 		str << "function<" << obj2str(t->func_name) << ">";
+	}
+	else if (PyTraceBack_Check(obj))
+	{
+		str << "obj-traceback";
 	}
 	else if (PyClass_Check(obj))
 	{

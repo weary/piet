@@ -1,6 +1,7 @@
 #include "python_handler.h"
 #include "bot.h"
 #include "sender.h"
+#include "piet_db.h"
 #include <signal.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
@@ -149,6 +150,9 @@ static PyMethodDef piet_methods[] =
 {
 	{"send", piet_send},
 	{"nick", piet_nick},
+	//{"get", piet_db_get},
+	//{"set", piet_db_set},
+	{"db", piet_db_query},
 	{NULL, NULL}
 };
 
