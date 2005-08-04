@@ -190,9 +190,8 @@ int main(int argc, char *argv[])
 
 		if (restart)
 		{
-			std::string cmdline=argv[0];
-			printf("restarting %s\n", cmdline.c_str());
-			int err=execlp(cmdline.c_str(), "");
+			printf("restarting %s\n", argv[0]);
+			int err=execlp(argv[0], argv[0], (char *)NULL);
 			if (err==-1) // this point can only be reached by an error
 			{
 				perror("failed to restart");
