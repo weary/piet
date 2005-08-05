@@ -357,11 +357,11 @@ def supercalc(toparse):
   if left[:11]=="_in_celsius":
     result-=273.15
     left=left[11:]
-  elif left[:11]=="_in_fahrenheit":
+  elif left[:14]=="_in_fahrenheit":
     result=((result*9)/5)-459.67
-    left=left[11:]
-  elif left[:11]=="_in_kelvin":
-    left=left[11:]
+    left=left[14:]
+  elif left[:10]=="_in_kelvin":
+    left=left[10:]
   if left[:4]=="_in_":
     backupunit=left[4:]
     (error,result2,left,unit2)=calcS(left[4:])
