@@ -56,7 +56,7 @@ struct python_lock
 	static void global_init();
 	static void global_deinit();
 
-	const std::string _occasion;
+	//const std::string _occasion;
 };
 
 #endif // __PIET_PYTHON_SUPPORT_H__

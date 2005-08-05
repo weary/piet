@@ -27,7 +27,7 @@ struct pythonthread_data_t
 
   // voor de thread
   std::string channel;
-  std::string file;
+  //std::string file;
   python_cmd cmd;
 };
 
@@ -35,7 +35,7 @@ std::ostream &operator <<(std::ostream &os_, const pythonthread_data_t &td_)
 {
 	os_ << "threaddata["
 		"chan=" << td_.channel << ", "
-		"file=" << td_.file << ", "
+		//"file=" << td_.file << ", "
 		"cmd=" << td_.cmd << ", ";
 	if (td_.ready)
 		os_ << "ready";
@@ -75,18 +75,6 @@ void *python_threadfunc(void *p)
 		PyThreadState * myThreadState = PyThreadState_New(mainInterpreterState);
 		PyThreadState_Swap(myThreadState);
 
-		if (!data->file.empty())
-		{
-			std::cout << "PY: reading file \"" << data->file << "\"\n" << std::flush;
-			FILE *f=fopen(data->file.c_str(), "r");
-			if (!f)
-				privmsg(chan, "Failed to open \""+data->file+"\"\n");
-			else
-			{
-				PyRun_SimpleFile(f, data->file.c_str());
-				fclose(f);
-			}
-		}
 		if (!data->cmd._cmd.empty())
 		{
 			data->cmd();
@@ -188,42 +176,62 @@ std::string mystrerror(int errnum)
 	return buf;
 }
 
-void python_handler::read_and_exec(
-		const std::string &channel_,
-		const std::string &file_,
-		const python_cmd &cmd_)
+void python_handler::checkfile_and_read(const std::string channel_, const std::string &file_)
 {
-	pythonthread_data_ptr p(new pythonthread_data_t(_main_thread_state));
-  p->channel=channel_;
-	p->file=file_;
-  p->cmd=cmd_;
-  p->ready=false;
-
 	struct stat st;
 	int r=stat(file_.c_str(), &st);
 	if (r!=0)
 	{
 		privmsg(channel_, (boost::format("Ik kan \"%1%\" niet bereiken! (%2%)\n") %
 					file_ % mystrerror(errno)).str());
-		p->file.clear(); // don't read
 	}
 	else
 	{
 		modification_map_t::iterator i=_modification_map.find(file_);
+		bool readit=false;
 		if (i==_modification_map.end())
 		{ // new file, just read, no message
 			_modification_map[file_]=st.st_mtime;
+			readit=true;
 		}
-		else if (i->second==st.st_mtime)
-		{
-			p->file.clear(); // don't read
-		}
-		else
+		else if (i==_modification_map.end() || i->second!=st.st_mtime)
 		{
 			privmsg(channel_, "ho! eerst de geweldige nieuwe "+file_+" lezen\n");
+			readit=true;
+		}
+
+		if (readit)
+		{
+			python_lock("checkfile_and_read");
 			i->second=st.st_mtime;
+
+			std::cout << "PY: reading file \"" << file_ << "\"\n" << std::flush;
+			FILE *f=fopen(file_.c_str(), "r");
+			if (!f)
+				privmsg(channel_, "Failed to open \""+file_+"\"\n");
+			else
+			{
+				PyThreadState_Swap(_main_thread_state);
+				PyRun_SimpleFile(f, file_.c_str());
+				PyThreadState_Swap(NULL);
+				fclose(f);
+			}
 		}
 	}
+}
+
+void python_handler::read_and_exec(
+		const std::string &channel_,
+		const std::string &file_,
+		const python_cmd &cmd_)
+{
+	std::cout << "read_and_exec(\"" << channel_ << "\", \"" << file_ << "\", " << cmd_ << ")\n" << std::flush;
+	pythonthread_data_ptr p(new pythonthread_data_t(_main_thread_state));
+  p->channel=channel_;
+  p->cmd=cmd_;
+  p->ready=false;
+
+	checkfile_and_read(channel_, file_);
 
   int result=pthread_create(&(p->thread), NULL, python_threadfunc, p.get());
   if (result)
@@ -234,6 +242,7 @@ void python_handler::read_and_exec(
   plist.push_back(p);
 }
 
+#if 0
 void python_handler::read(const std::string &channel_, const std::string &file_)
 {
 	read_and_exec(channel_, file_, python_cmd());
@@ -243,6 +252,7 @@ void python_handler::exec(const std::string &channel_, const python_cmd &code_)
 {
 	read_and_exec(channel_, std::string(), code_);
 }
+#endif
 
 void python_handler::cleanup()
 {
@@ -294,10 +304,10 @@ std::list<std::string> python_handler::threadlist()
   for (i=plist.begin(); i!=plist.end(); ++i)
 	{
 		result.push_back(
-				(boost::format("%1% voor %2% uit %3%%4%") %
+				(boost::format("%1% voor %2%%3%") %
 				 boost::lexical_cast<std::string>((*i)->cmd) %
 				 (*i)->channel %
-				 (*i)->file %
+				 //(*i)->file %
 				 ((*i)->ready?" (eigenlijk al klaar)":"")
 				).str());
 	}

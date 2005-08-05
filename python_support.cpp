@@ -1,10 +1,11 @@
-#include "bot.h"
 #include "python_handler.h"
 #include "python_support.h"
 #include "sender.h"
+#include "bot.h"
 #include <string>
 #include <sstream>
 #include <iostream>
+//#include <boost/lexical_cast.hpp>
 
 namespace
 {
@@ -62,6 +63,15 @@ std::string obj2str(PyObject *obj)
 			obj2str(t->cl_bases) << ", " <<
 			obj2str(t->cl_dict) << ", " <<
 			obj2str(t->cl_name) << ")";
+	}
+	else if (PyDict_Check(obj))
+	{
+		python_object keys=PyDict_Keys(obj);
+		str << "dict(" << keys << ")";
+	}
+	else if (PyModule_Check(obj))
+	{
+		str << "module<" << PyModule_GetName(obj) << ">";
 	}
 	else
 	{
@@ -210,7 +220,7 @@ std::ostream &operator <<(std::ostream &os_, const python_cmd &pc_)
 }
 
 python_lock::python_lock(const std::string &occasion_)
-	: _occasion(occasion_)
+	//: _occasion(occasion_)
 {
 	int lockcount = (int)pthread_getspecific(_key);
 	pthread_setspecific(_key, (void *)(lockcount+1));
@@ -218,7 +228,7 @@ python_lock::python_lock(const std::string &occasion_)
 	//if (lockcount) std::cout << ", already had " << lockcount;
 	//std::cout << ".\n" << std::flush;
 	if (lockcount==0) PyEval_AcquireLock();
-	//std::cout << "PL: acquired\n" << std::flush;
+	//std::cout << "PL: acquired by " << _occasion << "\n" << std::flush;
 }
 python_lock::~python_lock()
 {
@@ -228,7 +238,7 @@ python_lock::~python_lock()
 	//if (lockcount) std::cout << ", but still " << lockcount << " left, so no real release";
 	//std::cout << ".\n" << std::flush;
 	if (lockcount==0) PyEval_ReleaseLock();
-	//std::cout << "PL: released\n" << std::flush;
+	//std::cout << "PL: released for " << _occasion << "\n" << std::flush;
 }
 
 void python_lock::global_init()

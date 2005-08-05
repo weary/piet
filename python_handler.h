@@ -16,8 +16,8 @@ struct python_handler
 		return handler;
 	}
 
-	void read(const std::string &channel_, const std::string &file_);
-	void exec(const std::string &channel_, const python_cmd &code_);
+	//void read(const std::string &channel_, const std::string &file_);
+	//void exec(const std::string &channel_, const python_cmd &code_);
 
 	void cleanup();
 	void killall();
@@ -29,6 +29,7 @@ struct python_handler
 			const python_cmd &cmd_);
 	protected:
 	python_handler();
+	void checkfile_and_read(const std::string channel_, const std::string &file_);
 	
 	PyThreadState * _main_thread_state;
 
