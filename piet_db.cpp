@@ -62,12 +62,11 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 		PyErr_SetString(PyExc_Exception, (std::string("enge databasemeneer zei: ")+err).c_str());
 		sqlite3_free(err);
 		if (table) sqlite3_free_table(table);
-		return NULL;
 	}
 	else if (result!=SQLITE_OK)
 	{
+		std::cout << "DB: Error: unknown\n";
 		PyErr_SetString(PyExc_Exception, "boehoe, database lezen is mislukt");
-		return NULL;
 	}
 	else if (ncolumn==0)
 	{
@@ -103,3 +102,64 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 	
 	return NULL;
 }
+
+std::string piet_db_get(const std::string &table_, const std::string &key, const std::string &default_)
+{
+	if (!sqlite_t::instance().open())
+		return default_;
+
+	std::string query="SELECT value FROM "+table_+" WHERE key='"+key+"'";
+	std::cout << "DB: query=" << query << "\n";
+	int nrow,ncolumn;
+	char *err=NULL;
+	char **table=NULL;
+	int result=
+		sqlite3_get_table(sqlite_t::instance(), query.c_str(), &table, &nrow, &ncolumn, &err);
+	if (err)
+	{
+		std::cout << "DB: Error: " << err << "\n";
+		sqlite3_free(err);
+		if (table) sqlite3_free_table(table);
+	}
+	else if (result!=SQLITE_OK)
+	{
+		std::cout << "DB: Error: unknown\n";
+	}
+	else if (ncolumn==0)
+	{}
+	else
+	{
+		std::string result=table[1];
+		sqlite3_free_table(table);
+		return result;
+	}
+	
+	return default_;
+}
+
+void piet_db_set(const std::string &table_, const std::string &key_, const std::string &value_)
+{
+	python_lock guard(__PRETTY_FUNCTION__);
+
+	std::string query="REPLACE INTO "+table_+" VALUES('"+key_+"', '"+value_+"')";
+
+	if (!sqlite_t::instance().open()) throw;
+
+	std::cout << "DB: query=" << query << "\n";
+	int nrow,ncolumn;
+	char *err=NULL;
+	char **table=NULL;
+	int result=
+		sqlite3_get_table(sqlite_t::instance(), query.c_str(), &table, &nrow, &ncolumn, &err);
+	if (table) sqlite3_free_table(table);
+	if (err)
+	{
+		std::cout << "DB: Error" << err << "\n";
+		sqlite3_free(err);
+	}
+	else if (result!=SQLITE_OK)
+	{
+		std::cout << "DB: Error: unknown\n";
+	}
+}
+
