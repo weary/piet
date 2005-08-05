@@ -1,11 +1,11 @@
 
 
 //#include <unistd.h>
+#include "python_handler.h"
 #include "bot.h"
 #include "sender.h"
 #include "lua_if.h"
 #include "passwd.h"
-#include "python_handler.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/format.hpp>
@@ -16,8 +16,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-typedef std::map<std::string, int> tauth_map;
-extern tauth_map auth_map;
+//typedef std::map<std::string, int> tauth_map;
+//extern tauth_map auth_map;
 extern bool restart;
 bool silent_mode=false;
 
@@ -31,7 +31,7 @@ using boost::format;
 #define COM_CTCPPING 51
 #define COM_NEWS 11
 #define COM_SHUTUP 12
-#define COM_AUTH 13
+//#define COM_AUTH 13
 #define COM_BUSY_ASK 14
 #define COM_RENICK 15
 #define COM_OPME 16
@@ -62,7 +62,7 @@ const scommand commands[]= {
 { "\001PING",    COM_CTCPPING, 100 },
 { "kop dicht",   COM_SHUTUP,1000 },
 { "koffie?",     COM_BUSY_ASK, 121},
-{ "auth",        COM_AUTH, -2500 },
+//{ "auth",        COM_AUTH, -2500 },
 { "je heet nu ", COM_RENICK, 200 },
 { "opme",        COM_OPME,  150 },
 { "wees stil",   COM_BESILENT, 1000 },
@@ -256,7 +256,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
 							lua_inst->server_msg(nick.c_str(), auth, channel.c_str(), msg.c_str());
           }
 	  break;
-        case(COM_AUTH):
+        /*case(COM_AUTH):
           {
             int localauth=auth;
             int newauth=0;
@@ -321,7 +321,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
             else
               printf("WARNING: %s heeft localauth %d en krijgt dus geen feedback\n", nick.c_str(), localauth);
           }
-          break;
+          break;*/
       }
     }
     else

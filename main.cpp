@@ -2,6 +2,7 @@
 #include "lua_if.h"
 #include "passwd.h"
 #include "sender.h"
+#include "piet_db.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/format.hpp>
 #include <crypt.h>
@@ -15,9 +16,6 @@
 #include <unistd.h>
 
 using boost::format;
-
-typedef std::map<std::string, int> tauth_map;
-tauth_map auth_map;
 
 bool quit=false;
 bool restart=false;
@@ -133,7 +131,7 @@ int main(int argc, char *argv[])
 	try
 	{
 		lua_inst.reset(new clua);
-
+#if 0
 		//auth_map[std::string("piet")]=-10;
 		auth_map[std::string("weary")]=1200;
 		auth_map[std::string("Semyon")]=1000;
@@ -145,6 +143,7 @@ int main(int argc, char *argv[])
 		auth_map[std::string("chm")]=1000;
 		auth_map[g_config.get_nick()]=150; // <-- om te zorgen dat ie zichzelf het auth systeem niet uitlegt
 		auth_map[std::string("Bouncer")]=-1;
+#endif
 
 		int sok=connect_to_server();
 
@@ -258,12 +257,12 @@ void interpret(const std::string &input)
     std::string newnick=params;
     if (newnick[0]==':') newnick.erase(0,1);
 
-    int auth=auth_map[sender];
-    int otherauth=auth_map[newnick];
+    int auth=piet_db_get("auth", sender, -5);
+    int otherauth=piet_db_get("auth", newnick, -5);
     printf("DEBUG: \"%s\"(%d) is ge-renick\'t naar \"%s\"(%d)\n", sender.c_str(), auth, newnick.c_str(), otherauth);
 
-    auth_map[sender]=otherauth;
-    auth_map[newnick]=auth;
+		piet_db_set("auth", sender, otherauth);
+		piet_db_set("auth", newnick, auth);
     if (auth>otherauth)
       send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, %s heeft 't niet meer nodig lijkt me\n", g_config.get_nick().c_str(), channel.c_str(), auth, newnick.c_str(), sender.c_str());
     else if ((auth<otherauth)&&(auth>0))
@@ -308,6 +307,6 @@ void interpret(const std::string &input)
 
 int Authenticate(const std::string &nick, const std::string &email)
 {
-  return(auth_map[nick]);
+  return piet_db_get("auth", nick, -5);
 }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys,string,random,re,os,time;
+import sys,string,random,re,os,time,crypt;
 import piet;
 from telnetlib import Telnet;
 sys.path.append(".");
@@ -11,14 +11,14 @@ todofile = "todo.txt";
 logfile = "log.txt";
 
 nick = "";#string.strip(sys.stdin.readline());
-auth = 33;#int(string.strip(sys.stdin.readline()));
+auth = -5;#int(string.strip(sys.stdin.readline()));
 channel = "";#string.strip(sys.stdin.readline());
 d={};
 
 def db_get(table, key):
 	try:
 		result=piet.db("SELECT value FROM "+table+" WHERE key=\""+key+"\"");
-		return result[1];
+		return result[1][0];
 	except:
 		return None;
 
@@ -38,7 +38,6 @@ def error_handler(type, value, traceback):
 	sys.__excepthook__(type, value, traceback);
 
 sys.excepthook=error_handler;
-	
 
 def parse(param, first, magzeg):
   print "HELP! PIET STUK\n";
@@ -64,6 +63,47 @@ def convert(char):
     return ".";
   else:
     return char;
+
+def change_auth(params):
+	localauth=auth;
+	if (localauth<0): return "";
+	newauth=0;
+	par=[];
+	if (len(params)>0): par=string.split(params, ' ');
+	parcount=len(par);
+	if (parcount!=0 and parcount!=2 and parcount!=3):
+		return "auth [<newauth> <nick> [<password>]]";
+
+	if (parcount==0):
+		a=piet.db("SELECT key,value FROM auth ORDER BY key");
+		if (len(a)<=1):
+			return "Ik ken helemaal niemand! arme ik...\n";
+		else:
+			return "ik heb wel vrienden, "+string.join(["("+k+", "+v+")" for k,v in a[1:]], ", ");
+
+	newauth=int(par[0]);
+	nick=par[1];
+	if (newauth>1500): newauth=1500;
+	if (newauth<-1500): newauth=-1500;
+
+	passok=False;
+	if (parcount==3):
+		encrypted=crypt.crypt(par[2], "AB");
+		print "AUTH: encrypted ww = \""+encrypted+"\"\n";
+		if (encrypted=="ABVBPZGw0mmyg"):
+			localauth=max(localauth, 1000); # user can give authorization as-if his authorisation was 1000
+		else:
+			return "achja, leuk geprobeerd, niet goed helaas..\n";
+
+	oldauth=int(db_get("auth", nick) or -5);
+	if (newauth>localauth):
+		return "je hebt maar "+str(localauth)+" auth, dus meer mag je niet geven";
+	if (localauth<oldauth):
+		return "en wie ben jij dan wel, dat je zomaar denkt "+nick+" authorisatie te kunnen geven?!?";
+	if (newauth<=localauth and localauth>=oldauth):
+		db_set("auth", nick, str(newauth));
+		return "ok, "+nick+" heeft nu authenticatieniveau "+str(newauth)+"\n";
+	return "bogus"; # never reached, i think
 
 def kies(params):
   if string.find(params,"\"") >= 0:
@@ -1381,13 +1421,8 @@ def ns(regel):
     return string.strip("Waarschuwing: "+Warning+"\n"+returnstring);
   return string.strip(returnstring);
 
-g_test="niets";
-
 def mytest(regel):
-	global g_test;
-	ding=g_test;
-	g_test=regel;
-	return "vorige: "+ding+"\n";
+	return "result: "+repr(piet.db(regel))+"\n";
 
 def tel(regel):
   naam=string.lower(regel);
@@ -1507,7 +1542,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "temp":              (0,temp, "temp, de temperatuur in Twente en in NSW"), 
     "watis":             (1001, watis, "watis <iets>, geeft veel bla over <iets>"),
     "kop dicht":         (1000, leeg, "kop dicht, hou op met spammen"),
-    "auth":              (0, leeg, "auth <niveau> <nick> [<paswoord>], geef een authenticatieniveau"),
+    "auth":              (0, change_auth, "auth [<niveau> <nick> [<paswoord>]], geef een authenticatieniveau"),
     "spreuk":            (0, spreuk, "spreuk, geef een leuke(?) spreuk"),
     "oneliner":          (0, spreuk, ""),
     "ping":              (100, ping, "ping <host>, ping een computer"),
