@@ -201,7 +201,7 @@ def urban(params):
 			"<xsl:for-each select='/*/*/*/return/item'>"\
 				"<xsl:value-of select='definition'/>"\
 				"<xsl:for-each select='example'> (bijvoorbeeld: \"<xsl:value-of select='.'/>\")</xsl:for-each>"\
-				"\r\n"\
+				"LINEBREAKHIER"\
 			"</xsl:for-each>"\
 		"</xsl:template>"\
 	"</xsl:stylesheet>";
@@ -215,6 +215,9 @@ def urban(params):
 	style.freeStylesheet();
 	doc.freeDoc();
 	result.freeDoc();
+	lines=string.replace(lines, "\n", " ");
+	lines=string.replace(lines, "\r", "");
+	lines=string.replace(lines, "LINEBREAKHIER", ".\n");
 	return lines;
 
 def makeenterfromnull(inp):
