@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys,string,random,re,os,time,crypt;
+import sys,string,random,re,os,time,crypt,socket;
 import piet;
 from telnetlib import Telnet;
 sys.path.append(".");
@@ -165,6 +165,57 @@ def rijm(woord):
       result=[re.sub("\s+", ", ", string.strip(i)) for i in result];
       result=string.join(result, "\n");
       return result+"\n";
+
+def urban(params):
+	# darn thing has a SOAP interface :(
+	header= \
+		"POST /soap HTTP/1.1\r\n" \
+		"Host: api.urbandictionary.com\r\n" \
+		"Content-Type: text/xml\r\n" \
+		"Content-Length: ";
+	body= \
+	'<?xml version="1.0" encoding="UTF-8"?>' \
+	'<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' \
+		 '<soapenv:Body>' \
+				'<ns1:lookup soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="urn:UrbanSearch">' \
+					 '<key xsi:type="xsd:string">ab4756bc8aaad15f2b5a54fdf398f112</key>' \
+					 '<term xsi:type="xsd:string">%SEARCHWORD%</term>' \
+				'</ns1:lookup>' \
+		 '</soapenv:Body>' \
+	'</soapenv:Envelope>';
+
+	a=string.replace(body, "%SEARCHWORD%", params);
+	s=socket.socket(socket.AF_INET, socket.SOCK_STREAM);
+	s.connect(("api.urbandictionary.com", 80));
+	fs=s.makefile();
+	s.sendall(header+str(len(a))+"\r\n\r\n"+a);
+	x='<?xml'+string.split(fs.read(), '<?xml')[1]; # read only the part after <?xml
+
+	import libxml2
+	import libxslt
+
+	sheettext=\
+	"<xsl:stylesheet version='1.0' xmlns:xsl='http://www.w3.org/1999/XSL/Transform'>"\
+		"<xsl:output method='text'/>"\
+		"<xsl:template match='/'>"\
+			"<xsl:for-each select='/*/*/*/return/item'>"\
+				"<xsl:value-of select='definition'/>"\
+				"<xsl:for-each select='example'> (bijvoorbeeld: \"<xsl:value-of select='.'/>\")</xsl:for-each>"\
+				"\r\n"\
+			"</xsl:for-each>"\
+		"</xsl:template>"\
+	"</xsl:stylesheet>";
+
+	styledoc = libxml2.parseDoc(sheettext);
+	style = libxslt.parseStylesheetDoc(styledoc);
+	doc = libxml2.parseDoc(x);
+	result = style.applyStylesheet(doc, None);
+	try: lines=style.saveResultToString(result);
+	except: lines="*daar* weet ik niks van, probeer vandale eens ofzo";
+	style.freeStylesheet();
+	doc.freeDoc();
+	result.freeDoc();
+	return lines;
 
 def makeenterfromnull(inp):
   if inp=="":
@@ -1511,6 +1562,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "dwho":              (100, discwho, "dwho, kijk wie van Taido, Irk, Weary of Szwarts op discworld zijn"),
     "galgje":            (150, galgje, "spel een spelletje galgje, begin met galgje start en daarna galgje raad <letter>"),
     "vandale":           (100, vandale, "vandale <woord>, zoek woord op in woordenboek"),
+    "urban":             (100, urban, "urban <woord>, zoek woord op in urbandictionary (warning: explicit content)"),
     "rijm":              (100, rijm, "rijm <woord>, zoek rijmwoorden op"),
     "vertaal":           (100, vertaal, "vertaal <brontaal> <doeltaal> <regel>, vertaalt <regel> van de taal <brontaal> naar de taal <doeltaal>"),
     "weer":              (100, weer, "weer, zoek het weer op"),
