@@ -66,7 +66,6 @@ def convert(char):
 
 def change_auth(params):
 	localauth=auth;
-	if (localauth<0): return "";
 	newauth=0;
 	par=[];
 	if (len(params)>0): par=string.split(params, ' ');
@@ -75,14 +74,14 @@ def change_auth(params):
 		return "auth [<newauth> <nick> [<password>]]";
 
 	if (parcount==0):
-		a=piet.db("SELECT key,value FROM auth ORDER BY key");
+		a=piet.db("SELECT key,value FROM auth ORDER BY key") or [];
 		if (len(a)<=1):
 			return "Ik ken helemaal niemand! arme ik...\n";
 		else:
-			return "ik heb wel vrienden, "+string.join(["("+k+", "+v+")" for k,v in a[1:]], ", ");
+			return "ik heb wel vrienden, "+string.join([k+"("+v+")" for k,v in a[1:]], ", ");
 
 	newauth=int(par[0]);
-	nick=par[1];
+	parnick=par[1];
 	if (newauth>1500): newauth=1500;
 	if (newauth<-1500): newauth=-1500;
 
@@ -95,14 +94,14 @@ def change_auth(params):
 		else:
 			return "achja, leuk geprobeerd, niet goed helaas..\n";
 
-	oldauth=int(db_get("auth", nick) or -5);
+	oldauth=int(db_get("auth", parnick) or -5);
 	if (newauth>localauth):
 		return "je hebt maar "+str(localauth)+" auth, dus meer mag je niet geven";
-	if (localauth<oldauth):
-		return "en wie ben jij dan wel, dat je zomaar denkt "+nick+" authorisatie te kunnen geven?!?";
+	if (localauth<=oldauth and parnick!=nick):
+		return "en wie ben jij dan wel, dat je zomaar denkt "+parnick+" authorisatie te kunnen geven?!?";
 	if (newauth<=localauth and localauth>=oldauth):
-		db_set("auth", nick, str(newauth));
-		return "ok, "+nick+" heeft nu authenticatieniveau "+str(newauth)+"\n";
+		db_set("auth", parnick, str(newauth));
+		return "ok, "+parnick+" heeft nu authenticatieniveau "+str(newauth)+"\n";
 	return "bogus"; # never reached, i think
 
 def kies(params):
@@ -1597,7 +1596,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "temp":              (0,temp, "temp, de temperatuur in Twente en in NSW"), 
     "watis":             (1001, watis, "watis <iets>, geeft veel bla over <iets>"),
     "kop dicht":         (1000, leeg, "kop dicht, hou op met spammen"),
-    "auth":              (0, change_auth, "auth [<niveau> <nick> [<paswoord>]], geef een authenticatieniveau"),
+    "auth":              (-6, change_auth, "auth [<niveau> <nick> [<paswoord>]], geef een authenticatieniveau"),
     "spreuk":            (0, spreuk, "spreuk, geef een leuke(?) spreuk"),
     "oneliner":          (0, spreuk, ""),
     "ping":              (100, ping, "ping <host>, ping een computer"),
@@ -1663,7 +1662,7 @@ def parse(param_org, first, magzeg):
       params=param_org;
   
   r="";
-  if (int(auth)>=0):
+  if (int(auth)>=functie[0]):
     if (functie==d["zeg"]) and (magzeg==False):
       r=params;
     else:
