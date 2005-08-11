@@ -104,6 +104,29 @@ def change_auth(params):
 		return "ok, "+parnick+" heeft nu authenticatieniveau "+str(newauth)+"\n";
 	return "bogus"; # never reached, i think
 
+
+try:
+  boottime;
+except:
+  boottime=time.time();
+
+def uptime(params):
+	ut=time.time()-boottime;
+	minutes,seconds=int(ut/60),int(ut%60);
+	hours,minutes=int(minutes/60),int(minutes%60);
+	days,hours=int(hours/24),int(hours%24);
+	if (days>1):
+		return "woei! alweer "+str(days)+" dagen (en "+str(hours)+" uur en "+str(minutes)+" minuten)";
+	elif (days>0):
+		return "toch alweer een dagen en "+str(hours)+" uur (en "+str(minutes)+" minuten)";
+	elif (hours>1):
+		return "alweer "+str(hours)+" uur en "+str(minutes)+" minuten";
+	elif (hours>0):
+		return "een uurtje, en "+str(minutes)+" minuten";
+	else:
+		return str(minutes)+" minuten en "+str(seconds)+" secs";
+
+
 def kies(params):
   if string.find(params,"\"") >= 0:
     list=[]
@@ -1632,7 +1655,9 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "ns":                (100, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
     "trein":                (1200, trein, ""),
     "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
-		"test": (100, mytest, "ding"),
+    "reload":            (1000, reloadding, "reload <module> reload iets voor piet"),
+		"uptime":            (200, uptime, "uptime, verteld tijd sinds eerste python command"),
+    "test": (100, mytest, "ding"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
 def parse(param_org, first, magzeg):
