@@ -1581,6 +1581,18 @@ def tel(regel):
     return fresult;    
   return "Bla bla... functie mislukte er zal wel iets fout gegaan zijn";
 
+def reloadding(params):
+  params=string.split(params," ")
+  if (len(params)<1) or (len(params[0])==0):
+    return "reload wat?"
+  else:
+    if params[0]=="calc" or params[0]=="supercalc":
+      import calc
+      reload(calc)
+      return "'t is vast gelukt"
+  return "die module ken ik niet"
+
+
 d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <woorden> of anagram en <woorden> om engels te forceren."),
     "verklaar":          (100, verklaar, "Zoekt op het internet wat <regel> is"),
     "dw":                (100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
