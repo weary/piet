@@ -257,7 +257,12 @@ void python_handler::exec(const std::string &channel_, const python_cmd &code_)
 void python_handler::cleanup()
 {
 	// clean up the corpses
-
+	
+	if (plist.empty())
+	{
+		std::cout << "GC: nothing to do\n";
+		return;
+	}
 	std::cout << "GC: sequence started\n";
   
   pythonthreadlist_t::iterator i=plist.begin();
@@ -273,7 +278,7 @@ void python_handler::cleanup()
     else
       ++i;
   }
-  printf("GC: finished\n");
+	std::cout << "GC: finished\n";
 }
 
 void python_handler::killall()

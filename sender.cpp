@@ -1,5 +1,6 @@
 
 
+#include <Python.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -49,8 +50,6 @@ void join_send_thread()
 // put a header+textline in the queue, lines should be <=450 chars
 static void add_to_sendlist(const std::string header, const std::string textline, bool high_prio)
 {
-  printf("SEND: add_to_sendlist(\"%.45s\", \"%.45s\", %s)\n", unenter(header).c_str(), unenter(textline).c_str(), (high_prio?"TRUE":"FALSE"));
-
   if (textline.empty()) return;
 
   pthread_mutex_lock(&sendqueue_mutex);

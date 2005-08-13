@@ -80,22 +80,32 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 		char **field=table;
 		for (int n=0; n<=nrow; ++n) // one more row, also heading
 		{
+			std::cout << "DB: result: ";
 			python_object subl(PyList_New(ncolumn));
 			assert(subl);
 			for (int m=0; m<ncolumn; ++m, ++field)
 			{
+				if (m>0) std::cout << " | ";
 				python_object fld;
 				if (*field)
+				{
+					std::cout << *field;
 					fld = PyString_FromString(*(field));
+				}
 				else
-				{ Py_INCREF(Py_None); fld=Py_None; }
+				{
+					std::cout << "NULL";
+					Py_INCREF(Py_None); fld=Py_None;
+				}
 				assert(fld);
 				int r=PyList_SetItem(subl, m, fld);
 				assert(r==0);
 			}
+			std::cout << "\n";
 			int r=PyList_SetItem(list, n, subl);
 			assert(r==0);
 		}
+		std::cout << std::flush;
 		if (table) sqlite3_free_table(table);
 		return list;
 	}
