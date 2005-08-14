@@ -439,6 +439,24 @@ def ping(woord):
     result=inp.read();
     return result+"\n";
 
+def zoek(param):
+	if (param=="vrouw"):
+		return zoekvrouw(param);
+	return 'alleen "zoek vrouw" werkt'
+
+def zoekvrouw(param):
+	cmd="lynx --dump 'http://www.onehello.nl/search/quickSearchAction.jsp?myGender=134&gender=135&ageFrom=18&ageTo=30&loctype=country_division&findDivisionsAndReload=false&countryvalue=146&findCitiesAndReload=false&divisionvalue=652&LastActive=&LastJoined=&Smoking=&HaveChildren=&format=200&template=SearchQuickSearch&statsJS=JS&statsWinWidth=1272&statsWinHeight=874&k=2764037968126736068&s=6575419&l=nl&t=GUEST' | "
+	cmd+="sed -n '/Resultaten 1 tot en met/,/^[[:blank:]]*$/p' | ";
+	cmd+="sed -n '/naam/{s/^.*]//;h};/Leeftijd/{s/.*: /, /;H};/Lokregel/{s/.*: /: /;H;g;s/\\n//g;p}'";
+	inp = os.popen(cmd);
+	vrouwen = string.split(inp.read(), '\n');
+	inp.close();
+	result = random.choice(vrouwen) + '\n';
+	result+= random.choice(vrouwen) + '\n';
+	result+= random.choice(vrouwen) + '\n';
+	print 'zoekvrouw gaat teruggeven:\n'+result;
+	return result;
+
 def vertaal(regel):
   a=string.split(regel, ' ');
   if (len(a)<1):
@@ -1669,6 +1687,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
     "reload":            (1000, reloadding, "reload <module> reload iets voor piet"),
 		"uptime":            (200, uptime, "uptime, verteld tijd sinds eerste python command"),
+		"zoek":              (1000, zoek, "zoek vrouw, zoekt willekeurige vrouw in overijsel"),
     "test": (100, mytest, "ding"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
