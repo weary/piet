@@ -46,8 +46,8 @@ def doe_gemiddelde_offlinetijd(channel_, nick_, tu_):
 	# INSERT INTO offline SELECT "#^Ra^Re_mensen", "weary", tijd FROM t;
 	# DROP TABLE t
 
-	chan=string.lower(string.replace(channel_, '"', '\\"'));
-	nick=string.lower(string.replace(nick_, '"', '\\"'));
+	chan=string.lower(string.replace(channel_, '"', '""'));
+	nick=string.lower(string.replace(nick_, '"', '""'));
 	tijd=str(tu_);
 	query='INSERT INTO offline VALUES("'+chan+'", "'+nick+'", '+tijd+')';
 	piet.db(query);
@@ -70,11 +70,11 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
 	#		channel string, nick string, tijd int, reason string,
 	#		primary key (channel,nick));
 
-	chan=string.lower(string.replace(channel_, '"', '\\"'));
-	nick=string.lower(string.replace(nick_, '"', '\\"'));
+	chan=string.lower(string.replace(channel_, '"', '""'));
+	nick=string.lower(string.replace(nick_, '"', '""'));
 	if (command_ in ["PART", "QUIT", "KICK"]):
 		tijd=str(int(time.time()+0.5));
-		reason=string.replace(msg_[5:], '"', '\\"');
+		reason=string.replace(msg_[5:], '"', '""');
 		query='REPLACE INTO logout VALUES("'+chan+'", "'+nick+'", '+tijd+', "'+reason+'")';
 		piet.db(query);
 	elif (command_ in ["JOIN"]):
@@ -109,16 +109,16 @@ def check_netsplit(nick_, channel_, command_, msg_):
 	NETSPLIT_TIMEOUT=3600; # seconds
 	if (command_ in ["QUIT"]):
 		if quitmsg_is_split(msg_):
-			chan=string.lower(string.replace(channel_, '"', '\\"'));
-			nick=string.lower(string.replace(nick_, '"', '\\"'));
-			servers=string.replace(msg_[6:], '"', '\\"');
+			chan=string.lower(string.replace(channel_, '"', '""'));
+			nick=string.lower(string.replace(nick_, '"', '""'));
+			servers=string.replace(msg_[6:], '"', '""');
 			tijd=str(int(time.time()+0.5)+NETSPLIT_TIMEOUT);
 			query='REPLACE INTO netsplit VALUES("'+chan+'", "'+nick+'", "'+servers+'", '+tijd+')';
 			piet.db(query);
 			return True;
 	elif (command_ in ["JOIN"]):
-		chan=string.lower(string.replace(channel_, '"', '\\"'));
-		nick=string.lower(string.replace(nick_, '"', '\\"'));
+		chan=string.lower(string.replace(channel_, '"', '""'));
+		nick=string.lower(string.replace(nick_, '"', '""'));
 		tijd=int(time.time()+0.5);
 		where='WHERE channel="'+chan+'" AND nick="'+nick+'" AND timeout>'+str(tijd);
 		query='SELECT servers FROM netsplit '+where;
