@@ -327,15 +327,15 @@ def afk(woord):
 	return r;
 	
 def afk_hylke(woord):
-  woord=string.strip(woord);
-  comm="lynx -source http://www.afkorting.nl/cgi-local/s.pl?pg=a\&s="+woord;
-  outp, inp = os.popen2(comm);
-  outp.close();
-  result=inp.read();
-  result=re.findall("<TR>.*</TR>", result);
-  result=[re.findall("<T[DH]>[^<]*</T[DH]>", i) for i in result];
-  result=[[i[4:-5] for i in result_inner] for result_inner in result];
-  return result;
+	woord=string.strip(woord);
+	comm="lynx -source http://www.afkorting.net/cgi-local/s.pl?pg=a\&s="+woord;
+	outp, inp = os.popen2(comm);
+	outp.close();
+	result=inp.read();
+	result=re.findall("<TR>.*</TR>", result);
+	result=[re.findall("<T[DH]>[^<]*</T[DH]>", i) for i in result];
+	result=[[i[4:-5] for i in result_inner] for result_inner in result];
+	return result;
 
 def changelog(dinges):
   command="darcs cha --last=5 | sed -e '/^$/d;N;s/\\n//g;s/<[a-zA-Z]\\+@[a-zA-Z\\.]\\+>//;s/[\\t\\ ]\\+/ /g'";
@@ -445,7 +445,7 @@ def zoek(param):
 	return 'alleen "zoek vrouw" werkt'
 
 def zoekvrouw(param):
-	cmd="lynx --dump 'http://www.onehello.nl/search/quickSearchAction.jsp?myGender=134&gender=135&ageFrom=18&ageTo=30&loctype=country_division&findDivisionsAndReload=false&countryvalue=146&findCitiesAndReload=false&divisionvalue=652&LastActive=&LastJoined=&Smoking=&HaveChildren=&format=200&template=SearchQuickSearch&statsJS=JS&statsWinWidth=1272&statsWinHeight=874&k=2764037968126736068&s=6575419&l=nl&t=GUEST' | "
+	cmd="lynx --width=1000 --dump 'http://www.onehello.nl/search/quickSearchAction.jsp?myGender=134&gender=135&ageFrom=18&ageTo=30&loctype=country_division&findDivisionsAndReload=false&countryvalue=146&findCitiesAndReload=false&divisionvalue=652&LastActive=&LastJoined=&Smoking=&HaveChildren=&format=200&template=SearchQuickSearch&statsJS=JS&statsWinWidth=1272&statsWinHeight=874&k=2764037968126736068&s=6575419&l=nl&t=GUEST' | "
 	cmd+="sed -n '/Resultaten 1 tot en met/,/^[[:blank:]]*$/p' | ";
 	cmd+="sed -n '/naam/{s/^.*]//;h};/Leeftijd/{s/.*: /, /;H};/Lokregel/{s/.*: /: /;H;g;s/\\n//g;p}'";
 	inp = os.popen(cmd);
@@ -454,7 +454,6 @@ def zoekvrouw(param):
 	result = random.choice(vrouwen) + '\n';
 	result+= random.choice(vrouwen) + '\n';
 	result+= random.choice(vrouwen) + '\n';
-	print 'zoekvrouw gaat teruggeven:\n'+result;
 	return result;
 
 def vertaal(regel):
