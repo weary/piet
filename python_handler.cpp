@@ -65,7 +65,7 @@ void *python_threadfunc(void *p)
 {
 	assert(p);
 	pythonthread_data_t *data=(pythonthread_data_t *)p;
-	std::cout << "threadfunc, data:\n" << *data << "\n";
+	std::cout << "PY: threadfunc, data:\n" << *data << "\n";
 	std::string chan=data->channel;
 
 	{

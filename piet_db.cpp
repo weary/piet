@@ -12,36 +12,66 @@ struct sqlite_t
 	public:
 	~sqlite_t()
 	{
-		sqlite3_close(_db);
+		int r=pthread_key_delete(_key);
+		if (r) std::cout << "DB: failed to destroy key, errorcode " << r << "\n";
 	}
 
 	static sqlite_t &instance() { static sqlite_t db; return db; }
 
-	operator sqlite3 *() { return _db; }
-	bool open() { return (_db!=NULL); }
+	operator sqlite3 *() { return get_db(); }
+
+	// try to open
+	bool open() { return get_db()!=NULL; }
 
 	private:
+	static void dbdestructor(void *dbvoid_)
+	{
+		sqlite3 *db=static_cast<sqlite3 *>(dbvoid_);
+		std::cout << "DB: closing database for thread " << pthread_self() << "\n";
+		sqlite3_close(db);
+	}
 	sqlite_t()
 	{
-		int rc = sqlite3_open("piet.db", &_db);
-		if (rc)
-		{
-			std::cout << "DB: Can't open database: " << sqlite3_errmsg(_db) << "\n";
-			sqlite3_close(_db);
-			_db=NULL;
-		}
-		else
-			std::cout << "DB: database open\n";
+		int r=pthread_key_create(&_key, &dbdestructor);
+		if (r) std::cout << "DB: failed to create key, errorcode " << r << "\n";
 	}
 
-	sqlite3 *_db;
+	sqlite3 *get_db()
+	{
+		sqlite3 *db=static_cast<sqlite3 *>(pthread_getspecific(_key));
+		if (!db)
+		{
+			std::cout << "DB: opening database for thread " << pthread_self() << "\n";
+			int rc = sqlite3_open("piet.db", &db);
+			if (rc)
+			{
+				std::cout << "DB: Can't open database: " << sqlite3_errmsg(db) << "\n";
+				sqlite3_close(db);
+				db=NULL;
+			}
+			else
+			{
+				int r=pthread_setspecific(_key, db);
+				if (r)
+				{
+					std::cout << "DB: failed to set specific, errorcode " << r << "\n";
+					sqlite3_close(db);
+					db=NULL;
+				}
+			}
+		}
+		return db;
+	}
+
+	pthread_key_t _key;
 };
+
 }
 
 PyObject * piet_db_query(PyObject *self, PyObject *args)
 {
 	python_lock guard(__PRETTY_FUNCTION__);
-
+	
 	std::string query(PyString_AsString(args));
 
 	if (!sqlite_t::instance().open())
@@ -113,12 +143,15 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 	return NULL;
 }
 
-std::string piet_db_get(const std::string &table_, const std::string &key, const std::string &default_)
+std::string piet_db_get(const std::string &table_, const std::string &key_, const std::string &default_)
 {
 	if (!sqlite_t::instance().open())
+	{
+		std::cout << "DB: database not opened, returning default\n";
 		return default_;
+	}
 
-	std::string query="SELECT value FROM "+table_+" WHERE key='"+key+"'";
+	std::string query="SELECT value FROM "+table_+" WHERE key='"+key_+"'";
 	std::cout << "DB: query=" << query << "\n";
 	int nrow,ncolumn;
 	char *err=NULL;
