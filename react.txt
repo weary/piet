@@ -272,12 +272,14 @@ koffie#0.013333333333333334#ACTION qevaxg mvwa xbssvr urg yvrsfg ebg13
 koffie#0.011666666666666667#Als de koffie niet meer vloeibaar is, weet je dat je het te sterk hebt gezet
 koffie#0.01#Beter een kop koffie in de hand dan 10 in de lucht
 koffie#0.0083333333333333332#koffie is binnen tien minuten klaar
-koffie#0.0066666666666666671#Koffie is beter dan vrouwen omdat koffie er 's ochtends goed uit
+koffie#0.0066666666666666671#Koffie is beter dan vrouwen omdat koffie er 's ochtends goed uit ziet
 koffie#0.0050000000000000001#hoezo koffie? zou je niet een beetje op je maag passen?
 koffie#0.0033333333333333335#koffie = goed
 koffie#0.0016666666666666668#ho, er zei iemand het woord koffie, nu moet ik even er irritant doen
 kipei#0.5#kip
 kipei#1.0#ei
+kip of 't ei#0.5#kip
+kip of 't ei#1.0#ei
 ignore#0.5#ACTION negeert NICK
 huisgenoot#0.5#jaja, "huisgenoot", ik ken dat..
 nmapt#1.0#ACTION nmept keihard terug
@@ -288,3 +290,6 @@ dûm#0.5#doe's even 7bits ascii? deze troep hoef ik niet hoor
  nite #0.8#ACTION is het daar mee eens, echt nite
 google #0.05#astalavista!
 hmk#0.5#ACTION groet hare majesteit
+ikea#0.3#meubeltjes! meer!
+jamaar#0.5#wat een prutsmoes, ik had echt wel een betere van je verwacht
+
