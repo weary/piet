@@ -261,7 +261,7 @@ def calcM(param):
     (value,unit)=det(value,unit,dimx)
     return (error,value,param[1:],unit,1,1)
 
-  digits=re.compile('(\-)?[0-9]+(\.[0-9]+)?((e\+[0-9]+)|(e\-[0-9]+))?')
+  digits=re.compile('(\-)?[0-9]+(\.[0-9]+)?((e\+[0-9]+)|(e\-[0-9]+)|(e[0-9]+))?')
   digitscheck= digits.match(param)
   if digitscheck:
     value=float(digitscheck.group())
@@ -547,7 +547,7 @@ units+=[("liter",1e-3,"m^3")]
 
 #tijd
 
-units+=[("seconde",1.0,"s^1"),("second",1.0,"s^1"),("sec",1.0,"s^1"),("minuut",6.0e+1,"s^1"),("minuten",6.0e+1,"s^1"),("uur",3.6e+3,"s^1"),("uren",3.6e+2,"s^1"),("dag",8.64e+4,"s^1"),("dagen",8.64e+4,"s^1"),("maand",2.6298e+6,"s^1"),("maanden",2.6298e+6,"s^1"),("jaar",3.15576e+7,"s^1"),("jaren",3.15576e+7,"s^1"),("eeuw",3.15576e+9,"s^1"),("eeuwen",3.15576e+9,"s^1")]
+units+=[("seconden",1.0,"s^1"),("seconde",1.0,"s^1"),("second",1.0,"s^1"),("sec",1.0,"s^1"),("minuut",6.0e+1,"s^1"),("minuten",6.0e+1,"s^1"),("uur",3.6e+3,"s^1"),("uren",3.6e+2,"s^1"),("dag",8.64e+4,"s^1"),("dagen",8.64e+4,"s^1"),("maand",2.6298e+6,"s^1"),("maanden",2.6298e+6,"s^1"),("jaar",3.15576e+7,"s^1"),("jaren",3.15576e+7,"s^1"),("eeuw",3.15576e+9,"s^1"),("eeuwen",3.15576e+9,"s^1")]
 
 #time
 
