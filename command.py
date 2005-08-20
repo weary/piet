@@ -638,9 +638,6 @@ def url(params):
 	result = random.choice(result);
 	return result;
 
-def tv(params):
-  return("er is niks op tv");
-
 def news(params):
 	cmd="lynx -dump -width=500 http://podium.trouw.nl/novum/laatstenieuws.rss";
 	cmd+="|awk '{ result=result $0 } END { print result }' | sed 's/<\\/item>/<\\/item>\\n/g'" # get one item per line
@@ -1659,7 +1656,6 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "unleet":            (0, unleet, "unleet <text>, unconvert to 1337"),
     "todo":		 (1, todo, "todo <text>, voeg wat toe aan de todo list"),
     "bugrep":		 (1, todo, ""),
-    "tv":                (0, tv, ""),
     "geordi":		 (0, geordi, ""),
     "je heet nu":        (500, leeg, "je heet nu <nick>, geef nieuwe nick"),
     "renick":            (200, randomnaam, "renick, verzint een willekeurige nick"),
@@ -1673,7 +1669,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "praat maar":        (1000, leeg, "praat maar, tegenovergestelde van \"wees stil\""),
     "lees lua":          (1000, leeg, "lees lua, herlees het lua script"),
     "kies":              (100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
-    "tv":								 (100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
+    "tv":                (100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
     "url":               (100, url, "geef willekeurige oude url"),
     "mep":               (100, mep, ""),
     "geef":              (100, geef, ""),
