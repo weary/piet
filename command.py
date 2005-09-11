@@ -115,7 +115,11 @@ def uptime(params):
 	minutes,seconds=int(ut/60),int(ut%60);
 	hours,minutes=int(minutes/60),int(minutes%60);
 	days,hours=int(hours/24),int(hours%24);
-	if (days>1):
+	if (days>100):
+		return "ben oud... "+str(days)+" dagen (en "+str(hours)+" uur)"
+	elif (days>31):
+		return "ben met "+str(days)+" dagen en "+str(hours)+" toch een goede irc verslaafde"
+	elif (days>1):
 		return "woei! alweer "+str(days)+" dagen (en "+str(hours)+" uur en "+str(minutes)+" minuten)";
 	elif (days>0):
 		return "toch alweer een dagen en "+str(hours)+" uur (en "+str(minutes)+" minuten)";
