@@ -146,12 +146,13 @@ def do_server(nick_, auth_, channel_, msg_):
 		if not(netsplit):
 			check_sleep_time(nick_, auth_, channel_, command, msg_);
 	if command in ["KICK"]:
-		piet.send(channel_, "en waag het niet om weer te komen, jij vuile "+nick_+"!\n");
+		kicknick=string.split(msg_, ' ')[2];
+		piet.send(channel_, "en waag het niet om weer te komen, jij vuile "+kicknick+"!\n");
 	if command in ["437"]:
 		piet.send(channel_, "bah, die nick is even niet beschikbaar\n");
 	if command in ["MODE"]:
 		if not(netsplit):
-			piet.send(channel_, 'server riep "'+msg_[5:]+'", maar weary was te lui om dat te onderscheppen\n');
+			piet.send(channel_, 'server riep "'+msg_[5:]+'", maar dat interesseert echt helemaal niemand\n');
 		
 
 
