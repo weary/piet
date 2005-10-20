@@ -252,5 +252,5 @@ hui#(h'ui), (oeb) excl; Uitdrukking van blijheid.
 PHY#physical network layer
 ts#teamspeak
 UML#Universal Modelling Language
-
+BVH#biovision hierarchy file, motion captured skeletjes
 
