@@ -292,4 +292,8 @@ google #0.05#astalavista!
 hmk#0.5#ACTION groet hare majesteit
 ikea#0.3#meubeltjes! meer!
 jamaar#0.5#wat een prutsmoes, ik had echt wel een betere van je verwacht
+zobiezo#0.5#pas op, groentje gaat je zo vertellen dat je sowieso had moeten
+tikken
+zobiezo#1.0#tsk. sowieso dus.
+dt ik #1.0#hee, daar kan een letter uitgespaard worden na die d
 
