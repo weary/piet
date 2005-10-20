@@ -17,19 +17,30 @@ def calcS(param):
     return (error,result,param,unit,1,1)
   while ((error=="") and (param!="") and ((param[0]=="-") or (param[0]=="+"))):
     op=param[0]
-    (error,result2,param,unit2,dimx,dimy)=calcD(param[1:])
-    if unit!="" and unitinvertcheck(unit,unit2):
-      if op=="-":
-        result-=(1/result2)
+    (error,result2,param,unit2,dimx2,dimy2)=calcD(param[1:])
+    if (dimx!=dimx2) or (dimy!=dimy2):
+      return("adding matrix: matrices do not have the same dimension",0,"","",1,1)
+    if (dimx==1) and (dimx2==1) and (dimy==1) and (dimy2==1):
+      if unit!="" and unitinvertcheck(unit,unit2):
+        if op=="-":
+          result-=(1/result2)
+        else:
+          result+=(1/result2)
       else:
-        result+=(1/result2)
+        if (unit2!=unit) and (unit!="W"):
+          unit="W"
+        if op=="-":
+          result-=result2
+        else:
+          result+=result2
     else:
-      if (unit2!=unit) and (unit!="W"):
-        unit="W"
-      if op=="-":
-        result-=result2
-      else:
-        result+=result2;
+      for x in range(dimx*dimy):
+        if op=="+":
+          result[x]=result[x]+result2[x]
+        else:
+          result[x]=result[x]-result2[x]
+        if unit[x]!=unit2[x]:
+          unit[x]="W"         
   return (error,result,param,unit,dimx,dimy)
 
 def calcD(param):
@@ -37,6 +48,7 @@ def calcD(param):
   (error,result,param,unit,dimx,dimy)=calcP(param)
   if (error!=""):
     return (error,result,param,"",1,1)
+  
   while ((error=="") and (param!="") and ((param[0]=="/") or (param[0]=="*"))):
     op=param[0]
     (error,result2,param,unit2,dimx2,dimy2)=calcP(param[1:])
@@ -50,7 +62,7 @@ def calcD(param):
       #matrix multiplication
       if op=="/":
         #invert matrix is not yet supported
-        return (1,0,"","",1,1)
+        return ("Matrix dividing is not supported",0,"","",1,1)
       if (dimx==1) and (dimy==1):
         #scalar
         for x in range(dimx2):
@@ -70,8 +82,8 @@ def calcD(param):
         newresults=[]
         newdimx=dimx2
         newdimy=dimy
-        for x in range(newdimx):
-          for y in range(newdimy):
+        for y in range(newdimy):
+          for x in range(newdimx):
             resultitem=0
             unititem=unifyunits(unit[y*dimx],unit2[x],"*")
             for t in range(dimx):
@@ -81,8 +93,16 @@ def calcD(param):
             newresults+=[resultitem]
             newunit+=[unititem]
         if newdimx==1 and newdimy==1:
-          return("",newresults[0],param,newunit[0],1,1)
-        return("",newresults,param,newunit,newdimx,newdimy)
+          result=newresults[0]
+          unit=newunit[0]
+          dimx=1
+          dimy=1
+        else:
+          result=newresults
+          unit=newunit
+          unit=newunit
+          dimx=newdimx
+          dimy=newdimy
       else:
         return("Cannot multiply "+str(dimx)+"x"+str(dimy)+" matrix with "+str(dimx2)+"x"+str(dimy2)+" matrix",0,"","",1,1)
   return (error,result,param,unit,dimx,dimy)
@@ -163,14 +183,14 @@ def unifyunits(unit,unit2,op):
 
 def calcP(param):
   # Power rule
-  (error,result,param,unit,dimx,dimy)=calcM(param)
+  (error,result,param,unit,dimx,dimy)=calcT(param)
   if (error!=""):
     return (error,result,param,unit,1,1)
   while ((error=="") and (param!="") and (param[0]=="^")):
     if (dimx!=1) or (dimy!=1):
     # matrix to a power something? not defined
       return("Cannot raise matrix to powers (yet)",0,"","",1,1)
-    (error,result2,param,unit2,dimx,dimy)=calcM(param[1:])
+    (error,result2,param,unit2,dimx,dimy)=calcT(param[1:])
     if (dimx!=1) or (dimy!=1):
     # something to a power matrix? not defined
       return("Cannot raise things to power of matrix",0,"","",1,1)
@@ -193,13 +213,76 @@ def calcP(param):
     result**=result2
   return (error,result,param,unit,dimx,dimy)
 
+def calcT(param):
+  #rule for transposing matrices
+  (error,value,param,unit,dimx,dimy)=calcM(param)
+  if param[:2]=="*t":
+    param=param[1:]
+  while param[:1]=="t":
+    param=param[1:]
+    if (dimx>1) or (dimy>1):
+      newmatrixvalues=[]
+      newmatrixunits=[]
+      for x in range(dimx):
+        for y in range(dimy):
+          newmatrixvalues+=[value[x+(y*dimx)]]
+          newmatrixunits+=[unit[x+(y*dimx)]]
+      i=dimx
+      dimx=dimy
+      dimy=i
+      value=newmatrixvalues
+      unit=newmatrixunits
+   
+  return (error,value,param,unit,dimx,dimy)
+
+
+#gaus functie
+def gauss(value,unit,dimx,dimy):
+  newmatrix=[]
+  for y in range(dimy):
+    newline=value[y*dimx:(y+1)*dimx]
+    for i in range(y):
+      x=0
+      while x<dimx and newline[x]==0:
+        x+=1
+      if x<dimx:
+        if newmatrix[i*dimx+x]!=0:
+          factor=newline[x]/newmatrix[i*dimx+x]
+          for t in range(dimx):
+            newline[t]=(factor*newmatrix[i*dimx+t])-newline[t]
+    
+    #now insert the row at the right position
+    nonzeroline=0
+    while nonzeroline<dimx and newline[nonzeroline]==0:
+      nonzeroline+=1
+    added=0
+    x=0
+    while x<len(newmatrix) and added==0:
+      nonzeromatrix=0
+      while nonzeromatrix<dimx and newmatrix[x+nonzeromatrix]==0:
+        nonzeromatrix+=1
+      if nonzeromatrix>nonzeroline:
+        added=1
+        newmatrix=newmatrix[:x]+newline+newmatrix[x:]
+      x+=dimx
+    if added==0:
+      newmatrix+=newline
+  
+  newunit=[]
+  for x in range(dimx):
+    thisunit=unit[x]
+    for y in range(dimy):
+      if thisunit!=unit[x+(y*dimx)]:
+        thisunit="W"
+    newunit+=[thisunit]
+  unit=[]
+  for y in range(dimy):
+    unit+=newunit
+  return(newmatrix,unit)
+
 def det(value,unit,dim):
   if dim==1:
     return(value,unit)
-  newunit=[]
-  for x in unit:
-    newunit+=[x.replace("$","euro")]
-  unit=newunit
   if dim==2:
     # nee het is niet efficient maar wel makkelijk om de eenheden goed te houden
     value=value[0]*value[3]-value[1]*value[2]
@@ -241,13 +324,55 @@ def calcM(param):
       if (error!=""):
         return(error,0,"","",1,1)
       if (param[:1]!=")"):
-        return("Missing )",0,"","",1,1)
+        if error=="":
+          return("Missing )",0,"","",1,1)
+        else:
+          return(error,0,"","",1,1)
       chars=re.compile('[a-z]')
       if chars.match(param[1:]):
         (error,result,param,unit,dimx,dimy)=calcM(param[1:])
         return (error,func.__call__(value)*result,param,"",1,1)
 
       return(error,func.__call__(value),param[1:],"",1,1)
+# special matrix
+  if (param[:1]=="i" and param[1:2]>="0" and  param[1:2]<="9"):
+    (error,value,param,unit,dimx,dimy)=calcM(param[1:])
+    if error!="" and error!="t unknown":
+      return (error,0,"","",1,1)
+    if dimx!=1 or dimy!=1 or value!=math.floor(value):
+      return ("identity matrix must have simply number",0,"","",1,1)
+    value=int(value)
+#    if param[:1]=="t":
+#      matrixvalue=[]
+#      matrixunit=[]
+#      for x in range(value):
+#        matrixline=[]
+#        unitline=[]
+#        for y in range(value):
+#          unitline+=[""]
+#          if x+1==(value-y):
+#            matrixline+=[1]
+#          else:
+#            matrixline+=[0]
+#        matrixvalue+=matrixline
+#        matrixunit+=unitline
+#      return("",matrixvalue,param[1:],matrixunit,value,value)
+    matrixvalue=[]
+    matrixunit=[]
+    for x in range(value):
+      matrixline=[]
+      unitline=[]
+      for y in range(value):
+        unitline+=[""]
+        if x==y:
+          matrixline+=[1]
+        else:
+          matrixline+=[0]
+      matrixvalue+=matrixline
+      matrixunit+=unitline
+    if value==1:
+      return("",matrixvalue[0],param,matrixunit[0],1,1)
+    return("",matrixvalue,param,matrixunit,value,value)
 
 # matrix functions
   if param[:4]=="det(":
@@ -255,11 +380,47 @@ def calcM(param):
     if error!="":
       return(error,0,"","",1,1)
     if (param[:1]!=")"):
-      return("missing )",0,"","",1,1)
+      if error=="":
+        return("Missing )",0,"","",1,1)
+      else:
+        return(error,0,"","",1,1)
+
     if dimx!=dimy:
       return("det() expects a square matrix",0,"","",1,1)
     (value,unit)=det(value,unit,dimx)
     return (error,value,param[1:],unit,1,1)
+
+  if param[:6]=="gauss(":
+    (error,value,param,unit,dimx,dimy)=calcS(param[6:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (param[:1]!=")"):
+      if error=="":
+        return("missing )",0,"","",1,1)
+      else:
+        return(error,0,"","",1,1)
+    (value,unit)=gauss(value,unit,dimx,dimy)
+    return (error,value,param[1:],unit,dimx,dimy)
+  if param[:5]=="rank(":
+    (error,value,param,unit,dimx,dimy)=calcS(param[5:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (param[:1]!=")"):
+      if error=="":
+        return("missing )",0,"","",1,1)
+      else:
+        return(error,0,"","",1,1)
+    (value,unit)=gauss(value,unit,dimx,dimy)
+    rank=0
+    for y in range(dimy):
+      x=0
+      while x<dimx:
+        if value[x+(y*dimx)]!=0:
+          rank+=1
+          x=dimx
+        else:
+          x+=1
+    return (error,rank,param[1:],"",1,1)
 
   digits=re.compile('(\-)?[0-9]+(\.[0-9]+)?((e\+[0-9]+)|(e\-[0-9]+)|(e[0-9]+))?')
   digitscheck= digits.match(param)
@@ -293,8 +454,6 @@ def calcM(param):
         if param[x1+2:x1+3]=="t":
           x1+=1
         return(error,matrixvalues[0],param[x1+2:],matrixunits[0],1,1)
-      if param[x1+2:x1+3]=="t":
-        return (error,matrixvalues,param[x1+3:],matrixunits,1,dimx)
       return (error,matrixvalues,param[x1+2:],matrixunits,dimx,1)
     if (x2>=0) and (x2<x1):
       dimx=0
@@ -322,14 +481,6 @@ def calcM(param):
         if param[x2+3:x2+4]=="t":
           x2+=1
         return(error,matrixvalues[0],param[x2+3:],matrixunits[0],1,1)
-      if param[x2+3:x2+4]=="t":
-        newmatrixvalues=[]
-        newmatrixunits=[]
-        for x in range(dimx):
-          for y in range(dimy):
-            newmatrixvalues+=[matrixvalues[x+(y*dimx)]]
-            newmatrixunits+=[matrixunits[x+(y*dimx)]]
-        return(error,newmatrixvalues,param[x2+4:],newmatrixunits,dimy,dimx)
       return (error,matrixvalues,param[x2+3:],matrixunits,dimx,dimy)
       
     return ("Matrix format error",0,"","",1,1)
@@ -337,11 +488,25 @@ def calcM(param):
   if (param[:1]=="("):
     (error,value,param,unit,dimx,dimy)=calcS(param[1:])
     if param[:1]!=")":
-      return("Missing )",0,"","",1,1)
+      if error=="":
+        return("missing )",0,"","",1,1)
+      else:
+        return(error,0,"","",1,1)
     chars=re.compile('[a-z]|\(|[0-9]|\$')
     if chars.match(param[1:]):
-      return(error,value,"*"+param[1:],unit,1,1)
-    return(error,value,param[1:],unit,1,1)
+      return(error,value,"*"+param[1:],unit,dimx,dimy)
+    return(error,value,param[1:],unit,dimx,dimy)
+
+  #2 based prefixes
+  prefix=[("kilob",1024),("megab",1048576),("gigab",1073741824),("terrab",1099511627776),("petab",1125899906842624),("exab",1152921504606846976),("zettab",1180591620717411303424),("yottab",1208925819614629174706176)]
+  prefix+=[("millib",1.0/1024),("microb",1.0/1048576),("nanob",1.0/1073741824),("picob",1.0/1099511627776),("femtob",1.0/1125899906842624),("attob",1.0/1152921504606846976),("zeptob",1.0/1180591620717411303424),("yoctob",1.0/1208925819614629174706176)]
+
+  for(thisprefix,power) in prefix:
+    if param[:len(thisprefix)]==thisprefix:
+      (error_p,value_p,param_p,unit_p,dimx_p,dimy_p)=calcM(param[len(thisprefix)-1:])
+      if (unit_p[:2]=="b^"):
+        return (error_p,value_p*power,param_p,unit_p,1,1)
+
 
   #prefixes
   prefix=[("yotta",1e24),("zetta",1e21),("exa",1e18),("peta",1e15),("tera",1e12),("giga",1e9),("mega",1e6),("kilo",1e3),("hecto",1e2),("deca",1e1),("deci",1e-1),("centi",1e-2),("milli",1e-3),("micro",1e-6),("nano",1e-9),("pico",1e-12),("femto",1e-15),("atto",1e-18),("zepto",1e-21),("yocto",1e-24)]
@@ -430,6 +595,22 @@ def calcM(param):
   return (nametype+" unknown",1,param,unit,1,1)
 
 def supercalc(toparse):
+  if toparse[:4]=="help":
+    x1=toparse[4:].find(" ")
+    if x1<0:
+      return "help available on arithmetic, convert, currency, matrix, units"
+    toparse=toparse[x1+5:]
+    if toparse=="arithmetic":
+      return "supported operators: * / - + ^\nsupported functions: abs,ceil,exp,floor,log,log10,sqrt\nsupported goniometric functions acos,asin,atan,cos,sin,tan,cosh,sinh,tanh\nsyntax <expression> <operator> <expression> or <function>(<expression>) for example: 1+2, ceil(sin(3))"
+    if toparse=="currency":
+      return "syntax: <value> <currency> for example 2.5 euro\ncurrencies are known my their full name, their 3 letter abbreviation, or a shorthand ($a for australian dollar)\nknown currencies: (American, Australian, Canadian, New Zealand)dollar, Britisch Pound, Euro, Swiss Franc, Japanese Yen\nconversion example: 1 euro in yen"
+    if toparse=="convert":
+      return "converts one unit in another\nsyntax: <expression> <unit> in <expression> <unit>\nfor example: 1 feet*1 acre in liter\nconversion only supported on simple expression i.e. not on matrices"
+    if toparse=="matrix":
+      return "syntax: [[<e>,<e>,....,<e>],[<e>,<e>,....,<e>],....,[<e>,<e>,....,<e>]]\nfor example [[1,2,3],[4,5,6],[7,8,9]] is a 3x3 matrix\nspecial matrix: I<n> (for example I7) indicates the identity matrix of nxn\nsupported matrix suffix: T (transposes the matrix [[1],[2],[3]]T = [1,2,3]T)\nsupported matrix operators: * - +\nsupported matrix functions: det gauss rank"
+    if toparse=="units":
+      return "each expression is allowed to be followed by a unit of physics, most units are supported and are by default calculated back to SI units\nsyntax: <expression> <unit>\nfor example: 10 mile\nunits can be prefixed by the SI prefixes ranging from yotta till yocto in steps of 1e3 and kilo till milli in steps of 10\nfor example: 1 nanometer"
+    return "topic not found"
   if toparse[:4]=="uit ":
     toparse=toparse[4:];
   elif toparse[len(toparse)-4:]==" uit":
@@ -488,6 +669,44 @@ def supercalc(toparse):
         result/=result2 
     if left!="":
       return "Reached end of line, could not parse: "+left
+    if unit=="s^1":
+      if result < 0:
+        pref="-"
+        result=-result
+      else:
+        pref=""
+      s100=str(result)
+      if string.find(s100,"e-")>0:
+        return pref+s100+" sec"
+      if string.find(s100,"e")>0:
+        s100=""
+      else:
+        s100=s100[string.find(s100,".")+1:]
+      hours=math.floor(result/3600)
+      result-=hours*3600
+      hours=string.replace(str(hours),".0","")
+      min=math.floor(result/60)
+      result-=min*60
+      min=string.replace(str(min),".0","")
+      sec=math.floor(result)
+      sec=string.replace(str(sec),".0","")
+      if s100=="0":
+        s100=""
+      else:
+        s100="."+s100;
+      result=""
+      if (hours!="0"):
+        if len(min)==1:
+          min="0"+min
+        if len(sec)==1:
+          sec="0"+sec
+        return pref+hours+":"+min+":"+sec+s100    
+      if (min!="0"):
+        if len(sec)==1:
+          sec="0"+sec
+        return pref+min+":"+sec+s100        
+      else:
+        return pref+sec+s100+" sec"
     result=str(result)
     if result[len(result)-2:]==".0":
       result=result[:len(result)-2]
@@ -499,12 +718,15 @@ def supercalc(toparse):
       unit=string.replace(unit,"g^","gram^")
       unit=string.replace(unit,"$^","Euro^")
       unit=string.replace(unit,"a^","Ampere^")
+      unit=string.replace(unit,"b^","byte^")
       unit=string.replace(unit,"cd^","candela^")
     unit=string.replace(unit,"^1","")
     result+=" "+unit
     return result
   else:
 #Matrix format
+    if left!="":
+      return "Reached end of line, could not parse: "+left
     lens = []
     for x in range(dimx):
       maxlen=0
@@ -517,10 +739,12 @@ def supercalc(toparse):
           unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"g^","gram^")
           unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"$^","Euro^")
           unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"a^","Ampere^")
+          unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"b^","byte^")
           unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"cd^","candela^")
           unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"^1","")
-        if (len(str(result[x+(y*dimx)]))+len(unit[x+(y*dimx)]) > maxlen):
-          maxlen=len(str(result[x+(y*dimx)]))+len(unit[x+(y*dimx)])
+        if (len((str(result[x+(y*dimx)])+" ").replace(".0 "," "))-1+len(unit[x+(y*dimx)]) > maxlen):
+          maxlen=len((str(result[x+(y*dimx)])+" ").replace(".0 "," "))-1+len(unit[x+(y*dimx)])
+
       lens+=[maxlen+2]
     returnline=""
     for y in range(dimy):
@@ -528,10 +752,11 @@ def supercalc(toparse):
       for x in range(dimx):
         item=str(result[x+(y*dimx)])
         item+=" "+unit[x+(y*dimx)]
-        item=item.ljust(lens[x])
+        item=item.replace(".0 "," ").ljust(lens[x])
         returnline+=item
       returnline+="]\n"
     return returnline.strip()
+
 
 #SI length
 global units
@@ -547,11 +772,11 @@ units+=[("liter",1e-3,"m^3")]
 
 #tijd
 
-units+=[("seconden",1.0,"s^1"),("seconde",1.0,"s^1"),("second",1.0,"s^1"),("sec",1.0,"s^1"),("minuut",6.0e+1,"s^1"),("minuten",6.0e+1,"s^1"),("uur",3.6e+3,"s^1"),("uren",3.6e+2,"s^1"),("dag",8.64e+4,"s^1"),("dagen",8.64e+4,"s^1"),("maand",2.6298e+6,"s^1"),("maanden",2.6298e+6,"s^1"),("jaar",3.15576e+7,"s^1"),("jaren",3.15576e+7,"s^1"),("eeuw",3.15576e+9,"s^1"),("eeuwen",3.15576e+9,"s^1")]
+units+=[("seconde",1.0,"s^1"),("second",1.0,"s^1"),("sec",1.0,"s^1"),("minuut",6.0e+1,"s^1"),("minuten",6.0e+1,"s^1"),("uur",3.6e+3,"s^1"),("uren",3.6e+2,"s^1"),("dag",8.64e+4,"s^1"),("dagen",8.64e+4,"s^1"),("maand",2.6298e+6,"s^1"),("maanden",2.6298e+6,"s^1"),("jaar",3.15576e+7,"s^1"),("jaren",3.15576e+7,"s^1"),("eeuw",3.15576e+9,"s^1"),("eeuwen",3.15576e+9,"s^1")]
 
 #time
 
-units+=[("minute",6.0e+1,"s^1"),("hour",3.6e+3,"s^1"),("day",8.64e+4,"s^1"),("week",6.048e+5,"s^1"),("fortnight",1.2096e+6,"s^1"),("month",2.6298e+6,"s^1"),("year",3.15576e+7,"s^1"),("lustrum",1.57788e+8,"s^1"),("lustra",1.15576e+8,"s^1"),("decade",3.15576e+8,"s^1"),("century",3.15576e+9,"s^1"),("centuries",3.15576e+9,"s^1"),("millenium",3.15576e+10,"s^1"),("millenia",3.15576e+10,"s^1")]
+units+=[("minute",6.0e+1,"s^1"),("hour",3.6e+3,"s^1"),("day",8.64e+4,"s^1"),("week",6.048e+5,"s^1"),("weken",6.048e+5,"s^1"),("fortnight",1.2096e+6,"s^1"),("month",2.6298e+6,"s^1"),("year",3.15576e+7,"s^1"),("lustrum",1.57788e+8,"s^1"),("lustra",1.15576e+8,"s^1"),("decade",3.15576e+8,"s^1"),("century",3.15576e+9,"s^1"),("centuries",3.15576e+9,"s^1"),("millenium",3.15576e+10,"s^1"),("millenia",3.15576e+10,"s^1")]
 
 #pressure
 units+=[("bar",1.0e+8,"g^1*m^-1*s^-2"),("psi",6.8947529e+6,"g^1*m^-1*s^-2"),("barye",1.0e+2,"g^1*m^-1*s^-2"),("atmosphere",1.01325e+8,"g^1*m^-1*s^-2")]
@@ -593,9 +818,15 @@ units+=[("herz",1.0,"s^-1"),("hz",1.0,"s^-1")]
  
 units+=[("candela",1.0,"cd^1"),("cd",1.0,"cd^1"),("lumen",1.0,"cd^1"),("lux",1.0,"cd^1*s^-2"),("iluminance",1.0,"cd^1*s^-2")]
 
+#information
+units+=[("byte",1.0,"b^1"),("b",1.0,"b^1"),("bit",0.125,"b^1")]
+
+#information 2-power-prefixes
+units+=[("kb",1024,"b^1"),("mb",1048576,"b^1"),("gb",1073741824,"b^1"),("tb",1099511627776,"b^1"),("pb",1125899906842624,"b^1"),("eb",1152921504606846976,"b^1"),("zb",1180591620717411303424,"b^1"),("yb",1208925819614629174706176,"b^1")]
+
 # galaxy 
 
-units+=[("parsec",3.08568e+16,"m^1"),("lightyear",9.460730472580800e+15,"m^1"),("light-year",9.460730472580800e+15,"m^1"),("lichtjaar",9.460730472580800e+15,"m^1"),("licht-jaar",9.460730472580800e+15,"m^1"),("lightspeed",2.99792458e+8,"m^1*s^-1"),("light-speed",2.99792458e+8,"m^1*s^-1"),("lichtsnelheid",2.99792458e+8,"m^1*s^-1"),("licht-snelheid",2.99792458e+8,"m^1*s^-1")]
+units+=[("parsec",3.08568e+16,"m^1"),("lightyear",9.460730472580800e+15,"m^1"),("light-year",9.460730472580800e+15,"m^1"),("ly",9.460730472580800e+15,"m^1"),("lichtjaar",9.460730472580800e+15,"m^1"),("licht-jaar",9.460730472580800e+15,"m^1"),("lightspeed",2.99792458e+8,"m^1*s^-1"),("light-speed",2.99792458e+8,"m^1*s^-1"),("lichtsnelheid",2.99792458e+8,"m^1*s^-1"),("licht-snelheid",2.99792458e+8,"m^1*s^-1"),("astronomicalunit",1.49597870691e+11,"m^1"),("astronomischeeenheid",1.49597870691e+11,"m^1"),("ae",1.49597870691e+11,"m^1"),("au",1.49597870691e+11,"m^1")]
 
 #imperial weight and mass
 
@@ -614,11 +845,4 @@ units+=[("btuh",2.93071e+2,"g^1*m^2*s^-3"),("btu",2.93071e+2,"g^1*m^2*s^-3"),("b
 units+=[("mm",1.0e-3,"m^1"),("dm",1e-1,"m^1"),("cm",1e-2,"m^1"),("km",1e+3,"m^1"),("ft",3.048e-1,"m^1"),("lb",4.5359237e+3,"g^1"),("l",1e-3,"m^3"),("dl",1e-4,"m^3"),("cl",1e-5,"m^3"),("ml",1e-6,"m^3"),("kg",1.0e+3,"g^1"),("cc",1.0e-6,"m^3"),("cl",1.0e-5,"m^3"),("nm",1.0e-9,"m^1"),("s",1.0,"s^1"),("amp",1.0,"a^1"),("min",6.0e+1,"s^1"),("h",3.6e+3,"s^1"),("m",1.0,"m^1"),("el",1.143,"m^1")]
 
 units.sort(lambda (x1,x2,x3), (y1,y2,y3): cmp(len(y1),len(x1)))
-
-
-
-
-
-
-
 
