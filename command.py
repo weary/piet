@@ -34,7 +34,7 @@ def db_set(table, key, value):
 
 def error_handler(type, value, traceback):
 	global channel;
-	piet.send(channel, "arg! er heeft weer iemand zitten prutsen! wie is't? ik met even "+repr(value.args[0])+" op z'n voorhoofd tatoeëren\n");
+	piet.send(channel, "arg! er heeft weer iemand zitten prutsen! wie is't? ik moet even "+repr(value.args[0])+" op z'n voorhoofd tatoeëren\n");
 	sys.__excepthook__(type, value, traceback);
 
 sys.excepthook=error_handler;
