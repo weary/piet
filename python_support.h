@@ -33,8 +33,8 @@ struct python_cmd
 	void operator()();
 	const python_cmd &operator =(const python_cmd &rhs_);
 
-	private:
-
+	// steals reference, global lock not acquired
+	// use with caution ;)
 	void add_param(const python_object &ob);
 
 	public:

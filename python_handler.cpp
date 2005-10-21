@@ -134,14 +134,69 @@ static PyObject * piet_nick(PyObject *self, PyObject *args)
 	return Py_None;
 }
 
+#define PY_ASSERT(cond, msg) \
+	if (!(cond)) { \
+		PyErr_SetString(PyExc_RuntimeError, msg); \
+		return NULL; }
+
+static PyObject * piet_thread(PyObject *self, PyObject *args)
+{
+	python_lock guard(__PRETTY_FUNCTION__);
+	std::cout << "piet_thread: args=" << python_object(args) << "\n";
+	PY_ASSERT(PyTuple_Check(args), "need tuple argument");
+
+	// call like:
+	// piet.thread(func, channel, funcparams...)
+	// func will be called like func(channel, funcparams...)
+
+	PyTupleObject *t=reinterpret_cast<PyTupleObject *>(args);
+	int n=t->ob_size;
+	PY_ASSERT(n>=2, "need at least function and channel parameters");
+	PY_ASSERT(PyString_Check(t->ob_item[0]), "function name needs to be specified as string")
+	PY_ASSERT(PyString_Check(t->ob_item[1]), "channel is not a string");
+	
+	std::string cmd_str=PyString_AsString(t->ob_item[0]);
+	std::string channel_str=PyString_AsString(t->ob_item[1]);
+	std::cout << "piet_thread: cmd=\"" << cmd_str << "\", chan=\"" << channel_str << "\"\n";
+	
+	python_cmd cmd(channel_str, cmd_str, n-1);
+
+	for (int m=1; m<n; ++m)
+	{
+		PyObject *p=t->ob_item[m];
+		Py_INCREF(p);
+		cmd.add_param(p);
+	}
+	std::cout << "piet_thread: cmd=" << cmd << "\n";
+
+	python_handler::instance().read_and_exec(channel_str, "command.py", cmd);
+	
+	std::cout << "piet_thread: cmd draait, klaar\n";
+#if 0
+
+	python_cmd(g_config.get_channel
+	// parse the incoming arguments
+	if (!PyArg_Parse(args, "(s)", &nick))
+	{
+		return NULL;
+	}
+
+	send(":%s NICK :%s\n", g_config.get_nick().c_str(), nick);
+
+#endif
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static PyMethodDef piet_methods[] =
 {
-	{"send", piet_send},
-	{"nick", piet_nick},
-	//{"get", piet_db_get},
-	//{"set", piet_db_set},
-	{"db", piet_db_query},
-	{NULL, NULL}
+	{"send", piet_send, METH_OLDARGS, NULL},
+	{"nick", piet_nick, METH_OLDARGS, NULL},
+	//{"get", piet_db_get, METH_OLDARGS, NULL},
+	//{"set", piet_db_set, METH_OLDARGS, NULL},
+	{"db", piet_db_query, METH_OLDARGS, NULL},
+	{"thread", piet_thread, METH_VARARGS, NULL},
+	{NULL, NULL, METH_OLDARGS, NULL}
 };
 
 }

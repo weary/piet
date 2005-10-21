@@ -1675,44 +1675,59 @@ def reloadding(params):
       return "'t is vast gelukt"
   return "die module ken ik niet"
 
-newsthread=0;
-def tweakers_newsthread():
-	global newsthread;
-	if (newsthread>0):
+tweakersthreads=0;
+tweakersstop=0;
+def tweakers_newsthread(channel):
+	global tweakersthreads, tweakersstop, tweakerslastitem;
+	if (tweakersthreads>0):
 		return;
-	newsthread+=1;
+	tweakersthreads+=1;
 
 	sheettext=\
 		"<xsl:stylesheet version='1.0' xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xsl:output=\"text\" xml:space=\"preserve\">"\
 		"<xsl:template match=\"/\"><xsl:for-each select=\"/rss/channel/item/title\"><xsl:value-of select=\".\"/>\n"\
 		"</xsl:for-each></xsl:template></xsl:stylesheet>";
 	cmd = "wget -O - -q http://tweakers.net/feeds/mixed.xml"
-	previtem="flop";
+	tweakerslastitem="flop";
 
 	import libxml2
 	import libxslt
 	styledoc = libxml2.parseDoc(sheettext);
 	style = libxslt.parseStylesheetDoc(styledoc);
-	while(1):
+	while (tweakersstop==0):
 		outp = os.popen(cmd);
 		x=outp.read();
 		outp.close();
 		doc = libxml2.parseDoc(x);
 		result = style.applyStylesheet(doc, None);
 		try: lines=string.split(style.saveResultToString(result), '\n')[1:9];
-		except: piet.send("#ae_mensen", "news failure\n"); return;
-		lines.append(previtem);
-		oldindex=lines.index(previtem); lines=lines[:oldindex];
+		except: piet.send(channel, "news failure\n"); tweakersthreads-=1; return;
+		lines.append(tweakerslastitem);
+		oldindex=lines.index(tweakerslastitem); lines=lines[:oldindex];
 		if (len(lines)>0):
 			item=lines[-1];
-			previtem=item;
-			piet.send("#ae_mensen", "nieuwsflits: "+item+"\n");
+			tweakerslastitem=item;
+			piet.send(channel, 
+					random.choice(("dus, ", "let op: ", "flits: ", "maareuh, ", "gerucht: ", "ja, ", "en "))
+					+item+"\n");
 		doc.freeDoc();
 		result.freeDoc();
 		time.sleep(60*15);
 	style.freeStylesheet();
+	piet.send(channel, "het is weer mooi geweest met tweakers nieuws, ik stop\n");
+	tweakersthreads-=1;
 
 #thread.start_new_thread(tweakers_newsthread, ());
+def tweakers(regel):
+	global tweakersthreads, tweakersstop;
+	if (regel=="aan"):
+		tweakersstop=0;
+		piet.thread("tweakers_newsthread", channel);
+	elif (regel=="uit"):
+		tweakersstop=1;
+	else:
+		return "aan of uit, hoe moeilijk kan het nou helemaal wezen?\n";
+	return "uh, ok\n";
 
 
 d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <woorden> of anagram en <woorden> om engels te forceren."),
@@ -1786,6 +1801,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "dum":               (0, dum, ""),
     "wiki":		 (500, wiki, "wiki <woord> Freeware encyclopedie"),
     "tel":               (1000, tel, "geef weary's mobielnr"),
+    "tweakers":               (1000, tweakers, "zet nieuws vanaf tweakers.net aan/uit"),
     "tijd":		 (0, tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
     "ns":                (100, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
     "trein":                (1200, trein, ""),
