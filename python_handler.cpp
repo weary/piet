@@ -116,28 +116,47 @@ static PyObject * piet_send(PyObject *self, PyObject *args)
 	return Py_None;
 }
 
-static PyObject * piet_nick(PyObject *self, PyObject *args)
-{
-	char *nick;
-
-	python_lock guard(__PRETTY_FUNCTION__);
-
-	// parse the incoming arguments
-	if (!PyArg_Parse(args, "(s)", &nick))
-	{
-		return NULL;
-	}
-
-	send(":%s NICK :%s\n", g_config.get_nick().c_str(), nick);
-
-	Py_INCREF( Py_None );
-	return Py_None;
-}
-
 #define PY_ASSERT(cond, msg) \
 	if (!(cond)) { \
 		PyErr_SetString(PyExc_RuntimeError, msg); \
 		return NULL; }
+
+
+// will return the old nick
+static PyObject * piet_nick(PyObject *self, PyObject *args)
+{
+	python_lock guard(__PRETTY_FUNCTION__);
+
+	std::cout << "piet_nick: args=" << python_object(args) << "\n";
+	PY_ASSERT(PyTuple_Check(args), "need tuple argument");
+	PyTupleObject *t=reinterpret_cast<PyTupleObject *>(args);
+	int n=t->ob_size;
+	PY_ASSERT(n==0 || n==1, "need either no arguments or one");
+
+	if (n==1)
+	{ // ask for new nick
+		PY_ASSERT(PyString_Check(t->ob_item[0]), "new nick should be a string");
+		std::string nick=PyString_AsString(t->ob_item[0]);
+		send(":%s NICK :%s\n", g_config.get_nick().c_str(), nick.c_str());
+	}
+
+	return PyString_FromString(g_config.get_nick().c_str());
+}
+
+static PyObject * piet_names(PyObject *self, PyObject *args)
+{
+	python_lock guard(__PRETTY_FUNCTION__);
+
+	// parse the incoming arguments
+	char *cp_channel;
+	if (!PyArg_Parse(args, "s", &cp_channel))
+		return NULL;
+
+	send(":%s NAMES %s\n", g_config.get_nick().c_str(), cp_channel);
+
+	Py_INCREF( Py_None );
+	return Py_None;
+}
 
 static PyObject * piet_thread(PyObject *self, PyObject *args)
 {
@@ -152,7 +171,7 @@ static PyObject * piet_thread(PyObject *self, PyObject *args)
 	PyTupleObject *t=reinterpret_cast<PyTupleObject *>(args);
 	int n=t->ob_size;
 	PY_ASSERT(n>=2, "need at least function and channel parameters");
-	PY_ASSERT(PyString_Check(t->ob_item[0]), "function name needs to be specified as string")
+	PY_ASSERT(PyString_Check(t->ob_item[0]), "function name needs to be specified as string");
 	PY_ASSERT(PyString_Check(t->ob_item[1]), "channel is not a string");
 	
 	std::string cmd_str=PyString_AsString(t->ob_item[0]);
@@ -188,14 +207,56 @@ static PyObject * piet_thread(PyObject *self, PyObject *args)
 	return Py_None;
 }
 
+static PyObject * piet_op(PyObject *self, PyObject *args)
+{
+	python_lock guard(__PRETTY_FUNCTION__);
+	std::cout << "piet_op: args=" << python_object(args) << "\n";
+	PY_ASSERT(PyTuple_Check(args), "need tuple argument");
+
+	PyTupleObject *t=reinterpret_cast<PyTupleObject *>(args);
+	int n=t->ob_size;
+	PY_ASSERT(n==2, "need 2 arguments, a channel and a list of names");
+	PY_ASSERT(PyString_Check(t->ob_item[0]), "1st argument should be a string");
+	PY_ASSERT(PyList_Check(t->ob_item[1]), "2nd argument should be list of names");
+	std::string channel=PyString_AsString(t->ob_item[0]);
+	PyListObject *names=reinterpret_cast<PyListObject *>(t->ob_item[1]);
+	
+	std::string nm;
+	n=0;
+	for (int m=0; m<names->ob_size; ++m)
+	{
+		if (n>0) nm+=' ';
+		nm+=PyString_AsString(names->ob_item[m]);
+		++n;
+		if (n==3)
+		{ // full, send away
+			send(":%s MODE %s +ooo :%s\n", g_config.get_nick().c_str(), channel.c_str(),
+					nm.c_str());
+			nm.clear(); n=0;
+		}
+	}
+	if (n>0)
+	{
+		send(":%s MODE %s +%s :%s\n", g_config.get_nick().c_str(), channel.c_str(),
+				std::string(n, 'o').c_str(), nm.c_str());
+	}
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+
 static PyMethodDef piet_methods[] =
 {
 	{"send", piet_send, METH_OLDARGS, NULL},
-	{"nick", piet_nick, METH_OLDARGS, NULL},
+	{"names", piet_names, METH_OLDARGS, NULL},
 	//{"get", piet_db_get, METH_OLDARGS, NULL},
 	//{"set", piet_db_set, METH_OLDARGS, NULL},
 	{"db", piet_db_query, METH_OLDARGS, NULL},
+	{"nick", piet_nick, METH_VARARGS, NULL},
 	{"thread", piet_thread, METH_VARARGS, NULL},
+	{"op", piet_op, METH_VARARGS, NULL},
 	{NULL, NULL, METH_OLDARGS, NULL}
 };
 

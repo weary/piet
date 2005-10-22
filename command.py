@@ -1664,6 +1664,10 @@ def geoip(params):
         returnvalue+=x+" "
   return returnvalue.lower().strip()
 
+def opme(params):
+	piet.names(channel);
+	return "ik zal eens kijken hoe het er hier voor staat en zo nodig actie ondernemen\n";
+
 def reloadding(params):
   params=string.split(params," ")
   if (len(params)<1) or (len(params[0])==0):
@@ -1783,7 +1787,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "geoip":             (100, geoip, "geoip <ip>, zoekt positie op aarde van ip"),
     "je heet nu":        (500, leeg, "je heet nu <nick>, geef nieuwe nick"),
     "renick":            (200, randomnaam, "renick, verzint een willekeurige nick"),
-    "opme":              (500, leeg, "opme, geef @"),
+    "opme":              (500, opme, "opme, geef @"),
     "koffie?":           (121, leeg, "koffie?, vraag of ie koffie wil"),
     "simon?":            (150, simon, "simon?, kijkt of simon op sorcsoft ingelogd is"),
     "citaat":            (150, citaat, "citaat, geeft een random regel text die ooit gezegd is"),

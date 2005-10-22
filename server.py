@@ -136,26 +136,53 @@ def check_netsplit(nick_, channel_, command_, msg_):
 		return True;
 
 	return False;
+		
+def check_names(nick_, channel_, msg_):
+	nicks=set(string.split(msg_[string.find(msg_, ':')+1:], ' '));
+	pietnick=piet.nick();
+	#piet.send(channel_, "check_names("+nick_+", "+channel_+", "+msg_+")\n");
+	if ('@'+pietnick in nicks):
+		noop=[x for x in nicks if x[0]!='@'];
+		if (len(noop)==0): return;
+		qry="SELECT key FROM auth WHERE value>=500 AND key IN ("+ \
+				 string.join(['"'+x+'"' for x in noop], ',')+")";
+		res=[x[0] for x in piet.db(qry)[1:]];
+		if (len(res)==0): return;
+		piet.send(channel_, qry+"\n");
+		piet.op(channel_, res);
+
+names_delayed_waiting=0
+def check_names_delayed(channel_):
+	global names_delayed_waiting;
+	if (names_delayed_waiting>0):
+		return;
+	names_delayed_waiting=1;
+	time.sleep(5);
+	piet.names(channel_);
+	names_delayed_waiting=0;
 
 def do_server(nick_, auth_, channel_, msg_):
 	print("do_server("+nick_+", "+str(auth_)+", "+channel_+", "+msg_+")\n");
 	command=string.upper(string.split(msg_, ' ')[0]);
 	netsplit=False;
-	if command in ["JOIN", "PART", "QUIT", "KICK"]:
+	if command in ["JOIN", "PART", "QUIT", "KICK"] and auth_>0:
 		netsplit=check_netsplit(nick_, channel_, command, msg_);
 		if not(netsplit):
 			check_sleep_time(nick_, auth_, channel_, command, msg_);
-	if command in ["KICK"]:
+	if command in ["KICK"] and auth_>0:
 		kicknick=string.split(msg_, ' ')[2];
 		piet.send(channel_, "en waag het niet om weer te komen, jij vuile "+kicknick+"!\n");
-	if command in ["437"]:
+	if command in ["437"] and auth_>0:
 		piet.send(channel_, "bah, die nick is even niet beschikbaar\n");
-	if command in ["MODE"]:
-		if not(netsplit):
-			piet.send(channel_, 'server riep "'+msg_[5:]+'", maar dat interesseert echt helemaal niemand\n');
+	if command in ["353"]:
+		check_names(nick_, channel_, msg_);
+	if command in ["MODE"] and auth_>0:
+		if ((string.find(msg_, ' +o')>=0) or (string.find(msg_, ' -o')>=0)):
+			check_names_delayed(channel_);
+		else:
+			if not(netsplit):
+				piet.send(channel_, 'server riep "'+msg_+'", maar dat interesseert echt helemaal niemand\n');
+	if command in ["JOIN"]:
+		check_names_delayed(channel_);
 		
-
-
-		
-
 

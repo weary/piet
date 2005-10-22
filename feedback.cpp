@@ -35,7 +35,7 @@ using boost::format;
 //#define COM_AUTH 13
 #define COM_BUSY_ASK 14
 #define COM_RENICK 15
-#define COM_OPME 16
+//#define COM_OPME 16
 #define COM_BESILENT 17
 #define COM_SILENT 18
 #define COM_UNSILENT 19
@@ -65,12 +65,12 @@ const scommand commands[]= {
 { "koffie?",     COM_BUSY_ASK, 121},
 //{ "auth",        COM_AUTH, -2500 },
 { "je heet nu ", COM_RENICK, 200 },
-{ "opme",        COM_OPME,  150 },
+//{ "opme",        COM_OPME,  150 },
 { "wees stil",   COM_BESILENT, 1000 },
 { "stil?",       COM_SILENT, 1000 },
 { "praat maar",  COM_UNSILENT, 1000 },
 { "lees lua",    COM_RELOADLUA, 1000 },
-{ "SERVER",      COM_SERVER, 0 }
+{ "SERVER",      COM_SERVER, -5 }
 };
 
 
@@ -127,7 +127,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
     // commando opzoeken in de tabel
     int com_index=-1;
     std::string params;
-    for (int i=0; (i<(int)(sizeof(commands)/sizeof(scommand))) && (com_index==-1); i++)
+    for (int i=0; (i<(int)(sizeof(commands)/sizeof(scommand))) && (com_index==-1); ++i)
     {
 			if (boost::algorithm::istarts_with(msg, commands[i].name))
       {
@@ -137,6 +137,9 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
     }
 		boost::algorithm::trim(params);
 
+		if (com_index>=0)
+			std::cout << "command: \"" << commands[com_index].name << ", requires auth: " << 
+				commands[com_index].auth << ", you have: " << auth << "\n";
     // it is a build in command
     if ((com_index>=0)&&(auth>=commands[com_index].auth))
     {
@@ -228,12 +231,12 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
             send(":%s NICK :%s\n", g_config.get_nick().c_str(), params.c_str());
           }
           break;
-        case(COM_OPME):
+        /*case(COM_OPME):
           {
             send(":%s MODE %s +o %s", g_config.get_nick().c_str(), channel.c_str(), nick.c_str());
             send(":%s PRIVMSG %s :hoezo? ben ik dan operator ofzo? kan je dat zelf niet?\n", g_config.get_nick().c_str(), channel.c_str());
           }
-          break;
+          break;*/
         case(COM_RESTART):
           {
             send(":% QUIT :ben zo terug (hopelijk)\n", g_config.get_nick().c_str());
