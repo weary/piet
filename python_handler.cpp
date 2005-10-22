@@ -222,23 +222,24 @@ static PyObject * piet_op(PyObject *self, PyObject *args)
 	PyListObject *names=reinterpret_cast<PyListObject *>(t->ob_item[1]);
 	
 	std::string nm;
+	std::string nm2;
 	n=0;
 	for (int m=0; m<names->ob_size; ++m)
 	{
-		if (n>0) nm+=' ';
-		nm+=PyString_AsString(names->ob_item[m]);
+		nm2+="+o";
+		nm+=std::string(" ")+PyString_AsString(names->ob_item[m]);
 		++n;
 		if (n==3)
 		{ // full, send away
-			send(":%s MODE %s +ooo :%s\n", g_config.get_nick().c_str(), channel.c_str(),
-					nm.c_str());
-			nm.clear(); n=0;
+			send(":%s MODE %s %s %s\n", g_config.get_nick().c_str(), channel.c_str(),
+					nm2.c_str(), nm.c_str());
+			nm.clear(); nm2.clear(); n=0;
 		}
 	}
 	if (n>0)
 	{
-		send(":%s MODE %s +%s :%s\n", g_config.get_nick().c_str(), channel.c_str(),
-				std::string(n, 'o').c_str(), nm.c_str());
+		send(":%s MODE %s %s %s\n", g_config.get_nick().c_str(), channel.c_str(),
+				nm2.c_str(), nm.c_str());
 	}
 
 	Py_INCREF(Py_None);

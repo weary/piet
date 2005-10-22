@@ -138,17 +138,23 @@ def check_netsplit(nick_, channel_, command_, msg_):
 	return False;
 		
 def check_names(nick_, channel_, msg_):
+	print("check_names("+nick_+", "+channel_+", "+msg_+")\n");
 	nicks=set(string.split(msg_[string.find(msg_, ':')+1:], ' '));
 	pietnick=piet.nick();
-	#piet.send(channel_, "check_names("+nick_+", "+channel_+", "+msg_+")\n");
 	if ('@'+pietnick in nicks):
 		noop=[x for x in nicks if x[0]!='@'];
-		if (len(noop)==0): return;
+		if (not(noop)): return;
 		qry="SELECT key FROM auth WHERE value>=500 AND key IN ("+ \
 				 string.join(['"'+x+'"' for x in noop], ',')+")";
-		res=[x[0] for x in piet.db(qry)[1:]];
-		if (len(res)==0): return;
-		piet.send(channel_, qry+"\n");
+		dbres=piet.db(qry);
+		if (not(dbres)): return;
+		print("dbres="+repr(dbres)+"\n");
+		res=[x[0] for x in dbres[1:]];
+		if (not(res)): return;
+		if (len(res)==1):
+			piet.send(channel_, "hup, een apenstaart voor "+res[0]+"\n");
+		else:
+			piet.send(channel_, "ho, hier moet even wat gefixed worden.\n");
 		piet.op(channel_, res);
 
 names_delayed_waiting=0

@@ -78,8 +78,7 @@ std::string obj2str(PyObject *obj)
 		str << "obj<" << obj->ob_type->tp_name << ">";
 	}
 
-	if (obj)
-		str << 'x' << obj->ob_refcnt;
+	//if (obj) str << 'x' << obj->ob_refcnt;
 
 	return str.str();
 }
