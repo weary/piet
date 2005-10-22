@@ -8,6 +8,7 @@
 #include "passwd.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/format.hpp>
 #include <crypt.h>
 #include <netdb.h>
@@ -121,17 +122,17 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
   if (personal)
   {
 		boost::algorithm::trim(msg);
-    printf("This is a personal message, msg = \"%s\"\n", msg.c_str());
+		std::cout << "This is a personal message, msg = \"" << msg << "\"\n";
 
     // commando opzoeken in de tabel
     int com_index=-1;
     std::string params;
     for (int i=0; (i<(int)(sizeof(commands)/sizeof(scommand))) && (com_index==-1); i++)
     {
-      if (strncasecmp(msg.c_str(), commands[i].name, strlen(commands[i].name))==0)
+			if (boost::algorithm::istarts_with(msg, commands[i].name))
       {
         com_index=i;
-        params=msg.c_str()+strlen(commands[i].name);
+        params=msg.substr(strlen(commands[i].name));
       }
     }
 		boost::algorithm::trim(params);

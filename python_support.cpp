@@ -205,7 +205,7 @@ void python_cmd::operator()()
 			PyErr_Fetch(&type_o, &value_o, &traceback_o);
 			python_object type(type_o), value(value_o), traceback(traceback_o);
 			std::cout << "PY: ERROR: " << value << "\nerror class: " << type << "\ntraceback: " << traceback << "\n";
-			privmsg(_channel, "ACTION rent gillend rond en roept moord, brand en " + obj2str(value) +"\n");
+			privmsg(_channel, "ACTION kijkt gestoord op en roept: "+obj2str(value)+ ", en gaat daarna weer verder\n");
 		}
 
 		func.decref();
