@@ -156,6 +156,14 @@ def check_names(nick_, channel_, msg_):
 		else:
 			piet.send(channel_, "ho, hier moet even wat gefixed worden.\n");
 		piet.op(channel_, res);
+	else: # piet niet operator
+		ops=[x[1:] for x in nicks if x[0]=='@'];
+		if (not(ops)): return;
+		myop=random.choice(ops);
+		msg=random.choice(["mag ik een @?", "toe, doe eens een @?", \
+				"ik wil graag je operatortje zijn, mag ik?", \
+				"kijk, ik heb geen @. fix's?"]);
+		piet.send(channel_, myop+": "+msg+"\n");
 
 names_delayed_waiting=0
 def check_names_delayed(channel_):
