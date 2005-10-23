@@ -1795,7 +1795,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "wees stil":         (1000, leeg, "wees stil, laat piet z'n kop houden met loze dingen"),
     "stil?":             (1000, leeg, "stil?, probeert piet zich stil te houden?"),
     "praat maar":        (1000, leeg, "praat maar, tegenovergestelde van \"wees stil\""),
-    "lees lua":          (1000, leeg, "lees lua, herlees het lua script"),
+    #"lees lua":          (1000, leeg, "lees lua, herlees het lua script"),
     "kies":              (100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
     "tv":                (100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
 		"trigram":					 (1000, trigram, "praat nonsense"),

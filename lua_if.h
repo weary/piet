@@ -1,7 +1,7 @@
 #ifndef __PIET_CLUA__
 #define __PIET_CLUA__
 
-
+#if 0
 #include <lubi.h>
 
 struct clua
@@ -16,5 +16,6 @@ struct clua
 };
 
 extern boost::shared_ptr<clua> lua_inst;
+#endif
 
 #endif // __PIET_CLUA__

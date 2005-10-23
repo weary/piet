@@ -4,7 +4,7 @@
 #include "python_handler.h"
 #include "bot.h"
 #include "sender.h"
-#include "lua_if.h"
+//#include "lua_if.h"
 #include "passwd.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -15,6 +15,8 @@
 #include <netinet/in.h>
 #include <stdarg.h>
 #include <sys/socket.h>
+#include <iostream>
+#include <sstream>
 #include <sys/types.h>
 
 //typedef std::map<std::string, int> tauth_map;
@@ -42,7 +44,7 @@ using boost::format;
 #define COM_JOINME 20
 #define COM_JOINME_NOAUTH 21
 #define COM_SERVER 22
-#define COM_RELOADLUA 24
+//#define COM_RELOADLUA 24
 
 struct scommand
 {
@@ -69,7 +71,7 @@ const scommand commands[]= {
 { "wees stil",   COM_BESILENT, 1000 },
 { "stil?",       COM_SILENT, 1000 },
 { "praat maar",  COM_UNSILENT, 1000 },
-{ "lees lua",    COM_RELOADLUA, 1000 },
+//{ "lees lua",    COM_RELOADLUA, 1000 },
 { "SERVER",      COM_SERVER, -5 }
 };
 
@@ -244,20 +246,20 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
           }
           break;
 
-        case(COM_RELOADLUA):
+        /*case(COM_RELOADLUA):
           {
             send(":%s PRIVMSG %s :nou snel dan\n", g_config.get_nick().c_str(), channel.c_str());
 						lua_inst.reset(new clua);
             send(":%s PRIVMSG %s :ok, gedaan\n", g_config.get_nick().c_str(), channel.c_str());
           }
-          break;
+          break;*/
         case(COM_SERVER):
           {
             msg=msg.substr(7);
-						if (!lua_inst)
+						/*if (!lua_inst)
 							send(":%s PRIVMSG %s :HelpHelpHelp, ik ben m'n instellingen kwijt!\n", g_config.get_nick().c_str(), channel.c_str());
 						else
-							lua_inst->server_msg(nick.c_str(), auth, channel.c_str(), msg.c_str());
+							lua_inst->server_msg(nick.c_str(), auth, channel.c_str(), msg.c_str());*/
 						{
 							python_cmd cmd(channel, "do_server", 4);
 							cmd << nick << auth << channel << msg;

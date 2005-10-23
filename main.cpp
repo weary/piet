@@ -1,5 +1,5 @@
 #include "bot.h"
-#include "lua_if.h"
+//#include "lua_if.h"
 #include "passwd.h"
 #include "sender.h"
 #include "piet_db.h"
@@ -13,6 +13,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/poll.h>
+#include <iostream>
 #include <unistd.h>
 
 using boost::format;
@@ -130,7 +131,7 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		lua_inst.reset(new clua);
+		//lua_inst.reset(new clua);
 #if 0
 		//auth_map[std::string("piet")]=-10;
 		auth_map[std::string("weary")]=1200;

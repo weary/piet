@@ -1,4 +1,4 @@
-
+#if 0
 #include "bot.h"
 #include "sender.h"
 #include "lua_if.h"
@@ -97,4 +97,4 @@ void clua::server_msg(const std::string &nick_, int auth_, const std::string &ch
     send("%s", s.c_str());
 	}
 }
-
+#endif
