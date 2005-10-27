@@ -991,12 +991,13 @@ def remind(regel):
   tijd = to_int(string.strip(params[0]));
   if (tijd < 0):
     return "tijdsaanduiding klopt niet";
-  tijdstr=time.strftime("%H:%M", time.gmtime(time.time()+tijd));
-  piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
-  piet.send("weary", "remind gaat slapen voor "+repr(tijd)+"s ("+repr(params)+")\n");
-  time.sleep(tijd);
-  piet.send("weary", "remind wordt wakker van "+repr(tijd)+"s ("+repr(params)+")\n");
+  chan=channel;
   result = string.join(params[1:]);
+  tijdstr=time.strftime("%H:%M", time.localtime(time.time()+tijd));
+  piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
+  #piet.send("weary", "remind gaat slapen voor "+repr(tijd)+"s ("+result+")\n");
+  time.sleep(tijd);
+  #piet.send("weary", "remind wordt wakker van "+repr(tijd)+"s ("+result+")\n");
   return string.strip(parse(result, False, True));
 
 def verklaar(regel):
