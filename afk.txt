@@ -253,4 +253,6 @@ PHY#physical network layer
 ts#teamspeak
 UML#Universal Modelling Language
 BVH#biovision hierarchy file, motion captured skeletjes
+PVS#potentially visible set
+gug#GMT Universal Greeting
 
