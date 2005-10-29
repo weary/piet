@@ -144,7 +144,7 @@ def check_names(nick_, channel_, msg_):
 	if ('@'+pietnick in nicks):
 		noop=[x for x in nicks if x[0]!='@'];
 		if (not(noop)): return;
-		qry="SELECT key FROM auth WHERE value>=500 AND key IN ("+ \
+		qry="SELECT name FROM auth WHERE auth>=500 AND name IN ("+ \
 				 string.join(['"'+x+'"' for x in noop], ',')+")";
 		dbres=piet.db(qry);
 		if (not(dbres)): return;

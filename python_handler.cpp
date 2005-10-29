@@ -310,7 +310,7 @@ void python_handler::checkfile_and_read(const std::string channel_, const std::s
 		{ // new file, just read, no message
 			readit=true;
 		}
-		else if (i==_modification_map.end() || i->second!=st.st_mtime)
+		else if (i->second!=st.st_mtime)
 		{
 			privmsg(channel_, "ho! eerst de geweldige nieuwe "+file_+" lezen\n");
 			readit=true;

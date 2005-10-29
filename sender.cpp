@@ -126,7 +126,6 @@ void send(const char *fmt, ...)
   delete(p);
 }
 
-
 // separate thread that checks the send queue
 static void *sender(void *vsi)
 {

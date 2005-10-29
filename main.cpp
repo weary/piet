@@ -104,6 +104,7 @@ static std::string receive(int sok)
 	int len=recv(sok, buf, 65536, 0);
 	if (len<=0)
 	{
+		std::cout << "ERROR: recv failed\n" << std::flush;
 		quit=true;
 		return "";
 	}
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
 				garbagecollect_count=30;
 			}
 		}
-		printf("exit't main while, continuing to quit\n");
+		std::cout << "exit't main while(quit=" << quit << "), continuing to quit\n" << std::flush;
 
 		killall();
 
@@ -258,12 +259,15 @@ void interpret(const std::string &input)
     std::string newnick=params;
     if (newnick[0]==':') newnick.erase(0,1);
 
-    int auth=piet_db_get("auth", sender, -5);
-    int otherauth=piet_db_get("auth", newnick, -5);
+    int auth=piet_db_get("SELECT auth FROM auth where name=\""+sender+"\"", -5);
+    int otherauth=piet_db_get("SELECT auth FROM auth where name=\""+newnick+"\"", -5);
     printf("DEBUG: \"%s\"(%d) is ge-renick\'t naar \"%s\"(%d)\n", sender.c_str(), auth, newnick.c_str(), otherauth);
 
-		piet_db_set("auth", sender, otherauth);
-		piet_db_set("auth", newnick, auth);
+		piet_db_set("REPLACE INTO auth(name,auth) VALUES(\""+sender+"\","+
+				boost::lexical_cast<std::string>(otherauth)+")");
+		piet_db_set("REPLACE INTO auth(name,auth) VALUES(\""+newnick+"\","+
+				boost::lexical_cast<std::string>(auth)+")");
+
     if (auth>otherauth)
       send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, %s heeft 't niet meer nodig lijkt me\n", g_config.get_nick().c_str(), channel.c_str(), auth, newnick.c_str(), sender.c_str());
     else if ((auth<otherauth)&&(auth>0))
@@ -308,6 +312,6 @@ void interpret(const std::string &input)
 
 int Authenticate(const std::string &nick, const std::string &email)
 {
-  return piet_db_get("auth", nick, -5);
+  return piet_db_get("SELECT auth FROM auth where name=\""+nick+"\"", -5);
 }
 

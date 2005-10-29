@@ -143,7 +143,7 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 	return NULL;
 }
 
-std::string piet_db_get(const std::string &table_, const std::string &key_, const std::string &default_)
+std::string piet_db_get(const std::string &query_, const std::string &default_)
 {
 	if (!sqlite_t::instance().open())
 	{
@@ -151,22 +151,21 @@ std::string piet_db_get(const std::string &table_, const std::string &key_, cons
 		return default_;
 	}
 
-	std::string query="SELECT value FROM "+table_+" WHERE key='"+key_+"'";
-	std::cout << "DB: query=" << query << "\n";
+	std::cout << "DB: query=" << query_ << "\n" << std::flush;
 	int nrow,ncolumn;
 	char *err=NULL;
 	char **table=NULL;
 	int result=
-		sqlite3_get_table(sqlite_t::instance(), query.c_str(), &table, &nrow, &ncolumn, &err);
+		sqlite3_get_table(sqlite_t::instance(), query_.c_str(), &table, &nrow, &ncolumn, &err);
 	if (err)
 	{
-		std::cout << "DB: Error: " << err << "\n";
+		std::cout << "DB: Error: " << err << "\n" << std::flush;
 		sqlite3_free(err);
 		if (table) sqlite3_free_table(table);
 	}
 	else if (result!=SQLITE_OK)
 	{
-		std::cout << "DB: Error: unknown\n";
+		std::cout << "DB: Error: unknown\n" << std::flush;
 	}
 	else if (ncolumn==0)
 	{}
@@ -180,29 +179,27 @@ std::string piet_db_get(const std::string &table_, const std::string &key_, cons
 	return default_;
 }
 
-void piet_db_set(const std::string &table_, const std::string &key_, const std::string &value_)
+void piet_db_set(const std::string &query_)
 {
 	python_lock guard(__PRETTY_FUNCTION__);
 
-	std::string query="REPLACE INTO "+table_+" VALUES('"+key_+"', '"+value_+"')";
-
 	if (!sqlite_t::instance().open()) throw;
 
-	std::cout << "DB: query=" << query << "\n";
+	std::cout << "DB: query=" << query_ << "\n" << std::flush;
 	int nrow,ncolumn;
 	char *err=NULL;
 	char **table=NULL;
 	int result=
-		sqlite3_get_table(sqlite_t::instance(), query.c_str(), &table, &nrow, &ncolumn, &err);
+		sqlite3_get_table(sqlite_t::instance(), query_.c_str(), &table, &nrow, &ncolumn, &err);
 	if (table) sqlite3_free_table(table);
 	if (err)
 	{
-		std::cout << "DB: Error" << err << "\n";
+		std::cout << "DB: Error" << err << "\n" << std::flush;
 		sqlite3_free(err);
 	}
 	else if (result!=SQLITE_OK)
 	{
-		std::cout << "DB: Error: unknown\n";
+		std::cout << "DB: Error: unknown\n" << std::flush;
 	}
 }
 

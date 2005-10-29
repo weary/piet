@@ -74,7 +74,7 @@ def change_auth(params):
 		return "auth [<newauth> <nick> [<password>]]";
 
 	if (parcount==0):
-		a=piet.db("SELECT key,value FROM auth ORDER BY key") or [];
+		a=piet.db("SELECT name,auth FROM auth ORDER BY name") or [];
 		if (len(a)<=1):
 			return "Ik ken helemaal niemand! arme ik...\n";
 		else:
@@ -94,13 +94,18 @@ def change_auth(params):
 		else:
 			return "achja, leuk geprobeerd, niet goed helaas..\n";
 
+	try:
+		oldauth=int(piet.db("SELECT auth FROM auth WHERE name=\""+parnick+"\"")[1][0]);
+	except:
+		oldauth=-5;
+
 	oldauth=int(db_get("auth", parnick) or -5);
 	if (newauth>localauth):
 		return "je hebt maar "+str(localauth)+" auth, dus meer mag je niet geven";
 	if (localauth<=oldauth and parnick!=nick):
 		return "en wie ben jij dan wel, dat je zomaar denkt "+parnick+" authorisatie te kunnen geven?!?";
 	if (newauth<=localauth and localauth>=oldauth):
-		db_set("auth", parnick, str(newauth));
+		piet.db("REPLACE INTO auth(name,auth) VALUES(\""+parnick+"\","+str(newauth)+")");
 		return "ok, "+parnick+" heeft nu authenticatieniveau "+str(newauth)+"\n";
 	return "bogus"; # never reached, i think
 
@@ -1256,38 +1261,52 @@ def wiki(regel):
   return string.strip(toreturn);
 
 def tijd(regel):
-  tijdstruct=time.gmtime();
-  localstruct=time.localtime();
-  result= "NL: "+str(localstruct[3])+":";
-  if (localstruct[4] < 10):
-    result += "0";
-  result+=str(tijdstruct[4])+"  NSW: ";
-#  result+=str(tijdstruct[4])+"  PA: "; #PA
-#  diff=(localstruct[3]-6);
-#  while (diff < 0):
-#    diff+=24;
-#  result+=str(diff)+":";
-#  if (localstruct[4] < 10):
-#    result += "0";
-  
-  diff=(localstruct[3]-tijdstruct[3]);
-  while (diff < 0):
-    diff+=24;
-  if (diff==2):
-    if (localstruct[3]>15):
-      result += str(localstruct[3]-16);
-    else:
-      result += str(localstruct[3]+8);
-  else:
-    if (localstruct[3]>13):
-      result += str(localstruct[3]-14);
-    else:
-      result += str(localstruct[3]+10);
-  result +=":";
-  if (localstruct[4] < 10):
-    result += "0";
-  result += str(localstruct[4]);
-  return result;
+	inp=piet.db('SELECT name,timezone FROM auth');
+	if (inp==None or len(inp)<=1): # no users
+		return time.strftime("%H:%M", time.localtime());
+
+	# inp[1:] = [[naam,tijdzone]]
+	tzs=set([tz for n,tz in inp[1:]]);
+	tzcalc={};
+	for tz in tzs:
+		os.environ['TZ']=tz;
+		time.tzset();
+		tzcalc[time.strftime("%H:%M", time.localtime())]=tz;
+	# tzcalc is mapping van tijd naar tijdzone
+
+	# zoek lokale tijd op, die moet voorop
+	os.environ['TZ']="CET";
+	time.tzset();
+	result=time.strftime("%H:%M", time.localtime());
+	if (tzcalc.has_key(result)): del tzcalc[result];
+
+	result="hier is het "+result;
+	for t,tz in tzcalc.iteritems():
+		result=result+", en in "+tz+" is het "+t;
+	return result+"\n";
+
+def tijdzone(regel):
+	a=string.split(regel, ' ');
+	if (a==None or len(a)==0 or len(a[0])==0):
+		matches=piet.db('SELECT name,timezone FROM auth');
+		if (len(matches)<2): return "ik ken helemaal niemand!";
+		s={};
+		for n,tz in matches[1:]:
+			if (tz in s):
+				s[tz]=s[tz]+", "+n;
+			else:
+				s[tz]=n;
+		return string.join([tz+": "+ns for tz,ns in s.iteritems()], '\n');
+	elif (len(a)==1):
+		matches=piet.db('SELECT timezone FROM auth WHERE name="'+a[0]+'"');
+		if (matches==None or len(matches)<2):
+			return "die ken ik niet";
+		else:
+			return a[0]+" huppelt rond in "+matches[1][0]+"\n";
+	elif(len(a)==2):
+		piet.db('REPLACE INTO auth(name,timezone) VALUES("'+a[0]+'","'+a[1]+'")');
+		return "ach, is dat zo? ok, dan zet ik "+a[0]+" in "+a[1]+"\n";
+	return "zeges, tiepgraag mannetje, 2 parameters is echt 't maximum hoor\n";
 
 def quote(regel):
   a=string.split(regel, ' ');
@@ -1808,6 +1827,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "tel":               (1000, tel, "geef weary's mobielnr"),
     "tweakers":               (1000, tweakers, "zet nieuws vanaf tweakers.net aan/uit"),
     "tijd":		 (0, tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
+    "tijdzone":		 (1000, tijdzone, "tijdzone [naam [tijdzone]], verander tijdzones van mensen. zie /usr/share/zoneinfo."),
     "ns":                (100, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
     "trein":                (1200, trein, ""),
     "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
