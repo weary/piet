@@ -308,7 +308,6 @@ void python_handler::checkfile_and_read(const std::string channel_, const std::s
 		bool readit=false;
 		if (i==_modification_map.end())
 		{ // new file, just read, no message
-			_modification_map[file_]=st.st_mtime;
 			readit=true;
 		}
 		else if (i==_modification_map.end() || i->second!=st.st_mtime)
@@ -320,7 +319,7 @@ void python_handler::checkfile_and_read(const std::string channel_, const std::s
 		if (readit)
 		{
 			python_lock("checkfile_and_read");
-			i->second=st.st_mtime;
+			_modification_map[file_]=st.st_mtime;
 
 			std::cout << "PY: reading file \"" << file_ << "\"\n" << std::flush;
 			FILE *f=fopen(file_.c_str(), "r");
