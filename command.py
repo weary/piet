@@ -1026,20 +1026,20 @@ def verklaar(regel):
 def mep(regel):
   params=string.split(regel,' ');
   if (len(params)<1) or (len(params[0])==0):
-    return "\001ACTION mept er lustig op los \001";
+    return "ACTION mept er lustig op los";
   r=random.random();
   if (r<=0.1):
     return "ik zou niet weten waarom";
   if (r<=0.2):
-    return "\001ACTION mept "+nick+" zelf";
+    return "ACTION mept "+nick+" zelf";
   if (r<=0.5):
-    return "\001ACTION deelt een corrigerende mep uit aan "+params[0];
-  return "\001ACTION mept "+params[0];
+    return "ACTION deelt een corrigerende mep uit aan "+params[0];
+  return "ACTION mept "+params[0];
 
 def geef(regel):
   params=string.split(regel,' ');
   if (len(params)<1) or (len(params[0])==0):
-    return "\001ACTION geeft "+nick+" een blik van verstandhouding";
+    return "ACTION geeft "+nick+" een blik van verstandhouding";
   i=0;
   before="";
   line="";
@@ -1048,8 +1048,8 @@ def geef(regel):
     if a=="aan":
       line=before;
   if (line!=""):
-    return "\001ACTION geeft "+before+"\001";
-  return "\001ACTION deelt "+params[0]+" "+string.join(params[1:],' ')+" uit";
+    return "ACTION geeft "+before;
+  return "ACTION deelt "+params[0]+" "+string.join(params[1:],' ')+" uit";
 
 def dum(regel):
   r=random.random();
