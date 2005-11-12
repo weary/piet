@@ -998,9 +998,7 @@ def remind(regel):
 		chan=channel;
 		tijdstr=time.strftime("%H:%M", time.localtime(time.time()+tijd));
 		piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
-		#piet.send("weary", "remind gaat slapen voor "+repr(tijd)+"s ("+result+")\n");
 		time.sleep(tijd);
-		#piet.send("weary", "remind wordt wakker van "+repr(tijd)+"s ("+result+")\n");
 	else: # absolute time
 		try:
 			tijd = time.strptime(tijd, "%H:%M");
@@ -1010,7 +1008,6 @@ def remind(regel):
 			except:
 				return "volgens mij hou je me voor de gek, wat is dit voor rare tijd?";
 		inp=piet.db('SELECT timezone FROM auth where name="'+nick+'"');
-		piet.send(channel, repr(inp)+"\n");
 		assert(inp!=None and len(inp)>1);
 		os.environ['TZ']=inp[1][0];
 		time.tzset();
@@ -1018,7 +1015,6 @@ def remind(regel):
 		wt=(tijd[3]-lc[3])*3600+(tijd[4]-lc[4])*60+(tijd[5]-lc[5]);
 		if (wt<0): wt+=24*3600;
 		timezone_reset();
-		piet.send(channel, repr(wt)+"\n");
 		if (wt<120):
 			piet.send(channel, "dat is al over "+str(wt)+" seconden! maar goed, ik zal herinneren\n");
 		else:
