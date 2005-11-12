@@ -15,9 +15,9 @@ auth = -5;#int(string.strip(sys.stdin.readline()));
 channel = "";#string.strip(sys.stdin.readline());
 d={};
 
-def db_get(table, key):
+def db_get(table, keycol, key, valuecol):
 	try:
-		result=piet.db("SELECT value FROM "+table+" WHERE key=\""+key+"\"");
+		result=piet.db("SELECT "+valuecol+" FROM "+table+" WHERE "+keycol+"=\""+key+"\"");
 		return result[1][0];
 	except:
 		return None;
@@ -99,7 +99,7 @@ def change_auth(params):
 	except:
 		oldauth=-5;
 
-	oldauth=int(db_get("auth", parnick) or -5);
+	oldauth=int(db_get("auth", "name", parnick, "auth") or -5);
 	if (newauth>localauth):
 		return "je hebt maar "+str(localauth)+" auth, dus meer mag je niet geven";
 	if (localauth<=oldauth and parnick!=nick):
@@ -132,7 +132,7 @@ def uptime(params):
 	elif (days>1):
 		return "woei! alweer "+str(days)+" dagen (en "+str(hours)+" uur en "+str(minutes)+" minuten)";
 	elif (days>0):
-		return "toch alweer een dagen en "+str(hours)+" uur (en "+str(minutes)+" minuten)";
+		return "toch alweer een dag en "+str(hours)+" uur (en "+str(minutes)+" minuten)";
 	elif (hours>1):
 		return "alweer "+str(hours)+" uur en "+str(minutes)+" minuten";
 	elif (hours>0):
