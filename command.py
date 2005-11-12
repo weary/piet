@@ -1002,7 +1002,6 @@ def remind(regel):
 			return "dat is nu. je bent wel erg vergeetachtig, niet?";
 		tijdstr=format_localtijd(time.time()+tijd, "%H:%M", tz);
 		piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
-		time.sleep(tijd);
 	else: # absolute time
 		try:
 			tijd = time.strptime(tijd, "%H:%M");
@@ -1014,14 +1013,14 @@ def remind(regel):
 		os.environ['TZ']=tz;
 		time.tzset();
 		lc=time.localtime();
-		wt=(tijd[3]-lc[3])*3600+(tijd[4]-lc[4])*60+(tijd[5]-lc[5]);
-		if (wt<0): wt+=24*3600;
+		tijd=(tijd[3]-lc[3])*3600+(tijd[4]-lc[4])*60+(tijd[5]-lc[5]);
+		if (tijd<0): tijd+=24*3600;
 		timezone_reset();
-		if (wt<120):
-			piet.send(channel, "dat is al over "+str(wt)+" seconden! maar goed, ik zal herinneren\n");
+		if (tijd<120):
+			piet.send(channel, "dat is al over "+str(tijd)+" seconden! maar goed, ik zal herinneren\n");
 		else:
-			piet.send(channel, "goed, ik zal je waarschuwen. maar pas over "+format_tijdsduur(wt)+", hoor\n");
-		time.sleep(wt);
+			piet.send(channel, "goed, ik zal je waarschuwen. maar pas over "+format_tijdsduur(tijd)+", hoor\n");
+	time.sleep(tijd);
 	return string.strip(parse(result, False, True));
 
 def verklaar(regel):
