@@ -971,28 +971,27 @@ def randomnaam(input):
     naam=random.choice(result);
   return "NICK "+naam+"\nik heb deze keer gekozen voor een naam uit de categorie \""+category+"\"\n";
 
-def to_int(in_str):
-	out_num = 0;
-	result =0;
-	in_str=string.replace(in_str, "min", "m"); # also accept min
-	in_str=string.replace(in_str, "m", "*60 ");
-	in_str=string.replace(in_str, "h", "*3600 ");
-	in_str=string.replace(in_str, "d", "*24*3600 ");
-	in_str=string.replace(in_str, "s", " ");
-	in_str=string.strip(in_str);
-	piet.send(channel, '"'+in_str+'"\n');
-	in_str=re.sub('\ +', '+', in_str);
-	piet.send(channel, in_str+"\n");
-	return eval(in_str);
-
 def remind(regel):
-	params=string.split(regel, ' ');
-	if (len(params) < 2):
-		return "heb tijd en bericht nodig voor remind";
-	tijd=string.strip(params[0]);
-	result = string.join(params[1:]);
-	if (string.find(regel, ":")==-1): # relative time if no :
-		tijd = to_int(tijd);
+	split=re.match("\s*(((\d+(uren|uur|u|h|min|m|s|sec)\s*)+)|(\d+:\d+[:\d+]\s*))", regel);
+	if (split==None):
+		return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van";
+	tijd=string.strip(regel[split.start():split.end()]);
+	result = string.strip(regel[split.end():]);
+	if (len(result)==0):
+		result=nick+": ik moest je ergens aan herinneren, maar zou niet meer weten wat";
+	if (string.find(tijd, ":")==-1): # relative time if no :
+		tijd=string.replace(tijd, "uren", "h");
+		tijd=string.replace(tijd, "uur", "h");
+		tijd=string.replace(tijd, "u", "u");
+		tijd=string.replace(tijd, "min", "m");
+		tijd=string.replace(tijd, "sec", "s");
+		tijd=string.replace(tijd, "m", "*60 ");
+		tijd=string.replace(tijd, "h", "*3600 ");
+		tijd=string.replace(tijd, "d", "*24*3600 ");
+		tijd=string.replace(tijd, "s", " ");
+		tijd=string.strip(tijd);
+		tijd=re.sub('\ +', '+', tijd);
+		tijd=eval(tijd);
 		if (tijd < 0):
 			return "tijdsaanduiding klopt niet";
 		chan=channel;
