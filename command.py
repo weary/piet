@@ -15,6 +15,8 @@ auth = -5;#int(string.strip(sys.stdin.readline()));
 channel = "";#string.strip(sys.stdin.readline());
 d={};
 
+localtimezone="Europe/Amsterdam";
+
 def db_get(table, keycol, key, valuecol):
 	try:
 		result=piet.db("SELECT "+valuecol+" FROM "+table+" WHERE "+keycol+"=\""+key+"\"");
@@ -972,14 +974,16 @@ def randomnaam(input):
   return "NICK "+naam+"\nik heb deze keer gekozen voor een naam uit de categorie \""+category+"\"\n";
 
 def remind(regel):
-	split=re.match("\s*(((\d+(uren|uur|u|h|min|m|s|sec)\s*)+)|(\d+:\d+[:\d+]\s*))", regel);
+	split=re.match("\s*(((\d+\s*(uren|uur|u|h|min|m|s|sec)\s*)+)|(\d+:\d+[:\d+]\s*))", regel);
 	if (split==None):
 		return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van";
 	tijd=string.strip(regel[split.start():split.end()]);
 	result = string.strip(regel[split.end():]);
 	if (len(result)==0):
 		result=nick+": ik moest je ergens aan herinneren, maar zou niet meer weten wat";
+	tz=tijdzone_nick(nick);
 	if (string.find(tijd, ":")==-1): # relative time if no :
+		tijd=re.sub(" ", "", tijd);
 		tijd=string.replace(tijd, "uren", "h");
 		tijd=string.replace(tijd, "uur", "h");
 		tijd=string.replace(tijd, "u", "u");
@@ -994,8 +998,9 @@ def remind(regel):
 		tijd=eval(tijd);
 		if (tijd < 0):
 			return "tijdsaanduiding klopt niet";
-		chan=channel;
-		tijdstr=time.strftime("%H:%M", time.localtime(time.time()+tijd));
+		elif (tijd == 0):
+			return "dat is nu. je bent wel erg vergeetachtig, niet?";
+		tijdstr=format_localtijd(time.time()+tijd, "%H:%M", tz);
 		piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
 		time.sleep(tijd);
 	else: # absolute time
@@ -1006,9 +1011,7 @@ def remind(regel):
 				tijd = time.strptime(tijd, "%H:%M:%S");
 			except:
 				return "volgens mij hou je me voor de gek, wat is dit voor rare tijd?";
-		inp=piet.db('SELECT timezone FROM auth where name="'+nick+'"');
-		assert(inp!=None and len(inp)>1);
-		os.environ['TZ']=inp[1][0];
+		os.environ['TZ']=tz;
 		time.tzset();
 		lc=time.localtime();
 		wt=(tijd[3]-lc[3])*3600+(tijd[4]-lc[4])*60+(tijd[5]-lc[5]);
@@ -1017,7 +1020,7 @@ def remind(regel):
 		if (wt<120):
 			piet.send(channel, "dat is al over "+str(wt)+" seconden! maar goed, ik zal herinneren\n");
 		else:
-			piet.send(channel, "uw wens is mijn bevel, meester. over "+format_tijdsduur(wt)+" zal ik u wekken\n");
+			piet.send(channel, "goed, ik zal je waarschuwen. maar pas over "+format_tijdsduur(wt)+", hoor\n");
 		time.sleep(wt);
 	return string.strip(parse(result, False, True));
 
@@ -1277,7 +1280,7 @@ def wiki(regel):
   return string.strip(toreturn);
 
 def timezone_reset():
-	os.environ['TZ']="CET";
+	os.environ['TZ']=localtimezone;
 	time.tzset();
 
 def tijd(regel):
@@ -1304,6 +1307,17 @@ def tijd(regel):
 		result=result+", en in "+tz+" is het "+t;
 	return result+"\n";
 
+# geef de tijdzone van de gegeven nick. als nick niet bekend is, dan default tijdzone
+def tijdzone_nick(naam):
+	inp=piet.db('SELECT timezone FROM auth where name="'+naam+'"');
+	if (inp==None or len(inp)<=1):
+		tz=localtimezone;
+	else:
+		tz=inp[1][0];
+	return tz;
+
+# maak een nederlandse zin van secs. secs moet een tijdsduur weergeven, niet een
+# absolute tijd, zie format_localtijd voor absolute tijd
 def format_tijdsduur(secs):
 	h=int(secs/3600); secs=secs-h*3600;
 	m=int(secs/60); secs=secs-m*60;
@@ -1332,6 +1346,15 @@ def format_tijdsduur(secs):
 		else:
 			return format_tijdsduur(h*3600)+" en "+format_tijdsduur(m*60+s);
 
+# zet de gegeven tijd (secs, in seconden sinds epoch) om in lokale tijd voor de
+# gegeven tijdzone in het gegeven formaat. zie tijdzone_nick voor de tijdzone.
+def format_localtijd(secs, format="%H:%M", tijdzone=localtimezone):
+	os.environ['TZ']=tijdzone;
+	time.tzset();
+	result=time.strftime(format, time.localtime(secs));
+	timezone_reset();
+	return result;
+
 def tijdzone(regel):
 	a=string.split(regel, ' ');
 	if (a==None or len(a)==0 or len(a[0])==0):
@@ -1345,11 +1368,8 @@ def tijdzone(regel):
 				s[tz]=n;
 		return string.join([tz+": "+ns for tz,ns in s.iteritems()], '\n');
 	elif (len(a)==1):
-		matches=piet.db('SELECT timezone FROM auth WHERE name="'+a[0]+'"');
-		if (matches==None or len(matches)<2):
-			return "die ken ik niet";
-		else:
-			return a[0]+" huppelt rond in "+matches[1][0]+"\n";
+		tz=tijdzone_nick(a[0]);
+		return a[0]+" huppelt rond in "+tz+"\n";
 	elif(len(a)==2):
 		oldauth=piet.db('SELECT auth FROM auth WHERE name="'+a[0]+'"');
 		if (oldauth==None or len(oldauth)<2):
