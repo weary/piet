@@ -105,7 +105,12 @@ def change_auth(params):
 	if (localauth<=oldauth and parnick!=nick):
 		return "en wie ben jij dan wel, dat je zomaar denkt "+parnick+" authorisatie te kunnen geven?!?";
 	if (newauth<=localauth and localauth>=oldauth):
-		piet.db("REPLACE INTO auth(name,auth) VALUES(\""+parnick+"\","+str(newauth)+")");
+		oldtz=db_get("auth", "name", parnick, "timezone");
+		if (oldtz):
+			piet.db("REPLACE INTO auth(name,auth,timezone) VALUES(\""+\
+					parnick+"\","+str(newauth)+",\""+oldtz+"\")");
+		else:
+			piet.db("REPLACE INTO auth(name,auth) VALUES(\""+parnick+"\","+str(newauth)+")");
 		return "ok, "+parnick+" heeft nu authenticatieniveau "+str(newauth)+"\n";
 	return "bogus"; # never reached, i think
 
@@ -1304,7 +1309,12 @@ def tijdzone(regel):
 		else:
 			return a[0]+" huppelt rond in "+matches[1][0]+"\n";
 	elif(len(a)==2):
-		piet.db('REPLACE INTO auth(name,timezone) VALUES("'+a[0]+'","'+a[1]+'")');
+		oldauth=piet.db('SELECT auth FROM auth WHERE name="'+a[0]+'"');
+		if (oldauth==None or len(oldauth)<2):
+			piet.db('REPLACE INTO auth(name,timezone) VALUES("'+a[0]+'","'+a[1]+'")');
+		else:
+			piet.db('REPLACE INTO auth(name,auth,timezone) VALUES("'+a[0]+'",'+\
+				oldauth[1][0]+',"'+a[1]+'")');
 		return "ach, is dat zo? ok, dan zet ik "+a[0]+" in "+a[1]+"\n";
 	return "zeges, tiepgraag mannetje, 2 parameters is echt 't maximum hoor\n";
 
@@ -1766,7 +1776,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "weer":              (100, weer, "weer, zoek het weer op"),
     "zeg":               (0, zeg, "zeg <text> [tegen <naam>], ga napraten"),
     "ping":              (100, ping, "ping, zeg pong"),
-    "remind":            (1000, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
+    "remind":            (300, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
     "sin?":              (500, sin, "sin, lookup sin's ip-address"),
     "nmblookup":         (500, nmblookup, "nmblookup <host>, zoek op campusnet naar een ip"),
     "PING":              (100, ping, ""),
