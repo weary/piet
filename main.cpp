@@ -220,7 +220,7 @@ void interpret(const std::string &input)
 	std::string remainder=input;
   if (input[0]==':')
   { // extract the sender nick and email (":nick!email ")
-    unsigned int l=input.find_first_of(' ');
+		std::string::size_type l=input.find_first_of(' ');
     sender=input.substr(1,l);
 		remainder=input.substr((l==std::string::npos?l:l+1));
 
@@ -232,7 +232,7 @@ void interpret(const std::string &input)
     }
   }
 	// extract the command
-	unsigned int l=remainder.find_first_of(' ');
+	std::string::size_type l=remainder.find_first_of(' ');
 	std::string command=remainder.substr(0, l);
 	std::string params=remainder.substr((l==std::string::npos?l:l+1));
 
@@ -289,7 +289,7 @@ void interpret(const std::string &input)
   {
     std::string chan;
     { // extract the sending channel
-      unsigned int l=params.find_first_of(' ');
+			std::string::size_type l=params.find_first_of(' ');
       if (l!=params.npos)
       {
         chan=params.substr(0, l);
@@ -297,7 +297,7 @@ void interpret(const std::string &input)
       }
     }
     { // extract the message
-      unsigned int l=params.find_first_of(':');
+			std::string::size_type l=params.find_first_of(':');
       if (l!=params.npos)
         params.erase(0, l+1);
     }

@@ -972,43 +972,59 @@ def randomnaam(input):
   return "NICK "+naam+"\nik heb deze keer gekozen voor een naam uit de categorie \""+category+"\"\n";
 
 def to_int(in_str):
-  out_num = 0;
-  result =0;
-  for x in range(0,len(in_str)):
-    if (in_str[x]=='d'):
-      result += 86400*out_num;
-      out_num=0;
-    elif (in_str[x]=='h'):
-      result +=3600*out_num;
-      out_num=0;
-    elif (in_str[x]=='m'):
-      result += 60*out_num;
-      out_num=0;
-    elif (in_str[x]=='s'):
-      result += out_num;
-      out_num=0;
-    else:
-      if ((ord(in_str[x]) < ord('0')) or (ord(in_str[x]) > ord('9'))):
-        return -1;
-      out_num = out_num * 10 + ord(in_str[x]) - ord('0')
-  result += out_num;
-  return result;
+	out_num = 0;
+	result =0;
+	in_str=string.replace(in_str, "min", "m"); # also accept min
+	in_str=string.replace(in_str, "m", "*60 ");
+	in_str=string.replace(in_str, "h", "*3600 ");
+	in_str=string.replace(in_str, "d", "*24*3600 ");
+	in_str=string.replace(in_str, "s", " ");
+	in_str=string.strip(in_str);
+	piet.send(channel, '"'+in_str+'"\n');
+	in_str=re.sub('\ +', '+', in_str);
+	piet.send(channel, in_str+"\n");
+	return eval(in_str);
 
 def remind(regel):
-  params=string.split(regel, ' ');
-  if (len(params) < 2):
-    return "heb tijd en bericht nodig voor remind";
-  tijd = to_int(string.strip(params[0]));
-  if (tijd < 0):
-    return "tijdsaanduiding klopt niet";
-  chan=channel;
-  result = string.join(params[1:]);
-  tijdstr=time.strftime("%H:%M", time.localtime(time.time()+tijd));
-  piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
-  #piet.send("weary", "remind gaat slapen voor "+repr(tijd)+"s ("+result+")\n");
-  time.sleep(tijd);
-  #piet.send("weary", "remind wordt wakker van "+repr(tijd)+"s ("+result+")\n");
-  return string.strip(parse(result, False, True));
+	params=string.split(regel, ' ');
+	if (len(params) < 2):
+		return "heb tijd en bericht nodig voor remind";
+	tijd=string.strip(params[0]);
+	result = string.join(params[1:]);
+	if (string.find(regel, ":")==-1): # relative time if no :
+		tijd = to_int(tijd);
+		if (tijd < 0):
+			return "tijdsaanduiding klopt niet";
+		chan=channel;
+		tijdstr=time.strftime("%H:%M", time.localtime(time.time()+tijd));
+		piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
+		#piet.send("weary", "remind gaat slapen voor "+repr(tijd)+"s ("+result+")\n");
+		time.sleep(tijd);
+		#piet.send("weary", "remind wordt wakker van "+repr(tijd)+"s ("+result+")\n");
+	else: # absolute time
+		try:
+			tijd = time.strptime(tijd, "%H:%M");
+		except:
+			try:
+				tijd = time.strptime(tijd, "%H:%M:%S");
+			except:
+				return "volgens mij hou je me voor de gek, wat is dit voor rare tijd?";
+		inp=piet.db('SELECT timezone FROM auth where name="'+nick+'"');
+		piet.send(channel, repr(inp)+"\n");
+		assert(inp!=None and len(inp)>1);
+		os.environ['TZ']=inp[1][0];
+		time.tzset();
+		lc=time.localtime();
+		wt=(tijd[3]-lc[3])*3600+(tijd[4]-lc[4])*60+(tijd[5]-lc[5]);
+		if (wt<0): wt+=24*3600;
+		timezone_reset();
+		piet.send(channel, repr(wt)+"\n");
+		if (wt<120):
+			piet.send(channel, "dat is al over "+str(wt)+" seconden! maar goed, ik zal herinneren\n");
+		else:
+			piet.send(channel, "uw wens is mijn bevel, meester. over "+format_tijdsduur(wt)+" zal ik u wekken\n");
+		time.sleep(wt);
+	return string.strip(parse(result, False, True));
 
 def verklaar(regel):
   params=string.split(regel, ' ');
@@ -1265,6 +1281,10 @@ def wiki(regel):
     toreturn += string.strip(line)+'\n';
   return string.strip(toreturn);
 
+def timezone_reset():
+	os.environ['TZ']="CET";
+	time.tzset();
+
 def tijd(regel):
 	inp=piet.db('SELECT name,timezone FROM auth');
 	if (inp==None or len(inp)<=1): # no users
@@ -1280,8 +1300,7 @@ def tijd(regel):
 	# tzcalc is mapping van tijd naar tijdzone
 
 	# zoek lokale tijd op, die moet voorop
-	os.environ['TZ']="CET";
-	time.tzset();
+	timezone_reset();
 	result=time.strftime("%H:%M", time.localtime());
 	if (tzcalc.has_key(result)): del tzcalc[result];
 
@@ -1289,6 +1308,34 @@ def tijd(regel):
 	for t,tz in tzcalc.iteritems():
 		result=result+", en in "+tz+" is het "+t;
 	return result+"\n";
+
+def format_tijdsduur(secs):
+	h=int(secs/3600); secs=secs-h*3600;
+	m=int(secs/60); secs=secs-m*60;
+	s=secs;
+	if (h==0 and m==0 and s==0):
+		return "geen tijd";
+	if (h==0 and m==0):
+		if (s==1):
+			return "een seconde";
+		else:
+			return str(s)+" secondes";
+	if (h==0):
+		if (s==0):
+			if (m==1):
+				return "een minuut";
+			else:
+				return str(m)+" minuten";
+		else:
+			return format_tijdsduur(m*60)+" en "+format_tijdsduur(s);
+	else:
+		if (m==0 and s==0):
+			if (h==1):
+				return "een uur";
+			else:
+				return str(h)+" uren";
+		else:
+			return format_tijdsduur(h*3600)+" en "+format_tijdsduur(m*60+s);
 
 def tijdzone(regel):
 	a=string.split(regel, ' ');
