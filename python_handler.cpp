@@ -137,7 +137,8 @@ static PyObject * piet_nick(PyObject *self, PyObject *args)
 	{ // ask for new nick
 		PY_ASSERT(PyString_Check(t->ob_item[0]), "new nick should be a string");
 		std::string nick=PyString_AsString(t->ob_item[0]);
-		send(":%s NICK :%s\n", g_config.get_nick().c_str(), nick.c_str());
+		g_config.set_nick(nick);
+		//send(":%s NICK :%s\n", g_config.get_nick().c_str(), nick.c_str());
 	}
 
 	return PyString_FromString(g_config.get_nick().c_str());

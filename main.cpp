@@ -243,7 +243,7 @@ void interpret(const std::string &input)
   {
     sendstr_prio(std::string("PONG ")+params);
   }
-  else if ((command=="NICK")&&(sender==g_config.get_nick()))
+  /*else if ((command=="NICK")&&(sender==g_config.get_nick()))
   {
     if (!params.empty())
     {
@@ -272,7 +272,7 @@ void interpret(const std::string &input)
       send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, %s heeft 't niet meer nodig lijkt me\n", g_config.get_nick().c_str(), channel.c_str(), auth, newnick.c_str(), sender.c_str());
     else if ((auth<otherauth)&&(auth>0))
       send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, niet nickchangen om hogere auth te krijgen\n", g_config.get_nick().c_str(), channel.c_str(), auth, newnick.c_str(), sender.c_str());
-  }
+  }*/
   else if (command=="433")
   { // recv: ":irc.nl.uu.net 433 piet simon :Nickname is already in use."
     send(":%s PRIVMSG %s :server roept dat die naam al in gebruik is!\n", g_config.get_nick().c_str(), channel.c_str());

@@ -3,6 +3,13 @@
 import sys,string,random,re,os,time;
 import piet;
 
+try:
+	nicks;
+except:
+	nicks={};
+
+localtimezone="Europe/Amsterdam";
+
 def maketimestring(ut):
 	try:
 		minuten,seconden=int(ut/60),int(ut%60);
@@ -136,36 +143,89 @@ def check_netsplit(nick_, channel_, command_, msg_):
 		return True;
 
 	return False;
-		
-def check_names(nick_, channel_, msg_):
-	print("check_names("+nick_+", "+channel_+", "+msg_+")\n");
-	nicks=set(string.split(msg_[string.find(msg_, ':')+1:], ' '));
-	pietnick=piet.nick();
-	if ('@'+pietnick in nicks):
-		noop=[x for x in nicks if x[0]!='@'];
-		if (not(noop)): return;
-		qry="SELECT name FROM auth WHERE auth>=500 AND name IN ("+ \
-				 string.join(['"'+x+'"' for x in noop], ',')+")";
-		dbres=piet.db(qry);
-		if (not(dbres)): return;
-		print("dbres="+repr(dbres)+"\n");
-		res=[x[0] for x in dbres[1:]];
-		if (not(res)): return;
-		if (len(res)==1):
-			piet.send(channel_, "hup, een apenstaart voor "+res[0]+"\n");
-		else:
-			piet.send(channel_, "ho, hier moet even wat gefixed worden.\n");
-		piet.op(channel_, res);
-	else: # piet niet operator
-		ops=[x[1:] for x in nicks if x[0]=='@'];
-		if (not(ops)): return;
-		myop=random.choice(ops);
-		msg=random.choice(["mag ik een @?", "toe, doe eens een @?", \
-				"ik wil graag je operatortje zijn, mag ik?", \
-				"kijk, ik heb geen @. fix's?"]);
-		piet.send(channel_, myop+": "+msg+"\n");
 
-names_delayed_waiting=0
+def nickchange(nick_, auth_, channel_, newnick):
+	global nicks;
+	print("nickchange("+nick_+", "+str(auth_)+", "+channel_+", "+newnick+"):\n");
+	if (newnick[0]==':'): newnick=newnick[1:];
+	if (nick_==piet.nick()):
+		#piet.nick(newnick);
+		piet.send(channel_, "wat een prutnaam, dat "+nick_+", ik heet veel liever "+newnick+"\n");
+		return;
+
+	try:
+		otherauth=piet.db("SELECT name,auth,timezone FROM auth where name=\""+newnick+"\"")[1];
+	except:
+		otherauth=[newnick, -5, localtimezone];
+
+	try:
+		auth=piet.db("SELECT name,auth,timezone FROM auth where name=\""+nick_+"\"")[1];
+	except:
+		auth=[nick_, -5, localtimezone];
+
+	print("nickswap: "+repr(auth)+" en "+repr(otherauth)+"\n");
+	piet.db("REPLACE INTO auth VALUES(\""+auth[0]+"\", "+str(otherauth[1])+", \""+otherauth[2]+"\")");
+	piet.db("REPLACE INTO auth VALUES(\""+otherauth[0]+"\", "+str(auth[1])+", \""+auth[2]+"\")");
+
+	if (auth[1]>otherauth[1]):
+		piet.send(channel_, "authenticatie "+str(auth[1])+" nu naar "+newnick+" overgezet, "+\
+				nick_+" heeft 't niet meer nodig lijkt me\n");
+	elif (auth_<otherauth and auth_>0):
+		piet.send("authenticatie "+str(auth_)+" nu naar "+newnick+" overgezet, niet nickchangen om hogere auth te krijgen\n");
+	
+	nicks[newnick]=nicks[nick_];
+	del nicks[nick_];
+	check_names_delayed(channel_);
+
+def checkmessages(channel_):
+	global nicks;
+	where="WHERE nick IN ("+string.join(['"'+x+'"' for x in nicks], ',')+")";
+	msgs=piet.db("SELECT nick,msg FROM notes "+where);
+	if (msgs!=None and len(msgs)>=2):
+		piet.db("DELETE FROM notes "+where);
+		msgs=[n+": "+m for n,m in msgs[1:]];
+		piet.send(channel_, string.join(msgs, '\n'));
+
+def check_names(nick_, channel_, msg_):
+	global nicks;
+	print("check_names("+nick_+", "+channel_+", "+msg_+")\n");
+	msg_nicks=string.split(msg_[string.find(msg_, ':')+1:], ' ');
+	nicks={};
+	for x in msg_nicks:
+		if (x[0]=='@'):
+			nicks[x[1:]]=True;
+		else:
+			nicks[x]=False;
+	pietnick=piet.nick();
+	if (nicks[pietnick]):
+		noop=[x for (x,o) in nicks.iteritems() if not(o)];
+		if (bool(noop)):
+			qry="SELECT name FROM auth WHERE auth>=500 AND name IN ("+ \
+					 string.join(['"'+x+'"' for x in noop], ',')+")";
+			dbres=piet.db(qry);
+			if (dbres!=None and len(dbres)>=2):
+				print("dbres="+repr(dbres)+"\n");
+				res=[x[0] for x in dbres[1:]];
+				if (len(res)==1):
+					piet.send(channel_, "hup, een apenstaart voor "+res[0]+"\n");
+				else:
+					piet.send(channel_, "ho, hier moet even wat gefixed worden.\n");
+				piet.op(channel_, res);
+	else: # piet niet operator
+		ops=[x for (x,o) in nicks.iteritems() if o];
+		if (bool(ops)):
+			myop=random.choice(ops);
+			msg=random.choice(["mag ik een @?", "toe, doe eens een @?", \
+					"ik wil graag je operatortje zijn, mag ik?", \
+					"kijk, ik heb geen @. fix's?", "een @, ah toe?"]);
+			piet.send(channel_, myop+": "+msg+"\n");
+	checkmessages(channel_);
+
+try:
+	names_delayed_waiting;
+except:
+	names_delayed_waiting=0;
+
 def check_names_delayed(channel_):
 	global names_delayed_waiting;
 	if (names_delayed_waiting>0):
@@ -176,6 +236,7 @@ def check_names_delayed(channel_):
 	names_delayed_waiting=0;
 
 def do_server(nick_, auth_, channel_, msg_):
+	global nicks;
 	print("do_server("+nick_+", "+str(auth_)+", "+channel_+", "+msg_+")\n");
 	command=string.upper(string.split(msg_, ' ')[0]);
 	netsplit=False;
@@ -183,9 +244,14 @@ def do_server(nick_, auth_, channel_, msg_):
 		netsplit=check_netsplit(nick_, channel_, command, msg_);
 		if not(netsplit):
 			check_sleep_time(nick_, auth_, channel_, command, msg_);
+	if command in ["PART", "QUIT"]:
+		del nicks[nick_];
 	if command in ["KICK"] and auth_>0:
 		kicknick=string.split(msg_, ' ')[2];
 		piet.send(channel_, "en waag het niet om weer te komen, jij vuile "+kicknick+"!\n");
+		del nicks[nick_];
+	if command in ["NICK"]:
+		nickchange(nick_, auth_, channel_, msg_[5:]);
 	if command in ["437"] and auth_>0:
 		piet.send(channel_, "bah, die nick is even niet beschikbaar\n");
 	if command in ["353"]:

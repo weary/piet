@@ -15,7 +15,12 @@ auth = -5;#int(string.strip(sys.stdin.readline()));
 channel = "";#string.strip(sys.stdin.readline());
 d={};
 
-localtimezone="Europe/Amsterdam";
+try:
+	nicks;
+except:
+	nicks={};
+
+localtimezone; # defined in server.py, assert if not loaded
 
 def db_get(table, keycol, key, valuecol):
 	try:
@@ -66,7 +71,23 @@ def convert(char):
   else:
     return char;
 
+def make_list(p):
+	p=[a for a in p];
+	if (len(p)==0): return "";
+	last=len(p)-1;
+	r=""
+	for x in p:
+		i=p.index(x);
+		if (i==0):
+			r=x;
+		elif (i<last):
+			r=r+", "+x;
+		else:
+			r=r+" en "+x;
+	return r;
+				
 def change_auth(params):
+	global nicks;
 	localauth=auth;
 	newauth=0;
 	par=[];
@@ -76,11 +97,35 @@ def change_auth(params):
 		return "auth [<newauth> <nick> [<password>]]";
 
 	if (parcount==0):
-		a=piet.db("SELECT name,auth FROM auth ORDER BY name") or [];
-		if (len(a)<=1):
-			return "Ik ken helemaal niemand! arme ik...\n";
+		pietnick=piet.nick();
+		ns=set(nicks)-set([pietnick]);
+		try:
+			a=piet.db("SELECT name,auth FROM auth ORDER BY name")[1:];
+			a=set([(na,au) for (na,au) in a if not(na==pietnick)]);
+		except:
+			a=set([]);
+
+		anames=set([n for (n,au) in a]);
+		
+		present=set([(n,au) for (n,au) in a if (n in ns)]);
+		away=a-present;
+		unknown=ns-anames;
+
+		if (len(present)>0):
+			present=make_list([n+"("+str(a)+")" for (n,a) in present]);
 		else:
-			return "ik heb wel vrienden, "+string.join([k+"("+v+")" for k,v in a[1:]], ", ");
+			present="niemand";
+		if (len(away)>0):
+			away=make_list([n+"("+str(a)+")" for (n,a) in away]);
+		else:
+			away="niemand";
+		if (len(unknown)>0):
+			unknown=make_list(unknown);
+		else:
+			unknown="niemand";
+
+		msg="Van de aanwezigen ken ik "+present+", en ken ik "+unknown+" niet. "+away+" ken ik ook nog, maar die zijn hier niet"
+		return msg;
 
 	newauth=int(par[0]);
 	parnick=par[1];
@@ -312,16 +357,20 @@ def weer(woord):
 
 
 def zeg(params):
-  params = string.strip(params);
-  a=string.split(params, ' ');
-  try:
-    b=a.index("tegen");
-    name=a[b+1];
-    del a[b:b+2];
-    a=[name+",", "ehm,"]+a;
-  except:
-    a=a;
-  return string.join(a, ' ')+"\n";
+	global nicks;
+	split=re.match("(.*) tegen (\S+)", params);
+	if (split==None):
+		return params;
+	else:
+		txt=split.group(1);
+		nick=split.group(2);
+		if (nicks.has_key(nick)):
+			return nick+", ehm, "+txt;
+		elif (auth>100):
+			piet.db("INSERT INTO notes VALUES('"+nick+"','"+txt+"')");
+			return "ik zie helemaal geen "+nick+". misschien later";
+		else:
+			return "doe het lekker zelf ofzo";
 
 def rot13(params):
   params = string.strip(parse(params, False, True));
@@ -1908,6 +1957,9 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "test": (100, mytest, "ding"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
+#param_org: string containing command+parameters
+#first: True for outer call, False for recursions
+#magzeg: allways True
 def parse(param_org, first, magzeg):
   global auth,nick;
 
