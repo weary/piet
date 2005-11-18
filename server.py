@@ -149,7 +149,7 @@ def nickchange(nick_, auth_, channel_, newnick):
 	print("nickchange("+nick_+", "+str(auth_)+", "+channel_+", "+newnick+"):\n");
 	if (newnick[0]==':'): newnick=newnick[1:];
 	if (nick_==piet.nick()):
-		#piet.nick(newnick);
+		piet.nick(newnick);
 		piet.send(channel_, "wat een prutnaam, dat "+nick_+", ik heet veel liever "+newnick+"\n");
 		return;
 
