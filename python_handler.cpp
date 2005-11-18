@@ -122,7 +122,7 @@ static PyObject * piet_send(PyObject *self, PyObject *args)
 		return NULL; }
 
 
-// will return the old nick
+// will return the old nick if called without parameters
 static PyObject * piet_nick(PyObject *self, PyObject *args)
 {
 	python_lock guard(__PRETTY_FUNCTION__);
@@ -134,10 +134,12 @@ static PyObject * piet_nick(PyObject *self, PyObject *args)
 	PY_ASSERT(n==0 || n==1, "need either no arguments or one");
 
 	if (n==1)
-	{ // ask for new nick
+	{ // got new nick, let's set it
 		PY_ASSERT(PyString_Check(t->ob_item[0]), "new nick should be a string");
 		std::string nick=PyString_AsString(t->ob_item[0]);
 		g_config.set_nick(nick);
+		Py_INCREF( Py_None );
+		return Py_None;
 		//send(":%s NICK :%s\n", g_config.get_nick().c_str(), nick.c_str());
 	}
 
