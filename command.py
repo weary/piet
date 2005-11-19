@@ -1,11 +1,13 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys,string,random,re,os,time,crypt,socket,thread;
+import sys,string,random,re,os,time,crypt,socket,thread,urllib;
 import piet;
 from telnetlib import Telnet;
 sys.path.append(".");
 from calc import supercalc;
+from BeautifulSoup import BeautifulSoup;
+
 
 todofile = "todo.txt";
 logfile = "log.txt";
@@ -1451,17 +1453,19 @@ def quote(regel):
   return "Syntax is fout voor quote";
 
 def tv_nuenstraks(regel):
-	cmd = "lynx www.tvgids.nl/nustraks/ --width=2000 --dump | "
-	cmd+="sed -n '/Nederlandstalige zenders/,/Alle zenders/p' | " # cut needed part from html
-	cmd+="sed '1,3d;6~6d;9~6d;s/\[[0-9]*\]//' | " # cut inbetween lines for links and checkboxes away
-	cmd+="sed '1~4s/[:0-9]*[[:blank:]]*$//' | " # the start-time of the current program is in a strange place, remove it
-	cmd+="sed -n 's/^[[:blank:]]*//;N;N;N;s/[[:blank:]\\n][[:blank:]\\n]\+/<tab>/g;p' | " # join lines, replace blanks with <tab>
-	cmd+="grep -E '^Nederland|^RTL|^Yorin|^Veronica|^Talpa' | " # select correct channels
-	cmd+="sed 's/\(.*\)<tab>\(.*\)<tab>\(.*\)<tab>\(.*\)/  \\1, \\2, om \\3: \\4/'" # format output
-	inp = os.popen(cmd);
-	result = inp.read();
-	inp.close();
-	return result;#string.split(result,'\n');
+	input=urllib.urlopen("http://www.tvgids.nl/nustraks/").read();
+	soup=BeautifulSoup(input);
+	t=soup('div', {'id' : 'nuStraks'})[0].div.form.table;
+	needed=set(["Nederland 1", "Nederland 2", "Nederland 3", "RTL 4", "RTL 5", "SBS 6", "NET 5", "RTL 7", "Talpa", "Veronica"]);
+	r="";
+	for i in t('tr')[1:]:
+		td=i('td');
+		th=i('th');
+		channel=str(td[0].span.string);
+		if (channel in needed):
+			line="  "+channel+", "+str(td[1].div.a.string)+", om "+str(th[1].string)+" "+str(td[3].div.a.string);
+			r=r+line+"\n";
+	return r;
 
 def trigram_grow_back(cur):
 	last3wordsmatch=re.search("(([\w/\\'`]+[\s,]+){0,1}[\w/\\'`]+)$", cur);
