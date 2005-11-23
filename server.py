@@ -151,27 +151,26 @@ def nickchange(nick_, auth_, channel_, newnick):
 	if (nick_==piet.nick()):
 		piet.nick(newnick);
 		piet.send(channel_, "wat een prutnaam, dat "+nick_+", ik heet veel liever "+newnick+"\n");
-		return;
+	else:
+		try:
+			otherauth=piet.db("SELECT name,auth,timezone FROM auth where name=\""+newnick+"\"")[1];
+		except:
+			otherauth=[newnick, -5, localtimezone];
 
-	try:
-		otherauth=piet.db("SELECT name,auth,timezone FROM auth where name=\""+newnick+"\"")[1];
-	except:
-		otherauth=[newnick, -5, localtimezone];
+		try:
+			auth=piet.db("SELECT name,auth,timezone FROM auth where name=\""+nick_+"\"")[1];
+		except:
+			auth=[nick_, -5, localtimezone];
 
-	try:
-		auth=piet.db("SELECT name,auth,timezone FROM auth where name=\""+nick_+"\"")[1];
-	except:
-		auth=[nick_, -5, localtimezone];
+		print("nickswap: "+repr(auth)+" en "+repr(otherauth)+"\n");
+		piet.db("REPLACE INTO auth VALUES(\""+auth[0]+"\", "+str(otherauth[1])+", \""+otherauth[2]+"\")");
+		piet.db("REPLACE INTO auth VALUES(\""+otherauth[0]+"\", "+str(auth[1])+", \""+auth[2]+"\")");
 
-	print("nickswap: "+repr(auth)+" en "+repr(otherauth)+"\n");
-	piet.db("REPLACE INTO auth VALUES(\""+auth[0]+"\", "+str(otherauth[1])+", \""+otherauth[2]+"\")");
-	piet.db("REPLACE INTO auth VALUES(\""+otherauth[0]+"\", "+str(auth[1])+", \""+auth[2]+"\")");
-
-	if (auth[1]>otherauth[1]):
-		piet.send(channel_, "authenticatie "+str(auth[1])+" nu naar "+newnick+" overgezet, "+\
-				nick_+" heeft 't niet meer nodig lijkt me\n");
-	elif (auth_<otherauth and auth_>0):
-		piet.send("authenticatie "+str(auth_)+" nu naar "+newnick+" overgezet, niet nickchangen om hogere auth te krijgen\n");
+		if (auth[1]>otherauth[1]):
+			piet.send(channel_, "authenticatie "+str(auth[1])+" nu naar "+newnick+" overgezet, "+\
+					nick_+" heeft 't niet meer nodig lijkt me\n");
+		elif (auth_<otherauth and auth_>0):
+			piet.send("authenticatie "+str(auth_)+" nu naar "+newnick+" overgezet, niet nickchangen om hogere auth te krijgen\n");
 	
 	nicks[newnick]=nicks[nick_];
 	del nicks[nick_];
