@@ -359,18 +359,24 @@ def weer(woord):
 def zeg(params):
 	global nicks;
 	split=re.match("(.*) tegen (\S+)", params);
-	if (split==None):
-		return params;
-	else:
+	if (split!=None):
 		txt=split.group(1);
 		nick=split.group(2);
-		if (nicks.has_key(nick)):
-			return nick+", ehm, "+txt;
-		elif (auth>100):
-			piet.db("INSERT INTO notes VALUES('"+nick+"','"+txt+"')");
-			return "ik zie helemaal geen "+nick+". misschien later";
+	else:
+		split=re.match("tegen (\S+) (.*)", params);
+		if (split!=None):
+			txt=split.group(2);
+			nick=split.group(1);
 		else:
-			return "doe het lekker zelf ofzo";
+			return params;
+
+	if (nicks.has_key(nick)):
+		return nick+", ehm, "+txt;
+	elif (auth>100):
+		piet.db("INSERT INTO notes VALUES('"+nick+"','"+txt+"')");
+		return "ik zie helemaal geen "+nick+". misschien later";
+	else:
+		return "doe het lekker zelf ofzo";
 
 def rot13(params):
   params = string.strip(parse(params, False, True));
