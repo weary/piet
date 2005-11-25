@@ -57,13 +57,15 @@ def leeg(param):
   return "";
 
 def onbekend_commando(param):
-  if (len(param)==0):
-    return "ok\n";
-  elif (random.random()>=0.475):
-    return "ja\n";
-  elif (random.random()>=0.95):
-    return "nee\n";
-  return "ja\n";
+	param=string.strip(param);
+	if (len(param)==0):
+		return "ok\n";
+	elif (param[-1]=='?'):
+		if (random.random()>=0.475):
+			return "ja\n";
+		else:
+			return "nee\n";
+	return "oh\n";
 
 def convert(char):
   if (char=="\xb4"):
