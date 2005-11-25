@@ -6,7 +6,7 @@ import piet;
 from telnetlib import Telnet;
 sys.path.append(".");
 from calc import supercalc;
-from BeautifulSoup import BeautifulSoup;
+import BeautifulSoup;
 
 
 todofile = "todo.txt";
@@ -237,19 +237,15 @@ def vandale(woord):
       return "helaas niet gevonden\n";
 
 def rijm(woord):
-  comm="lynx --dump \"http://www.rijmwoorden.nl/rijm.pl?woord="+string.strip(woord)+"&stap=2\" | head -10 | tail -n 4";
-  inp = os.popen(comm);
-  result=inp.read();
-  if (re.search("Unable to connect", result)!=None):
-    return "rijmwoorden stuk, echt\n";
-  else:
-    if (re.search("Helaas, geen woorden gevonden", result)!=None):
-      return "geen rijmwoorden gevonden\n";
-    else:
-      result=string.split(result, '\n');
-      result=[re.sub("\s+", ", ", string.strip(i)) for i in result];
-      result=string.join(result, "\n");
-      return result+"\n";
+	try:
+		input=urllib.urlopen("http://www.rijmwoorden.nl/rijm.pl?woord="+string.strip(woord)).read();
+	except:
+		return "ik kan niet rijmen zonder de website, dus je zult 't zelf moeten doen";
+	soup=BeautifulSoup.BeautifulSoup(input);
+	woorden=[x.string for x in soup.table("td") if x.string!=BeautifulSoup.Null];
+	if (len(woorden)==0):
+		return "daar rijmt echt helemaal niks op";
+	return "oh, dat is makkelijk: "+string.join(woorden, ', ');
 
 def urban(params):
 	# darn thing has a SOAP interface :(
@@ -1454,7 +1450,7 @@ def quote(regel):
 
 def tv_nuenstraks(regel):
 	input=urllib.urlopen("http://www.tvgids.nl/nustraks/").read();
-	soup=BeautifulSoup(input);
+	soup=BeautifulSoup.BeautifulSoup(input);
 	t=soup('div', {'id' : 'nuStraks'})[0].div.form.table;
 	needed=set(["Nederland 1", "Nederland 2", "Nederland 3", "RTL 4", "RTL 5", "SBS 6", "NET 5", "RTL 7", "Talpa", "Veronica"]);
 	r="";
