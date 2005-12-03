@@ -1469,7 +1469,11 @@ def tv_nuenstraks(regel):
 		th=i('th');
 		channel=str(td[0].span.string);
 		if (channel in needed):
-			line="  "+channel+", "+str(td[1].div.a.string)+", om "+str(th[1].string)+" "+str(td[3].div.a.string);
+			line="  "+channel+", "+str(td[1].div.a.string);
+			if (th[1].string!=BeautifulSoup.Null):
+				line=line+", om "+str(th[1].string)+" "+str(td[3].div.a.string);
+			else:
+				line=line+", en daarna niks meer";
 			r=r+line+"\n";
 	return r;
 
