@@ -1029,7 +1029,7 @@ def randomnaam(input):
   return "NICK "+naam+"\nik heb deze keer gekozen voor een naam uit de categorie \""+category+"\"\n";
 
 def remind(regel):
-	split=re.match("\s*(((\d+\s*(uren|uur|u|h|min|m|s|sec)\s*)+)|(\d+:\d+[:\d+]\s*))", regel);
+	split=re.match("\s*(((\d+\s*(d|dagen|dag|uren|uur|u|h|min|m|s|sec)\s*)+)|(\d+:\d+[:\d+]\s*))", regel);
 	if (split==None):
 		return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van";
 	tijd=string.strip(regel[split.start():split.end()]);
@@ -1039,9 +1039,11 @@ def remind(regel):
 	tz=tijdzone_nick(nick);
 	if (string.find(tijd, ":")==-1): # relative time if no :
 		tijd=re.sub(" ", "", tijd);
+		tijd=string.replace(tijd, "dagen", "d");
+		tijd=string.replace(tijd, "dag", "d");
 		tijd=string.replace(tijd, "uren", "h");
 		tijd=string.replace(tijd, "uur", "h");
-		tijd=string.replace(tijd, "u", "u");
+		tijd=string.replace(tijd, "u", "h");
 		tijd=string.replace(tijd, "min", "m");
 		tijd=string.replace(tijd, "sec", "s");
 		tijd=string.replace(tijd, "m", "*60 ");
