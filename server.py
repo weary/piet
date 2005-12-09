@@ -243,6 +243,7 @@ def do_server(nick_, auth_, channel_, msg_):
 		netsplit=check_netsplit(nick_, channel_, command, msg_);
 		if not(netsplit):
 			check_sleep_time(nick_, auth_, channel_, command, msg_);
+		check_names_delayed(channel_);
 	if command in ["PART", "QUIT"]:
 		del nicks[nick_];
 	if command in ["KICK"] and auth_>0:
@@ -261,7 +262,5 @@ def do_server(nick_, auth_, channel_, msg_):
 		else:
 			if not(netsplit):
 				piet.send(channel_, 'server riep "'+msg_+'", maar dat interesseert echt helemaal niemand\n');
-	if command in ["JOIN"]:
-		check_names_delayed(channel_);
 		
 
