@@ -255,4 +255,224 @@ UML#Universal Modelling Language
 BVH#biovision hierarchy file, motion captured skeletjes
 PVS#potentially visible set
 gug#GMT Universal Greeting
+lfg#looking for group (from wow)
+wow#world of warcraft
+xip#execute in place
+cmiiw#correct me if i'm wrong
+
+121#one to one
+AFAIK#as far as I know
+AFK#away from keyboard
+AKA#also known as
+ARE#acronym-rich environment
+ASAP#as soon as possible
+A/S/L?#age, sex, location
+B4#before
+B4N#bye for now
+BAK#back at the keyboard
+BBIAB#be back in a bit
+BBL#be back later
+BBML#be back much later
+BBN#bye bye now
+BBS#be back soon
+BEG#big evil grin
+BF#boyfriend
+BFN#bye for now
+BG#big grin
+BL#belly laughing
+BRB#be right back
+BTA#but then again
+BTW#by the way
+BWL#bursting with laughter
+BWTHDIK#but what the heck do I know
+C&G#chuckle & grin
+CID#crying in disgrace
+CNP#continued (in my) next post
+CP#chat post
+CRBT#crying real big tears
+CSG#chuckle, snicker, grin
+CU#see you
+CUL#or CUL8ER see you later
+CUZ#because
+CYO#see you online
+DIKU#do I know you?
+DL#dead link
+DLTBBB#donnt let the bed bugs bite
+DQMOT#donnt quote me on this
+EG#evil grin
+EMFBI#excuse me for butting in
+EOM#end of message
+EOT#end of thread
+F2F#face to face
+FAQ#frequently asked question(s)
+FC#fingers crossed
+FISH#first in, still here
+FMTYEWTK#far more than you ever wanted to know
+FOMCL#falling off my chair laughing
+FTBOMH#from the bottom of my heart
+FUD#fear, uncertainty, and doubt
+FWIW#for what itas worth
+FYI#for your information
+GA#go ahead
+GAL#get a life
+GD&R#grinning, ducking, & running
+GF#girlfriend
+GFN#gone for now
+GIWIST#gee, I wish Id said that
+GMBO#giggling my butt off
+GMTA#great minds think alike
+GOL#giggling out loud
+GTRM#going to read mail
+GTSY#glad to see you
+H&K#hug and kiss
+HAGN#have a good night
+HHIS#hanging head in shame
+HTH#hope this helps
+IAC#in any case
+IAE#in any event
+IANAL#I am not a lawyer (but)
+IC#I see
+IDK#I dont know
+IHA#I hate acronyms
+IIRC#if I remember correctly
+ILU#I love you
+IM#instant message
+IMHO#in my humble opinion
+IMing#chatting with someone online
+IMNSHO#in my not so humble opinion
+IMO#in my opinion
+IOW#in other words
+IPN#Inm posting naked
+IRL#in real life
+IWALU#I will always love you
+IYSWIM#if you see what I mean
+JBOD#just a bunch of disks
+JIC#just in case
+JK#just kidding
+JMO#just my opinion
+JTLYK#just to let you know
+JW#just wondering
+K#okay
+KIT#keep in touch
+KOC#kiss on cheek
+KOL#kiss on lips
+KWIM#know what I mean?
+L2M#listening to music
+L8R#later
+LD#later, dude
+LDR#long distance relationship
+LHM#lord help me
+LHU#lord help us
+LLTA#lots and lots of thunderous applause
+LMIRL#let s meet in real life
+LMSO#laughing my socks off
+LOL#laughing out loud
+LRF#little rubber feet
+LSHMBB#laughing so hard my belly is bouncing
+LSHMBH#laughing so hard my belly hurts
+LSHTTARDML#laughing so hard the tears are running down my leg
+LTM#laugh to myself
+LTNS#long time, no see
+LTR#long term relationship
+LTS#laughing to self
+LULAB#love you like a brother
+LULAS#love you like a sister
+LUWAMH#love you with all my heart
+LY#love you
+M/F#male or female
+MOSS#member of same sex
+MOTOS#member of the opposite sex
+MSG#message
+MTF#more to follow
+MUSM#miss you so much
+NADT#not a darn thing
+NIFOC#naked in front of computer
+NP#nosy parents
+N/P#no problem
+NRN#no reply necessary
+OIC#oh I see
+OL#old lady
+OLL#online love
+OM#old man
+OMG#oh my god
+OTF#off the floor
+OTOH#on the other hand
+OTTOMH#off the top of my head
+P2P#peer to peer
+P911#my parents are coming!
+PA#parent alert
+PAL#parents are listening
+PANB#parents are nearby
+PANS#pretty awesome new stuff
+PDA#public display of affection
+PDS#please donpt shoot
+PLZ#please
+PM#private message
+PMFJIB#pardon me for jumping in but&.
+PMP#peed my pants
+POAHF#put on a happy face
+POS#parent over shoulder
+POTS#plain old telephone service
+PU#that stinks
+QSL#reply
+QSO#conversation
+QT#cutie
+RL#real life
+ROL#raffing out loud
+ROTFL#rolling on the floor laughing
+RPG#role playing games
+RSN#real soon now
+RYO#roll your own
+S4L#spam for life
+SETE#smiling ear to ear
+SF#surfer friendly
+SHCOON#shoot hot coffee out of nose
+SHID#slaps head in disgust
+SNERT#snot nosed egotistical rude teenager
+SO#significant other
+SOMY#sick of me yet?
+SOT#short of time
+SOTMG#short of time, must go
+STW#search the web
+SUP#or WU what s up
+SWAK#sealed with a kiss
+SWL#screaming with laughter
+SYS#see you soon
+TA#thanks again
+TAFN#that s all for now
+TAW#teachers are watching
+TCOB#taking care of business
+TCOY#take care of yourself
+TFH#thread from hell
+TGIF#thank God ites Friday
+THX#thanks
+TIA#thanks in advance
+TILII#tell it like it is
+TLK2UL8R#talk to you later
+TMI#too much information
+TNT#till next time
+TOPCA#til our paths cross again
+TOY#thinking of you
+TPTB#the powers that be
+TTFN#ta ta for now
+TTT#thought that too
+TTYL#talk to you later
+TU#thank you
+UW#younre welcome
+VBG#very big grin
+WB#welcome back
+WDALYIC#who died and left you in charge?
+W/E#whatever
+WFM#works for me
+WIBNI#wouldnrt it be nice if
+WTG#way to go
+WTGP#want to go private?
+WTH#what/who the heck
+WUF#where are you from?
+WYSIWYG#what you see is what you get
+YBS#you ll be sorry
+YG#young gentleman
+YL#young lady
+YM#young man
+
 
