@@ -184,6 +184,7 @@ toch maar#0.7#ik heb liever van niet trouwens
 wat betekend#1.0#betekent moet vast met een t
 dirk#1.0#he? wat moet dirk hier?
 schopt piet#1.0#ACTION rent huilend weg
+hakt piet#1.0#ACTION wordt gehacked
 ramt piet#1.0#ACTION zet het op het huilen
 scheldt piet#1.0#schelden doet geen zeer
 pakt piet#1.0#blijf van me af NICK
@@ -207,6 +208,7 @@ t'is#0.3#ACTION wurgt NICK langzaam met een speciaal geprepareerde ' na een t
 t'is#0.5#NICK bedoelt 't goed hoor, maar dat 'ie t' tikt was gewoon fout
 t'is#1.0#ACTION zeurt dat t' niet kan omdat de ' een weglating aanduidt die niet na de t kan komen
 zobiezo#0.1#iemand wil dat ik nu over spelling ga zeuren maar dat doe ik sowieso niet
+brandnetel thee#0.5#YUK!
 thee#0.4#ACTION kijkt afkeurend naar NICK
 thee#1.0#ga toch koffie drinken
 ligt er nog#1.0#nog steeds?!?
@@ -296,4 +298,5 @@ zobiezo#0.5#pas op, groentje gaat je zo vertellen dat je sowieso had moeten
 tikken
 zobiezo#1.0#tsk. sowieso dus.
 dt ik #1.0#hee, daar kan een letter uitgespaard worden na die d
+curl#1.0#curl? dat zou ik toch zo gebruiken: curl -d @get_reports.xml -H content-type:text/xml http://localhost/cgi-bin/disp.fcgi
 
