@@ -346,13 +346,29 @@ def nlweer(woord):
       result+='\n';
   return string.strip(result);
 
+def itaweer(woord):
+	if (woord=="it"):
+		cmd = "wget -O - \"http://www.televideo.rai.it/televideo/pub/solotesto.jsp?regione=&pagina=704&sottopagina=01\" 2>/dev/null | grep -A 2 PISA | perl -ni -e 'trim; $_ =~ s/\s+/ /g; print \"Oggi: $_\\n\";';wget -O - \"http://www.televideo.rai.it/televideo/pub/solotesto.jsp?regione=&pagina=705&sottopagina=01\" 2>/dev/null | grep -A 2 PISA | perl -ni -e 'trim; $_ =~ s/\s+/ /g; print \"Domani: $_\\n\";'"
+	else:
+		cmd = "wget -O - \"http://www.televideo.rai.it/televideo/pub/solotesto.jsp?regione=TOSCANA&pagina=313&sottopagina=01\" 2>/dev/null|grep -i "+woord+" | perl -ni -e '$_ =~ s/\s+/ /g;($dummy,$loc,$min,$max) = split / /, $_ ; print \"$loc: min=$min max=$max\";'";
+
+	inp,outp,stderr = os.popen3(cmd);
+	result=outp.read();
+	inp.close();
+	outp.close();
+	stderr.close();
+	return string.strip(result); 
+
 def weer(woord):
-	if (string.lower(woord)[:3]=="syd"):
+	woord=string.lower(woord);
+	if (woord[:3]=="syd"):
 		return SydWeer(woord);
-	elif (string.lower(woord)=="nl") or woord=="":
+	elif (woord=="nl") or woord=="":
 		return nlweer("");
-	elif (string.lower(nick)[:6]=="semyon"):
+	elif (nick[:6]=="semyon"):
 		return SydWeer("");
+	elif (woord=="it" or woord=="pisa" or woord=="lucca"):
+		return itaweer(woord);
 	return "'"+woord+"' ken ik niet hoor, hier is het nederlandse weer:\n"+nlweer("");
 
 
@@ -1858,7 +1874,7 @@ def tweakers_newsthread(channel):
 		outp.close();
 		doc = libxml2.parseDoc(x);
 		result = style.applyStylesheet(doc, None);
-		try: lines=string.split(style.saveResultToString(result), '\n')[1:9];
+		try: lines=string.split(style.saveResultToString(result), '\n')[1:5];
 		except: piet.send(channel, "news failure\n"); tweakersthreads-=1; return;
 		lines.append(tweakerslastitem);
 		oldindex=lines.index(tweakerslastitem); lines=lines[:oldindex];
