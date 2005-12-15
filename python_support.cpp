@@ -52,10 +52,10 @@ std::string obj2str(PyObject *obj)
 		PyFunctionObject *t=reinterpret_cast<PyFunctionObject *>(obj);
 		str << "function<" << obj2str(t->func_name) << ">";
 	}
-	else if (PyTraceBack_Check(obj))
+	/*else if (PyTraceBack_Check(obj))
 	{
 		str << "obj-traceback";
-	}
+	}*/
 	else if (PyClass_Check(obj))
 	{
 		PyClassObject *t=reinterpret_cast<PyClassObject *>(obj);
@@ -75,7 +75,9 @@ std::string obj2str(PyObject *obj)
 	}
 	else
 	{
-		str << "obj<" << obj->ob_type->tp_name << ">";
+		PyObject* strrepr=PyObject_Repr(obj);
+		str << PyString_AsString(strrepr);
+		Py_XDECREF(strrepr);
 	}
 
 	//if (obj) str << 'x' << obj->ob_refcnt;
