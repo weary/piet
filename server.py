@@ -231,24 +231,25 @@ def check_names_delayed(channel_):
 		return;
 	names_delayed_waiting=1;
 	time.sleep(5);
-	piet.names(channel_);
 	names_delayed_waiting=0;
+	piet.names(channel_);
 
 def do_server(nick_, auth_, channel_, msg_):
 	global nicks;
 	print("do_server("+nick_+", "+str(auth_)+", "+channel_+", "+msg_+")\n");
 	command=string.upper(string.split(msg_, ' ')[0]);
 	netsplit=False;
-	if command in ["JOIN", "PART", "QUIT", "KICK"] and auth_>0:
-		netsplit=check_netsplit(nick_, channel_, command, msg_);
-		if not(netsplit):
-			check_sleep_time(nick_, auth_, channel_, command, msg_);
+	if command in ["JOIN", "PART", "QUIT", "KICK"]:
+		if auth_>0:
+			netsplit=check_netsplit(nick_, channel_, command, msg_);
+			if not(netsplit):
+				check_sleep_time(nick_, auth_, channel_, command, msg_);
 		check_names_delayed(channel_);
 	if command in ["PART", "QUIT"]:
 		try:
 			del nicks[nick_];
 		except:
-			piet.send(channel_, "nouja zeg, "+nick_+" gaat alweer weg, en ik had 'm nog niet eens gezien..\n");
+			piet.send(channel_, "voor jullie informatie: het schijnt dat er hier een "+nick_+" was, maar ik heb 'm niet gezien\n");
 	if command in ["KICK"] and auth_>0:
 		kicknick=string.split(msg_, ' ')[2];
 		piet.send(channel_, "en waag het niet om weer te komen, jij vuile "+kicknick+"!\n");
