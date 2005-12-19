@@ -245,11 +245,17 @@ def do_server(nick_, auth_, channel_, msg_):
 			check_sleep_time(nick_, auth_, channel_, command, msg_);
 		check_names_delayed(channel_);
 	if command in ["PART", "QUIT"]:
-		del nicks[nick_];
+		try:
+			del nicks[nick_];
+		except:
+			piet.send(channel_, "nouja zeg, "+nick_+" gaat alweer weg, en ik had 'm nog niet eens gezien..\n");
 	if command in ["KICK"] and auth_>0:
 		kicknick=string.split(msg_, ' ')[2];
 		piet.send(channel_, "en waag het niet om weer te komen, jij vuile "+kicknick+"!\n");
-		del nicks[nick_];
+		try:
+			del nicks[nick_];
+		except:
+			piet.send(channel_, "niet dat je er was, maar toch\n");
 	if command in ["NICK"]:
 		nickchange(nick_, auth_, channel_, msg_[5:]);
 	if command in ["437"] and auth_>0:
