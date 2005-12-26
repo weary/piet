@@ -342,21 +342,6 @@ def calcM(param):
     if dimx!=1 or dimy!=1 or value!=math.floor(value):
       return ("identity matrix must have simply number",0,"","",1,1)
     value=int(value)
-#    if param[:1]=="t":
-#      matrixvalue=[]
-#      matrixunit=[]
-#      for x in range(value):
-#        matrixline=[]
-#        unitline=[]
-#        for y in range(value):
-#          unitline+=[""]
-#          if x+1==(value-y):
-#            matrixline+=[1]
-#          else:
-#            matrixline+=[0]
-#        matrixvalue+=matrixline
-#        matrixunit+=unitline
-#      return("",matrixvalue,param[1:],matrixunit,value,value)
     matrixvalue=[]
     matrixunit=[]
     for x in range(value):
@@ -429,7 +414,7 @@ def calcM(param):
     param=string.strip(param[digitscheck.end():])
     chars=re.compile('[a-z]|\(|[0-9]|\$')
     if chars.match(param):
-      (error,value2,left,unit,dimx,dimy)=calcM(param)
+      (error,value2,left,unit,dimx,dimy)=calcP(param)
       return (error,value*value2,left,unit,1,1)
     return ("",value,param,"",1,1)
 #matrix
@@ -795,7 +780,7 @@ units+=[("acre",4.0468564224e+3,"m^2"),("are",1.0e+2,"m^2"),("hectare",1.0e+2,"m
 
 #electricity
 
-units+=[("volt",1.0e+3,"g^1*m^2*s^-3*a^-1"),("ampere",1.0,"a^1"),("a",1.0,"a^1"),("coulomb",1.0,"a^1*s^1"),("ohm",1.0e+3,"g^1*m^2*s^-3*a^-2"),("farad",1.0e-3,"a^2*g^-1*m^-2*s^4"),("tesla",1.0e+3,"a^-1*g^1*s^-2"),("weber",1.0e+3,"a^-1*g^1*m^2*s^-2"),("henry",1.0e+3,"a^-2*g^1*m^2*s^-2")] 
+units+=[("volt",1.0e+3,"a^-1*g^1*m^2*s^-3"),("ampere",1.0,"a^1"),("a",1.0,"a^1"),("coulomb",1.0,"a^1*s^1"),("ohm",1.0e+3,"g^1*m^2*s^-3*a^-2"),("farad",1.0e-3,"a^2*g^-1*m^-2*s^4"),("tesla",1.0e+3,"a^-1*g^1*s^-2"),("weber",1.0e+3,"a^-1*g^1*m^2*s^-2"),("henry",1.0e+3,"a^-2*g^1*m^2*s^-2")] 
 
 #energy
 units+=[("joule",1.0e+3,"g^1*m^2*s^-2"),("calorie",4.184e+3,"g^1*m^2*s^-2"),("watt",1.0e+3,"g^1*m^2*s^-3")]
