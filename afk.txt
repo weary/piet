@@ -259,7 +259,6 @@ lfg#looking for group (from wow)
 wow#world of warcraft
 xip#execute in place
 cmiiw#correct me if i'm wrong
-
 121#one to one
 AFAIK#as far as I know
 AFK#away from keyboard
@@ -474,5 +473,43 @@ YBS#you ll be sorry
 YG#young gentleman
 YL#young lady
 YM#young man
-
+stfu#houdt je smoel
+YSF#you stupid fuck
+FFS#for fucks sake
+QRA#What is the name of your station ?  The name of my station is... 
+QRB#How far approximately are you from my station ?  The approximate distance between our stations is........nautical miles (or.... kilometers) 
+QRG#Will you tell me my exact frequency (or that of....) ?  Your exact frequency (or that of...) is ...Khz (or Mhz) 
+QRH#Does my frequency vary ?  Your frequency varies. 
+QRI#How is the tone of my transmission ?  The tone of your transmission is ... 1 = good. 2 = variable. 3 = bad 
+QRK#What is the readability of my signals ?  The readability of your signals is..... 1 = bad. 2 = poor. 3 = fair. 4 = good. 5 = excellent. 
+QRL#Are you busy ?  I am busy 
+QRM#Are you being interfered ?  I am being interfered with: 1 = nil. 2 = slightly. 3 = moderately. 4 = severely. 5 = extremely. 
+QRN#Are you troubled by static ?  I am troubled by static 1 = nil. 2 = slightly. 3 = moderately. 4 = severely. 5 = extremely. 
+QRO#Shall I increase transmitter power ?  Increase transmitter power. 
+QRP#Shall I decrease transmitter power ?  Decrease transmitter power. 
+QRQ#Shall I send faster ?  Send faster (or ... words per minute). 
+QRS#Shall I send more slowly ?  Send more slowly (or ... words per minute). 
+QRT#Shall I stop sending ?  Stop sending. 
+QRU#Have you anything for me ? I have nothing for you. 
+QRV#Are you ready ?  I am ready. 
+QRW#Shall I inform...that you are calling him on...khz (or...Mhz)?.  Please inform...that I am calling him on...khz(or...Mhz) 
+QRX#When will you call me again ?  I will call you again at...hours (on ...khz (or ...Mhz)). 
+QRY#What is my turn ?  Your turn is number....(or according to any other indication). 
+QRZ#Who is calling me ?  You are being called by...(on ...khz (or ...Mhz)). 
+QSA#What is the strength of my signals ?  The strength of your signals (or those of ...) is... 1 = scarcely perceptible. 2 = weak. 3 = fairly good. 4 = good. 5 = very good. 
+QSB#Are my signals fading ?  Your signals are fading. 
+QSD#Is my keying defective ?  Your keying is defective. 
+QSK#Can you hear me between your signals and if so can I break in on your transmission ?  I can hear you between my signals;break in on my transmission 
+QSL#Can you acknowledge receipt ?  I am acknowledging receipt. 
+QSO#Can you communicate with...?  I can communicate with...direct (or by relay through...). 
+QSP#Will you relay to...?  I will relay to... 
+QST#Is there any message for radio-hams ?  Here follows a message for radio-hams 
+QSU#Shall I send or reply on this frequency ( or on ...khz (or ...Mhz))?  Send or reply on this frequency ? (on ...khz (or ...Mhz)). 
+QSV#Shall I send a series of V's on this frequency ( or on ...khz (or ...Mhz))?  Send a series of V's on this frequency ( or on ...khz (or ...Mhz)). 
+QSW#Will you send on this frequency ( or on ...khz (or ...Mhz))?  I am going to send on this frequency ( or on ...khz (or ...Mhz)). 
+QSX#Will you listen to...?  I am listening to ...(call signs) on ...khz (or Mhz). 
+QSY#Shall I transmit on an other frequency ?  Transmit on an other frequency. ( or on ...khz (or ...Mhz)). 
+QTC#How many messages have you for me ?  I have...messages for you. 
+QTH#What is your position ?  My position is... 
+QTR#What is the correct time (in UTC) ?  The correct time is...(in UTC). 
 
