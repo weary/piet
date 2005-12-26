@@ -6,6 +6,14 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+std::string trimquotes(const std::string &inp_)
+{
+	if (inp_.size()<2)
+		return inp_;
+	if (inp_[0]=='"' && inp_[inp_.size()-1]=='"')
+		return inp_.substr(1, inp_.size()-2);
+	return inp_;
+}
 
 c_piet_config::c_piet_config() :
 	_server("irc.xs4all.nl"), _service("ircd"),
@@ -18,12 +26,14 @@ c_piet_config::c_piet_config() :
 		while (i.getline(line, 1024))
 		{
 			char *p=strchr(line, '=');
-			if (p)
+			if (p && p[0]!='#' && p[0]!='-')
 			{
 				std::string key(line, p);
 				std::string value(p+1);
 				boost::algorithm::trim(key);
 				boost::algorithm::trim(value);
+				key=trimquotes(key);
+				value=trimquotes(value);
 				if (boost::algorithm::iequals(key, "server"))
 					_server=value;
 				else if (boost::algorithm::iequals(key, "service"))

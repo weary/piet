@@ -1,10 +1,14 @@
+#include "bot.h"
 #include "python_handler.h"
 #include "python_support.h"
 #include "sender.h"
-#include "bot.h"
-#include <string>
-#include <sstream>
+#include <fcntl.h>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 //#include <boost/lexical_cast.hpp>
 
 namespace
@@ -52,10 +56,35 @@ std::string obj2str(PyObject *obj)
 		PyFunctionObject *t=reinterpret_cast<PyFunctionObject *>(obj);
 		str << "function<" << obj2str(t->func_name) << ">";
 	}
-	/*else if (PyTraceBack_Check(obj))
+	else if (PyTraceBack_Check(obj))
 	{
 		str << "obj-traceback";
-	}*/
+		PyObject* f=PyFile_FromString("/tmp/plop.txt", "w+");
+		if (f)
+		{
+			PyTraceBack_Print(obj, f);
+			Py_DECREF(f);
+			int handle=open("/tmp/plop.txt", O_RDONLY);
+			if (handle>0)
+			{
+				char buf[2048];
+				int c=read(handle, buf, 2048);
+				if (c>0)
+				{
+					buf[c]=0;
+					str << "\n" << buf;
+				}
+				else
+					str << "(unknown3)";
+				
+				str << buf;
+			}
+			else
+				str << "(unknown2)";
+		}
+		else
+			str << "(unknown)";
+	}
 	else if (PyClass_Check(obj))
 	{
 		PyClassObject *t=reinterpret_cast<PyClassObject *>(obj);
@@ -202,6 +231,14 @@ void python_cmd::operator()()
 			retval.decref();
 		else
 		{
+			PyObject* o=PyErr_Occurred();
+			if (o)
+				std::cout << "PY: ERROR: " << obj2str(o) << "\n";
+			else
+				std::cout << "PY: ERROR: NULL\n";
+
+			PyErr_Print();
+
 			PyObject *type_o, *value_o, *traceback_o;
 			PyErr_Fetch(&type_o, &value_o, &traceback_o);
 			python_object type(type_o), value(value_o), traceback(traceback_o);
