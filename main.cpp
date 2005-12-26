@@ -160,16 +160,23 @@ int main(int argc, char *argv[])
 			pollfd polls[1];
 			polls[0].fd=sok; polls[0].events=POLLIN|POLLPRI; polls[0].revents=0;
 			int n=poll(polls, 1, 1000/*ms*/);
-			if (n<0)
+			if (n<0 && errno==EINTR)
+				continue;
+			else if (n<0)
 			{ // error
-				printf("poll failed\n"); quit=true;
+				int e=errno;
+				char buf[1024];
+				if (strerror_r(e, buf, 1024)!=0)
+					strcpy(buf, "no message");
+				std::cout << "poll failed, " << e << ", " << buf << "\n" << std::flush;
 			}
 			else if (n==0)
 			{ // timeout
 			}
 			else if (polls[0].revents&(POLLERR|POLLHUP|POLLNVAL))
 			{
-				std::cout << "something happened to the socked, revents=" << polls[0].revents << ", ignoring\n";
+				std::cout << "something happened to the socked, revents=" << polls[0].revents << ", doei!\n";
+				quit=true;
 			}
 			else if (polls[0].revents&(POLLIN|POLLPRI))
 			{ // something to receive on sok
@@ -183,7 +190,9 @@ int main(int argc, char *argv[])
 				garbagecollect_count=30;
 			}
 		}
+		std::cout << "\n------------------------------------------------------------------------\n";
 		std::cout << "exit't main while(quit=" << quit << "), continuing to quit\n" << std::flush;
+		std::cout << "------------------------------------------------------------------------\n";
 
 		killall();
 
