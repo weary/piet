@@ -2,6 +2,9 @@ janee#0.5#ja
 janee#1.0#nee
 gezecht#1.0#ACTION merkt op dat je dat als gezegd spelt
 standaart#1#je zou clippie bijzonder blij maken als je standaart volgende keer als standaard spelt
+piet!!!!#1.0#NICK, jij zieke geest, 3 uitroeptekens is echt meer dan zat
+piet!!!#1.0#ja, hoi NICK
+piet!!#1.0#ACTION trekt, bij wijze van begroeting, aan NICK's neus
 hoi piet#1.0#hoi NICK
 hallo piet#1.0#hallo NICK
 mogge piet#1.0#morgen NICK
@@ -157,7 +160,7 @@ dum dum dum#1#dum dum dum went the dismal drums demanding the demise of us all.
 geprobeert#1.0#Je zou mijn vriendje Clippie blij maken als je geprobeerd met een d schrijft
 hoe heet je piet#1.0#ik heet nu piet
 hoe heet je, piet#1.1#ik heet nu piet
-piet hoet heet je#1.1#ik heet nu piet
+piet hoe heet je#1.1#ik heet nu piet
 schiet piet#1.0#ACTION zijn kogelvrije vest houdt alles makkelijk tegen
 evennaar#1.0#ik denk zo dat je evenaar bedoelt
 versie#0.2#ja maar dat is een beta versie hoor...
@@ -299,4 +302,5 @@ tikken
 zobiezo#1.0#tsk. sowieso dus.
 dt ik #1.0#hee, daar kan een letter uitgespaard worden na die d
 curl#1.0#curl? dat zou ik toch zo gebruiken: curl -d @get_reports.xml -H content-type:text/xml http://localhost/cgi-bin/disp.fcgi
+
 
