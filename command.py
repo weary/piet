@@ -7,6 +7,7 @@ from telnetlib import Telnet;
 sys.path.append(".");
 from calc import supercalc;
 import BeautifulSoup;
+from pistes import cmd_pistes;
 
 
 todofile = "todo.txt";
@@ -1839,15 +1840,19 @@ def opme(params):
 	return "ik zal eens kijken hoe het er hier voor staat en zo nodig actie ondernemen\n";
 
 def reloadding(params):
-  params=string.split(params," ")
-  if (len(params)<1) or (len(params[0])==0):
-    return "reload wat?"
-  else:
-    if params[0]=="calc" or params[0]=="supercalc":
-      import calc
-      reload(calc)
-      return "'t is vast gelukt"
-  return "die module ken ik niet"
+	params=string.split(params," ")
+	if (len(params)<1) or (len(params[0])==0):
+		return "reload wat?"
+	else:
+		if params[0]=="calc" or params[0]=="supercalc":
+			import calc
+			reload(calc)
+			return "'t is vast gelukt";
+		elif params[0]=="pistes":
+			import pistes;
+			reload(pistes);
+			return "och, wie weet is't gelukt";
+	return "die module ken ik niet"
 
 tweakersthreads=0;
 tweakersstop=0;
@@ -1972,6 +1977,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "url":               (100, url, "geef willekeurige oude url"),
     "mep":               (100, mep, ""),
     "geef":              (100, geef, ""),
+		"pistes":            (100, cmd_pistes, "pistes, doet iets met skipistes"),
     "dum":               (0, dum, ""),
     "wiki":		 (500, wiki, "wiki <woord> Freeware encyclopedie"),
     "tel":               (1000, tel, "geef weary's mobielnr"),
