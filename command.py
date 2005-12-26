@@ -1172,6 +1172,8 @@ def tempwereld(regel):
       City="Enschede";
     elif (City=="r'dam" or City=="rotterdam"):
       City="Rotterdam";
+    elif (City=="j'burg" or City=="johannesburg"):
+      City="Johannesburg";
     elif (City=="a'dam" or City=="amsterdam"):
       City="Amsterdam";
     elif (City=="l'sum" or City=="loppersum"):
@@ -1191,7 +1193,8 @@ def tempwereld(regel):
     elif (City=="p'burgh" or City=="pennsylvania" or City=="pittsburgh"):
        City="Pittsburgh";
     url="";
-    cityurlmap=[("Enschede","?ID=IOVERIJS5","CET"),("Loppersum","?ID=IGRONING8","CET"),("New York","?ID=KNYNEWYO17","CET"),("Groningen","?ID=IGRONING9","CET"),("Leeuwarden","?ID=IFRIESLA16","CET"),("Sydney","?ID=INSWMOOR1","AEST"),("Pittsburgh","?ID=KPAPITTS8","EDT"),("Hilversum","?ID=IHILVERS3","CET"),("Rotterdam","?ID=IZHROTTE2","CET"),("Amsterdam","?ID=INOORDHO1","CET"),("Cairns","?ID=IQUEENSL32","AEST")];
+
+    cityurlmap=[("Enschede","?ID=IOVERIJS5","CET"),("Loppersum","?ID=IGRONING8","CET"),("New York","?ID=KNYNEWYO17","EST"),("Groningen","?ID=IGRONING9","CET"),("Leeuwarden","?ID=IFRIESLA16","CET"),("Sydney","?ID=INSWMOOR1","AEST"),("Pittsburgh","?ID=KPAPITTS8","EDT"),("Hilversum","?ID=IHILVERS3","CET"),("Rotterdam","?ID=IZHROTTE2","CET"),("Amsterdam","?ID=INOORDHO1","CET"),("Cairns","?ID=IQUEENSL32","AEST"),("Johannesburg","?ID=IGAUTENG8","SAST")];
     for (name,x,t) in cityurlmap:
       if name==City:
         url=x;
@@ -1209,11 +1212,12 @@ def tempwereld(regel):
     if (i<=0):
       error=1
     else:
-      i=string.rfind(webresult[:i],"<tr b");
+      i=string.rfind(webresult[:i],"rowW");
       if (i<=0):
         error=2
     if (error==0):
-      i=string.find(webresult,"<td>",i)+4;
+      i=string.find(webresult,"<td",i)+3;
+      i=string.find(webresult,">",i)+1;
       j=string.find(webresult,"</td",i);
       tijd=webresult[i:j]+" "+timezone
       if (i<=0):
@@ -1231,13 +1235,14 @@ def tempwereld(regel):
     if (error==0):
       templine=tijd+" "+City+", temp: "+webresult[i:j]+"°C, luchtvochtigheid: ";
       j=string.find(webresult,"%",j);
-      j=string.rfind(webresult[:j],"<b>")+3
+      j=string.rfind(webresult[:j],">")+1
       if (j<=0):
         error=6
     if (error==0):
       templine+=webresult[j:j+2]+"%, wind: ";
-      i=string.find(webresult,"hPa",i);
-      i=string.find(webresult,"<td>",i)+4
+      i=string.rfind(webresult[:j],"km/h")-1;
+      i=string.rfind(webresult[:i],"km/h");
+      i=string.rfind(webresult[:i],"<nobr>")+6
       if (i<=0):
         error=7
     if (error==0):
@@ -1245,10 +1250,6 @@ def tempwereld(regel):
         templine+="rustig"
       else:
         i=string.find(webresult,"<b>",i)+3
-        j=string.find(webresult,"<",i)
-        templine+=webresult[i:j]+" "
-        i=string.find(webresult,"<b>",j)+3
-        i=string.find(webresult,"<b>",j)+3
         j=string.find(webresult,"<",i)
         templine+=webresult[i:j]+"km/h"
     if (error==0):
