@@ -46,6 +46,7 @@ c_piet_config::c_piet_config() :
 		}
 
 		_nick=_initial_nick;
+		assert(!_nick.empty() || !"need an initail nick");
 	}
 	catch (std::exception &e)
 	{

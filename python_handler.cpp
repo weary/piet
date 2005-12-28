@@ -7,6 +7,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <list>
 #include <iostream>
 
@@ -103,13 +104,24 @@ static PyObject * piet_send(PyObject *self, PyObject *args)
 	}
 	std::string channel(cp_channel), msg(cp_msg);
 
+	using boost::algorithm::starts_with;
+
   typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
   boost::char_separator<char> sep("\n");
   tokenizer tokens(msg, sep);
   for (tokenizer::iterator it = tokens.begin(); it != tokens.end(); ++it)
 	{
 		std::cout << "PY: sendline: " << *it << "*\n";
-		privmsg(channel, *it);
+		std::string line=*it;
+		if (starts_with(line, "ACTION "))
+			privmsg(channel, '\000'+line+'\000');
+		else if (starts_with(line, "NICK "))
+		{
+			privmsg(channel, "wuh? nieuwe nick? wat is dit voor nonsense\n");
+			send(":%s NICK :%s\n", g_config.get_nick().c_str(), line.c_str()+5);
+		}
+		else
+			privmsg(channel, line);
 	}
 	
 	Py_INCREF( Py_None );

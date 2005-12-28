@@ -19,8 +19,6 @@
 #include <sstream>
 #include <sys/types.h>
 
-//typedef std::map<std::string, int> tauth_map;
-//extern tauth_map auth_map;
 extern bool restart;
 bool silent_mode=false;
 
@@ -34,17 +32,14 @@ using boost::format;
 #define COM_CTCPPING 51
 #define COM_NEWS 11
 #define COM_SHUTUP 12
-//#define COM_AUTH 13
 #define COM_BUSY_ASK 14
-#define COM_RENICK 15
-//#define COM_OPME 16
+//#define COM_RENICK 15
 #define COM_BESILENT 17
 #define COM_SILENT 18
 #define COM_UNSILENT 19
 #define COM_JOINME 20
 #define COM_JOINME_NOAUTH 21
 #define COM_SERVER 22
-//#define COM_RELOADLUA 24
 
 struct scommand
 {
@@ -54,7 +49,6 @@ struct scommand
 };
 
 const scommand commands[]= {
-{ "stop",        COM_QUIT,  1000 },
 { "sterf",       COM_QUIT,  1000 },
 { "donder op",   COM_QUIT,  1000 },
 { "herstart",    COM_RESTART, 1000 },
@@ -63,15 +57,13 @@ const scommand commands[]= {
 { "ga weg van ", COM_LEAVE, 1000 },
 { "kom bij ",    COM_JOIN,  1000 },
 { "\001PING",    COM_CTCPPING, 100 },
-{ "kop dicht",   COM_SHUTUP,1000 },
+{ "stop",        COM_SHUTUP, 1000 },
+{ "kop dicht",   COM_SHUTUP, 1000 },
 { "koffie?",     COM_BUSY_ASK, 121},
-//{ "auth",        COM_AUTH, -2500 },
-{ "je heet nu ", COM_RENICK, 200 },
-//{ "opme",        COM_OPME,  150 },
+//{ "je heet nu ", COM_RENICK, 200 },
 { "wees stil",   COM_BESILENT, 1000 },
 { "stil?",       COM_SILENT, 1000 },
 { "praat maar",  COM_UNSILENT, 1000 },
-//{ "lees lua",    COM_RELOADLUA, 1000 },
 { "SERVER",      COM_SERVER, -5 }
 };
 
@@ -227,112 +219,28 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
             }
           }
           break;
-        case(COM_RENICK):
+        /*case(COM_RENICK):
           {
             send(":%s PRIVMSG %s :ik zal de server eens vragen of dat mag\n", g_config.get_nick().c_str(), channel.c_str());
             send(":%s NICK :%s\n", g_config.get_nick().c_str(), params.c_str());
           }
-          break;
-        /*case(COM_OPME):
-          {
-            send(":%s MODE %s +o %s", g_config.get_nick().c_str(), channel.c_str(), nick.c_str());
-            send(":%s PRIVMSG %s :hoezo? ben ik dan operator ofzo? kan je dat zelf niet?\n", g_config.get_nick().c_str(), channel.c_str());
-          }
           break;*/
-        case(COM_RESTART):
+
+				case(COM_RESTART):
           {
             send(":% QUIT :ben zo terug (hopelijk)\n", g_config.get_nick().c_str());
             restart=true;
           }
           break;
 
-        /*case(COM_RELOADLUA):
-          {
-            send(":%s PRIVMSG %s :nou snel dan\n", g_config.get_nick().c_str(), channel.c_str());
-						lua_inst.reset(new clua);
-            send(":%s PRIVMSG %s :ok, gedaan\n", g_config.get_nick().c_str(), channel.c_str());
-          }
-          break;*/
         case(COM_SERVER):
           {
             msg=msg.substr(7);
-						/*if (!lua_inst)
-							send(":%s PRIVMSG %s :HelpHelpHelp, ik ben m'n instellingen kwijt!\n", g_config.get_nick().c_str(), channel.c_str());
-						else
-							lua_inst->server_msg(nick.c_str(), auth, channel.c_str(), msg.c_str());*/
-						{
-							python_cmd cmd(channel, "do_server", 4);
-							cmd << nick << auth << channel << msg;
-							python_handler::instance().read_and_exec(channel, "server.py", cmd);
-						}
+						python_cmd cmd(channel, "do_server", 4);
+						cmd << nick << auth << channel << msg;
+						python_handler::instance().read_and_exec(channel, "server.py", cmd);
           }
 	  break;
-        /*case(COM_AUTH):
-          {
-            int localauth=auth;
-            int newauth=0;
-            char nick_[20]; nick_[0]=0;
-            char pwd_[20]; pwd_[0]=0;
-            int val=sscanf(params.c_str(), "%d %20s %20s", &newauth, nick_, pwd_);
-            if (newauth>1500) newauth=1500;
-            if (newauth<-1500) newauth=-1500;
-
-            const char *encrypted="<lege string>";
-            bool passok=false;
-            if (val==3)
-            {
-              encrypted=crypt(pwd_, "AB");
-              printf("AUTH: encrypted ww = %s\n", encrypted);
-              for (int i=0; i<botpasssize; i++)
-              {
-                if ((botpass[i].auth>localauth) && (strcmp(encrypted, botpass[i].pass)==0))
-                {
-                  localauth=botpass[i].auth;
-                  passok=true;
-                }
-              }
-            }
-
-            if (((val==2)||(val==3)) && (newauth<=localauth) && (localauth>=auth_map[nick_]))
-            {
-              auth_map[nick_]=newauth;
-              send(":%s PRIVMSG %s :ok, %s heeft nu authenticatieniveau %d\n", g_config.get_nick().c_str(), channel.c_str(), nick_, auth_map[nick_]);
-            }
-            else if ((params.empty())&&(localauth>=0))
-            {
-              tauth_map::const_iterator i=auth_map.begin();
-              bool first=true;
-              std::string result;
-              while (i!=auth_map.end())
-              {
-                if ((*i).second!=0)
-	              {
-                  result=(boost::format("%1%%2%%3%%4%%5%%6%") % result % (first?"(":", (") % (*i).first % ", " % ((*i).second) % ")").str();
-                  first=false;
-                }
-                i++;
-              }
-              if (result.empty())
-                send(":%s PRIVMSG %s :ik ken helemaal niemand!", g_config.get_nick().c_str(), channel.c_str());
-              else
-                send(":%s PRIVMSG %s :bij mij zijn bekend: %s", g_config.get_nick().c_str(), channel.c_str(), result.c_str());
-            }
-            else if (localauth>=0)
-            {
-              if ((val==2)||((val==3)&&(passok==true)))
-              {
-                send(":%s PRIVMSG %s :niet goed, mag niet\n", g_config.get_nick().c_str(), channel.c_str());
-                send(":%s PRIVMSG %s :%s: je mag tot level %d geven\n", g_config.get_nick().c_str(), channel.c_str(), nick.c_str(), localauth);
-              }
-              else if (val==3)
-                send(":%s PRIVMSG %s :niet goed, mag niet, wachtwoordfout in \"%s\" denk ik\n", g_config.get_nick().c_str(), channel.c_str(), encrypted);
-              else
-                send(":%s PRIVMSG %s :niet goed, mag niet.\n", g_config.get_nick().c_str(), channel.c_str());
-            }
-            else
-              printf("WARNING: %s heeft localauth %d en krijgt dus geen feedback\n", nick.c_str(), localauth);
-          }
-          break;*/
       }
     }
     else

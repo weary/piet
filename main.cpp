@@ -36,7 +36,7 @@ void printsockaddr(const sockaddr *buf, unsigned int size)
     case(PF_INET6): printf("ipv6 address"); break;
     default: printf("unknown address"); break;
   }
-  printf(" for port %d, address:\n", port);
+  printf(" for port %d, address ", port);
 
   const unsigned char *b=(const unsigned char *)buf->sa_data+sizeof(u_short);
   unsigned int s=size-sizeof(short)-sizeof(u_short);
@@ -44,7 +44,7 @@ void printsockaddr(const sockaddr *buf, unsigned int size)
   if (family==PF_INET6) b+=4, s-=8;
   for (unsigned int i=0; i<s; i++)
   {
-    printf(" %.2x", b[i]);
+    printf(" %.2x(%d)", b[i], b[i]);
   }
   printf("\n");
 }

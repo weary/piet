@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys,string,random,re,os,time,crypt,socket,thread,urllib;
+import sys,string,random,re,os,time,crypt,socket,thread,urllib,traceback;
 import piet;
 from telnetlib import Telnet;
 sys.path.append(".");
@@ -42,10 +42,10 @@ def db_set(table, key, value):
 		return;
 
 
-def error_handler(type, value, traceback):
+def error_handler(type, value, tb):
 	global channel;
 	piet.send(channel, "arg! er heeft weer iemand zitten prutsen! wie is't? ik moet even "+repr(value.args[0])+" op z'n voorhoofd tatoeëren\n");
-	sys.__excepthook__(type, value, traceback);
+	sys.__excepthook__(type, value, tb);
 
 sys.excepthook=error_handler;
 
@@ -989,6 +989,9 @@ def geordi(input):
   line="Captain, "+A;
   return line;
 
+def jeheetnu(input):
+	return "NICK "+input;
+
 def randomnaam(input):
   getdiscworldname=(random.random() > 0.5);
   if (getdiscworldname):
@@ -1045,10 +1048,63 @@ def randomnaam(input):
     naam=random.choice(result);
   return "NICK "+naam+"\nik heb deze keer gekozen voor een naam uit de categorie \""+category+"\"\n";
 
+remind_threads=0;
+def remind_thread(frop):
+	global remind_threads;
+	if (remind_threads>0):
+		print repr(remind_threads)+"th remind thread refusing to start";
+		return;
+	remind_threads+=1;
+	try:
+		while True:
+			now=int(round(time.time()));
+			print "remind thread: calculating sleep time (now="+repr(now)+")";
+			next=now+(5*60);
+			try:
+				tijd=min(next, int(piet.db("SELECT MIN(tijd) from reminds")[1][0]));
+			except:
+				print "remind thread: geen reminds meer";
+				break;
+			print "remind thread: finished calculating sleep time";
+
+			wachttijd=tijd-now;
+			if (wachttijd>0):
+				print "remind thread slaapt voor "+format_tijdsduur(wachttijd);
+				time.sleep(wachttijd);
+			else:
+				print "remind thread slaapt niet";
+
+			print "remind thread: checking messages";
+			try:
+				now=int(round(time.time()));
+				msgs=piet.db("SELECT channel,nick,msg,tijd FROM reminds "+
+						"WHERE tijd<="+repr(now+1))[1:];
+				for m in msgs:
+					if (len(m)!=4):
+						print "WARNING: malformed db response in remind: "+repr(m);
+					telaat=now-int(m[3]);
+					if (telaat>0):
+						piet.send(m[0], m[2]+" (ja, "+format_tijdsduur(telaat)+" te laat)");
+					else:
+						piet.send(m[0], m[2]);
+				piet.db("DELETE FROM reminds WHERE tijd<="+repr(now+1));
+			except:
+				#traceback.print_exc();
+				pass;
+			print "remind thread: finished checking messages";
+
+	except:
+		traceback.print_exc();
+		print "onverwachte remind error: "+repr(sys.exc_info()[0]);
+	
+	print "remind_thread terminating";
+	remind_threads-=1;
+
 def remind(regel):
 	split=re.match("\s*(((\d+\s*(d|dagen|dag|uren|uur|u|h|min|m|s|sec)\s*)+)|(\d+:\d+[:\d+]\s*))", regel);
 	if (split==None):
 		return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van";
+	now=int(round(time.time()));
 	tijd=string.strip(regel[split.start():split.end()]);
 	result = string.strip(regel[split.end():]);
 	if (len(result)==0):
@@ -1069,12 +1125,12 @@ def remind(regel):
 		tijd=string.replace(tijd, "s", " ");
 		tijd=string.strip(tijd);
 		tijd=re.sub('\ +', '+', tijd);
-		tijd=eval(tijd);
+		tijd=eval(tijd); # tijd in secs t.o.v now
 		if (tijd < 0):
 			return "tijdsaanduiding klopt niet";
 		elif (tijd == 0):
 			return "dat is nu. je bent wel erg vergeetachtig, niet?";
-		tijdstr=format_localtijd(time.time()+tijd, "%H:%M", tz);
+		tijdstr=format_localtijd(now+tijd, "%H:%M", tz);
 		piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
 	else: # absolute time
 		try:
@@ -1094,8 +1150,21 @@ def remind(regel):
 			piet.send(channel, "dat is al over "+str(tijd)+" seconden! maar goed, ik zal herinneren\n");
 		else:
 			piet.send(channel, "goed, ik zal je waarschuwen. maar pas over "+format_tijdsduur(tijd)+", hoor\n");
-	time.sleep(tijd);
-	return string.strip(parse(result, False, True));
+	if (tijd<5*60):
+		chan=channel;
+		time.sleep(tijd);
+		piet.send(chan, string.strip(parse(result, False, True)));
+		return "";
+	# meer dan 5 min, stop in db
+	# CREATE TABLE reminds (channel string, nick string, msg string, tijd int)
+	piet.db("INSERT INTO reminds VALUES(\""+
+			string.replace(channel, '"', '""')+"\",\""+
+			string.replace(nick, '"', '""')+"\",\""+
+			string.replace(result, '"', '""')+"\","+
+			repr(now+tijd)+");");
+	piet.thread("remind_thread", channel); # make sure a thread is running
+	return "";
+piet.thread("remind_thread", channel);
 
 def verklaar(regel):
   params=string.split(regel, ' ');
@@ -1119,6 +1188,8 @@ def mep(regel):
   params=string.split(regel,' ');
   if (len(params)<1) or (len(params[0])==0):
     return "ACTION mept er lustig op los";
+  if (params[2]=="piet"):
+    return "ACTION heeft een hekel aan zichzelf, maar doet niet aan zelfverminking";
   r=random.random();
   if (r<=0.1):
     return "ik zou niet weten waarom";
@@ -1961,7 +2032,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "bugrep":		 (1, todo, ""),
     "geordi":		 (0, geordi, ""),
     "geoip":             (100, geoip, "geoip <ip>, zoekt positie op aarde van ip"),
-    "je heet nu":        (500, leeg, "je heet nu <nick>, geef nieuwe nick"),
+    "je heet nu":        (500, jeheetnu, "je heet nu <nick>, geef nieuwe nick"),
     "renick":            (200, randomnaam, "renick, verzint een willekeurige nick"),
     "opme":              (500, opme, "opme, geef @"),
     "koffie?":           (121, leeg, "koffie?, vraag of ie koffie wil"),
@@ -1998,43 +2069,46 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
 #first: True for outer call, False for recursions
 #magzeg: allways True
 def parse(param_org, first, magzeg):
-  global auth,nick;
+	global auth,nick;
 
-  if (param_org[:1]>="0" and param_org[:1]<="9") or (param_org[:1]=="(") or (param_org[:1]=="["):
-    param_org="calc "+param_org;
+	if (param_org[:1]>="0" and param_org[:1]<="9") or (param_org[:1]=="(") or (param_org[:1]=="["):
+		param_org="calc "+param_org;
 
-  command=string.split(param_org, ' ')[0];
-  params=string.join(string.split(param_org, ' ')[1:],' ');
+	command="zeg";
+	functie=d["zeg"];
+	params=param_org;
 
-  functie=d["zeg"];
-  try:
-    functie=d[command];
-  except:
-    if (first):
-      functie=d["onbekend_commando"];
-    else:
-      params=param_org;
+	commands=[x for x in d if param_org.startswith(x)];
+	if (len(commands)!=1):
+		if (first):
+			print "multiple(or no) matches for command: "+repr(commands)+", in line \""+param_org+"\"";
+			functie=d["onbekend_commando"];
+		# else: use zeg
+	else: # command found
+		command=commands[0];
+		functie=d[command];
+		params=string.strip(param_org[len(command):]);
 
-  print (command, params, int(auth), functie);
-  if (int(auth)<functie[0]):
-    if (first):
-      functie=d["onbekend_commando"];
-    else:
-      functie=d["zeg"];
-      params=param_org;
+	print (command, params, int(auth), functie);
+	if (int(auth)<functie[0]):
+		if (first):
+			functie=d["onbekend_commando"];
+		else:
+			functie=d["zeg"];
+			params=param_org;
   
-  r="";
-  if (int(auth)>=functie[0]):
-    if (functie==d["zeg"]) and (magzeg==False):
-      r=params;
-    else:
-      r=functie[1](params);
+	r="";
+	if (int(auth)>=functie[0]):
+		if (functie==d["zeg"]) and (magzeg==False):
+			r=params;
+		else:
+			r=functie[1](params);
 
-  r2=string.split(r, '\n');
-  if (len(r2)>15):
-    l=str(len(r2));
-    r=string.join(r2[:15], '\n')+"\n"+nick+": de rest verzin je zelf maar, 15 van de "+l+" regels vind ik zat\n";
-  return r;
+	r2=string.split(r, '\n');
+	if (len(r2)>15):
+		l=str(len(r2));
+		r=string.join(r2[:15], '\n')+"\n"+nick+": de rest verzin je zelf maar, 15 van de "+l+" regels vind ik zat\n";
+	return r;
 
 prev_command="niets";
 
@@ -2055,6 +2129,5 @@ def do_command(nick_, auth_, channel_, msg_):
 	print "channel is now ", channel;
 	print "executing", nick, auth, channel, msg_;
 	result=parse(msg_, True, True);
-	if (result[0:6]=="ACTION"): result='\001'+result+'\001';
 	piet.send(channel_, result);
 
