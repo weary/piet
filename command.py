@@ -76,6 +76,56 @@ def convert(char):
   else:
     return char;
 
+# maak een nederlandse zin van secs. secs moet een tijdsduur weergeven, niet een
+# absolute tijd, zie format_localtijd voor absolute tijd
+def format_tijdsduur(secs):
+	if (secs==0):
+		return "geen tijd";
+	
+	tijd=[];
+	d=int(secs/86400); secs=secs-d*86400;
+	h=int(secs/3600); secs=secs-h*3600;
+	m=int(secs/60); secs=secs-m*60;
+	s=secs;
+	if (d==1):
+		tijd.append("een dag");
+	elif (d>1):
+		tijd.append(str(d)+" dagen");
+		
+	if (h==1):
+		tijd.append("een uur");
+	elif (h>1):
+		tijd.append(str(h)+" uren");
+		
+	if (m==1):
+		tijd.append("een minuut");
+	elif (m>1):
+		tijd.append(str(m)+" minuten");
+		
+	if (s==1):
+		tijd.append("een seconde");
+	elif (s>1):
+		tijd.append(str(s)+" secondes");
+
+	if (len(tijd)==0):
+		return "tijd verprutst";
+	elif (len(tijd)==1):
+		return tijd[0];
+
+	prefix=tijd[:-1];
+	postfix=tijd[-1];
+	return string.join(prefix, ", ")+" en "+postfix;
+
+# zet de gegeven tijd (secs, in seconden sinds epoch) om in lokale tijd voor de
+# gegeven tijdzone in het gegeven formaat. zie tijdzone_nick voor de tijdzone.
+def format_localtijd(secs, format="%H:%M", tijdzone=localtimezone):
+	os.environ['TZ']=tijdzone;
+	time.tzset();
+	result=time.strftime(format, time.localtime(secs));
+	timezone_reset();
+	return result;
+
+
 def make_list(p):
 	p=[a for a in p];
 	if (len(p)==0): return "";
@@ -1048,7 +1098,10 @@ def randomnaam(input):
     naam=random.choice(result);
   return "NICK "+naam+"\nik heb deze keer gekozen voor een naam uit de categorie \""+category+"\"\n";
 
-remind_threads=0;
+try:
+	remind_threads;
+except:
+	remind_threads=0;
 def remind_thread(frop):
 	global remind_threads;
 	if (remind_threads>0):
@@ -1101,6 +1154,12 @@ def remind_thread(frop):
 	remind_threads-=1;
 
 def remind(regel):
+	try:
+		if (regel[0:4]=="list"):
+			return list_reminds(string.strip(regel[5:]));
+	except:
+		traceback.print_exc();
+		return "frop";
 	split=re.match("\s*(((\d+\s*(d|dagen|dag|uren|uur|u|h|min|m|s|sec)\s*)+)|(\d+:\d+[:\d+]\s*))", regel);
 	if (split==None):
 		return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van";
@@ -1165,6 +1224,24 @@ def remind(regel):
 	piet.thread("remind_thread", channel); # make sure a thread is running
 	return "";
 piet.thread("remind_thread", channel);
+
+def list_reminds(regel):
+	try:
+		qry="SELECT channel,nick,msg,tijd FROM reminds";
+		if (regel!="all"):
+			qry+=" WHERE nick=\""+nick+"\"";
+		try:
+			msgs=piet.db(qry)[1:];
+		except:
+			return "ik herinner je helemaal nergens aan..";
+
+		now=int(round(time.time()));
+		msgs=["over "+format_tijdsduur(int(x[3])-now)+", \""+x[2]+"\"" for x in msgs if len(x)==4]; # pak tijd
+		piet.send(channel, string.join(msgs, '\n'));
+
+	except:
+		traceback.print_exc();
+	return "";
 
 def verklaar(regel):
   params=string.split(regel, ' ');
@@ -1460,45 +1537,6 @@ def tijdzone_nick(naam):
 	else:
 		tz=inp[1][0];
 	return tz;
-
-# maak een nederlandse zin van secs. secs moet een tijdsduur weergeven, niet een
-# absolute tijd, zie format_localtijd voor absolute tijd
-def format_tijdsduur(secs):
-	h=int(secs/3600); secs=secs-h*3600;
-	m=int(secs/60); secs=secs-m*60;
-	s=secs;
-	if (h==0 and m==0 and s==0):
-		return "geen tijd";
-	if (h==0 and m==0):
-		if (s==1):
-			return "een seconde";
-		else:
-			return str(s)+" secondes";
-	if (h==0):
-		if (s==0):
-			if (m==1):
-				return "een minuut";
-			else:
-				return str(m)+" minuten";
-		else:
-			return format_tijdsduur(m*60)+" en "+format_tijdsduur(s);
-	else:
-		if (m==0 and s==0):
-			if (h==1):
-				return "een uur";
-			else:
-				return str(h)+" uren";
-		else:
-			return format_tijdsduur(h*3600)+" en "+format_tijdsduur(m*60+s);
-
-# zet de gegeven tijd (secs, in seconden sinds epoch) om in lokale tijd voor de
-# gegeven tijdzone in het gegeven formaat. zie tijdzone_nick voor de tijdzone.
-def format_localtijd(secs, format="%H:%M", tijdzone=localtimezone):
-	os.environ['TZ']=tijdzone;
-	time.tzset();
-	result=time.strftime(format, time.localtime(secs));
-	timezone_reset();
-	return result;
 
 def tijdzone(regel):
 	a=string.split(regel, ' ');
