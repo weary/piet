@@ -111,10 +111,10 @@ static PyObject * piet_send(PyObject *self, PyObject *args)
   tokenizer tokens(msg, sep);
   for (tokenizer::iterator it = tokens.begin(); it != tokens.end(); ++it)
 	{
-		std::cout << "PY: sendline: " << *it << "*\n";
+		std::cout << "PY: sendline: \"" << *it << "\"\n";
 		std::string line=*it;
 		if (starts_with(line, "ACTION "))
-			privmsg(channel, '\000'+line+'\000');
+			privmsg(channel, '\001'+line+'\001');
 		else if (starts_with(line, "NICK "))
 		{
 			privmsg(channel, "wuh? nieuwe nick? wat is dit voor nonsense\n");
