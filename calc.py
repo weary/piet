@@ -406,7 +406,21 @@ def calcM(param):
         else:
           x+=1
     return (error,rank,param[1:],"",1,1)
-
+  digits=re.compile('[0-9]+\:[0-9]+(\:[0-9]+)?(\.[0-9]+)?') # time format
+  digitscheck= digits.match(param)
+  if digitscheck:
+    # in time format... parse that
+    value=0.0
+    timestring=digitscheck.group()
+    i1=string.find(timestring,":")
+    value+=int(timestring[:i1])*60
+    i2=string.find(timestring,":",i1+1)
+    if (i2>0):
+      value+=int(timestring[i1+1:i2])
+      value*=60
+      i1=i2
+    value+=float(timestring[i1+1:])
+    return("",value,param[len(timestring):],"s^1",1,1)
   digits=re.compile('(\-)?[0-9]+(\.[0-9]+)?((e\+[0-9]+)|(e\-[0-9]+)|(e[0-9]+))?')
   digitscheck= digits.match(param)
   if digitscheck:
