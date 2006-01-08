@@ -44,6 +44,7 @@ def db_set(table, key, value):
 
 def error_handler(type, value, tb):
 	global channel;
+	traceback.print_exc();
 	piet.send(channel, "arg! er heeft weer iemand zitten prutsen! wie is't? ik moet even "+repr(value.args[0])+" op z'n voorhoofd tatoeëren\n");
 	sys.__excepthook__(type, value, tb);
 
@@ -1265,7 +1266,7 @@ def mep(regel):
   params=string.split(regel,' ');
   if (len(params)<1) or (len(params[0])==0):
     return "ACTION mept er lustig op los";
-  if (params[2]=="piet"):
+  if (params[0]=="piet"):
     return "ACTION heeft een hekel aan zichzelf, maar doet niet aan zelfverminking";
   r=random.random();
   if (r<=0.1):
@@ -2112,22 +2113,22 @@ def parse(param_org, first, magzeg):
 	if (param_org[:1]>="0" and param_org[:1]<="9") or (param_org[:1]=="(") or (param_org[:1]=="["):
 		param_org="calc "+param_org;
 
-	command="zeg";
-	functie=d["zeg"];
+	command="";
 	params=param_org;
+	for x in d:
+		if param_org.startswith(x) and len(x)>len(command):
+			command=x;
+			params=string.strip(param_org[len(command):]);
 
-	commands=[x for x in d if param_org.startswith(x)];
-	if (len(commands)!=1):
+	if (command==""):
 		if (first):
-			print "multiple(or no) matches for command: "+repr(commands)+", in line \""+param_org+"\"";
-			functie=d["onbekend_commando"];
-		# else: use zeg
-	else: # command found
-		command=commands[0];
-		functie=d[command];
-		params=string.strip(param_org[len(command):]);
-
-	print (command, params, int(auth), functie);
+			command="onbekend_commando";
+		else:
+			command="zeg";
+	
+	print (command, params, int(auth));
+	
+	functie=d[command];
 	if (int(auth)<functie[0]):
 		if (first):
 			functie=d["onbekend_commando"];
