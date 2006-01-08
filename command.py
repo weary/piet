@@ -2084,7 +2084,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     #"lees lua":          (1000, leeg, "lees lua, herlees het lua script"),
     "kies":              (100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
     "tv":                (100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
-		"trigram":					 (1000, trigram, "praat nonsense"),
+		"trigram":					 (1000, trigram, "praat nonsens"),
     "url":               (100, url, "geef willekeurige oude url"),
     "mep":               (100, mep, ""),
     "geef":              (100, geef, ""),

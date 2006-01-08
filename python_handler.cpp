@@ -117,7 +117,7 @@ static PyObject * piet_send(PyObject *self, PyObject *args)
 			privmsg(channel, '\001'+line+'\001');
 		else if (starts_with(line, "NICK "))
 		{
-			privmsg(channel, "wuh? nieuwe nick? wat is dit voor nonsense\n");
+			privmsg(channel, "wuh? nieuwe nick? wat is dit voor nonsens\n");
 			send(":%s NICK :%s\n", g_config.get_nick().c_str(), line.c_str()+5);
 		}
 		else
