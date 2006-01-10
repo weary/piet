@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import string,random,os,math,re,sys;
+import string,random,os,math,re,sys,datetime;
 
 def unitinvertcheck(unit1,unit2):
   for i in ["1","2","3","4","5","6","7","8","9"]:
@@ -406,11 +406,32 @@ def calcM(param):
         else:
           x+=1
     return (error,rank,param[1:],"",1,1)
-  digits=re.compile('[0-9]+\:[0-9]+(\:[0-9]+)?(\.[0-9]+)?') # time format
+
+  #date and time format
+  date=0
+  digits=re.compile('[0-9]+\-?'+months+'\-?[0-9]+')
   digitscheck= digits.match(param)
   if digitscheck:
-    # in time format... parse that
+    date=1
+    datestring=digitscheck.group()
+    day=int(re.compile('[0-9]+').match(datestring).group())
+    month=re.compile(months).search(param).group()
+    i=string.find(param,month)
+    year=int(re.compile('[0-9]+').search(datestring[i:]).group())
+    month=monthmap[month]
+    try:
+      a=datetime.date(year,month,day)
+    except:
+      return("Invalide date type",0,"","",1,1)
+    param=param[digitscheck.end():]
+    if (param[:1]!="_"):
+      return("",[year,month,day],param,["D^1","D^1","D^1"],3,1)
+    param=param[2:]
+  digits=re.compile('[0-9]+\:[0-9]+(\:[0-9]+(\.[0-9]+)?)?') # time format
+  digitscheck= digits.match(param)
+  if digitscheck:
     value=0.0
+    # in time format... parse that
     timestring=digitscheck.group()
     i1=string.find(timestring,":")
     value+=int(timestring[:i1])*60
@@ -419,7 +440,12 @@ def calcM(param):
       value+=int(timestring[i1+1:i2])
       value*=60
       i1=i2
-    value+=float(timestring[i1+1:])
+      value+=float(timestring[i1+1:])
+    else:
+      value+=float(timestring[i1+1:])
+      value*=60      
+    if (date==1):
+      return("",[year,month,day,value],param[len(timestring):],["D^1","D^1","D^1","s^1"],4,1)
     return("",value,param[len(timestring):],"s^1",1,1)
   digits=re.compile('(\-)?[0-9]+(\.[0-9]+)?((e\+[0-9]+)|(e\-[0-9]+)|(e[0-9]+))?')
   digitscheck= digits.match(param)
@@ -526,7 +552,7 @@ def calcM(param):
 
   #check for money currency
   
-  money=[("euro","EUR"),("dollar","USD"),("pond","GBP"),("britsepond","GBP"),("britishpound","GBP"),("eur","EUR"),("usd","usd"),("gbp","GBP"),("a$","AUD"),("$a","AUD"),("aud","AUD"),("australischedollar","AUD"),("$c","CAD"),("c$","CAD"),("canadiandollar","CAD"),("canadeesedollar","CAD"),("cad","CAD"),("ukp","GBP"),("yen","JPY"),("jpy","JPY"),("$nz","NZD"),("nz$","NZD"),("newzealanddollar","NZD"),("nieuwzeeuwsedollar","NZD"),("nieuwzeelandsedollar","NZD"),("nzd","NZD"),("chf","CHF"),("zwitsersefrank","CHF"),("switzerlandfranc","CHF"),("swissfranc","CHF"),("franc","CHF"),("$","USD")]
+  money=[("euro","EUR"),("dollar","USD"),("pond","GBP"),("britsepond","GBP"),("britishpound","GBP"),("eur","EUR"),("usd","usd"),("gbp","GBP"),("a$","AUD"),("$a","AUD"),("aud","AUD"),("australischedollar","AUD"),("$c","CAD"),("c$","CAD"),("canadiandollar","CAD"),("canadeesedollar","CAD"),("cad","CAD"),("ukp","GBP"),("yen","JPY"),("jpy","JPY"),("$nz","NZD"),("nz$","NZD"),("newzealanddollar","NZD"),("nieuwzeeuwsedollar","NZD"),("nieuwzeelandsedollar","NZD"),("nzd","NZD"),("chf","CHF"),("zwitsersefrank","CHF"),("switzerlandfranc","CHF"),("swissfranc","CHF"),("franc","CHF"),("$","USD"),("dkk","DKK"),("deensekronen","DKK"),("deensekroon","DKK"),("danishkronor","DKK"),("nok","NOK"),("noorsekronen","NOK"),("noorsekroon","NOK"),("norwegiankronor","NOK"),("noorweegsekronen","NOK"),("noorweegsekroon","NOK"),("sek","SEK"),("zweedsekronen","SEK"),("zweedsekroon","SEK"),("swedishkroner","SEK")]
 
   for (currency,name) in money:
     if  param[:len(currency)]==currency:
@@ -615,6 +641,15 @@ def supercalc(toparse):
   elif toparse[len(toparse)-4:]==" uit":
     toparse=toparse[:len(toparse)-4];
   toparse=string.lower(toparse)
+
+  # if time after date change space to _ so it doesn't get lost
+  digits=re.compile('[0-9]+(\-|\ )?'+months+'(\-|\ )?[0-9]+(\ )+[0-9]+\:')
+  digitscheck= digits.search(toparse)
+  while digitscheck:
+    i=string.rfind(toparse[:digitscheck.end()-1]," ")
+    toparse=toparse[:i]+"_"+toparse[i+1:]
+    digitscheck= digits.search(toparse)
+
   toparse=string.strip(string.replace(toparse," in ","_in_"))
   toparse=string.replace(toparse," per ","/")
   toparse=string.replace(toparse," ","")
@@ -703,7 +738,9 @@ def supercalc(toparse):
       if (min!="0"):
         if len(sec)==1:
           sec="0"+sec
-        return pref+min+":"+sec+s100        
+        if len(min)==1:
+          min="0"+min
+        return pref+"00:"+min+":"+sec+s100        
       else:
         return pref+sec+s100+" sec"
     result=str(result)
@@ -845,3 +882,5 @@ units+=[("mm",1.0e-3,"m^1"),("dm",1e-1,"m^1"),("cm",1e-2,"m^1"),("km",1e+3,"m^1"
 
 units.sort(lambda (x1,x2,x3), (y1,y2,y3): cmp(len(y1),len(x1)))
 
+months='(jan|januari|january|feb|februari|february|mar|mrt|maart|march|apr|april|mei|may|jun|juni|june|jul|juli|july|aug|augustus|august|sep|september|oct|okt|oktober|october|nov|november|dec|december)'
+monthmap={"jan":1, "januari":1, "january":1, "feb":2, "februari":2, "february":2, "mar":3, "mrt":3, "maart":3, "march":3, "apr":4, "april":4, "mei":5, "may":5, "jun":6, "juni":6, "june":6, "jul":7, "juli":7, "july":7, "aug":8, "augustus":8, "august":8, "sep":9, "september":9, "oct":10, "okt":10, "oktober":10, "october":10, "nov":11, "november":11, "dec":12, "december":12}
