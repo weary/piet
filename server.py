@@ -2,47 +2,13 @@
 
 import sys,string,random,re,os,time;
 import piet;
+sys.path.append(".");
+from pietlib import format_tijdsduur,localtimezone;
 
 try:
 	nicks;
 except:
 	nicks={};
-
-localtimezone="Europe/Amsterdam";
-
-def maketimestring(ut):
-	try:
-		minuten,seconden=int(ut/60),int(ut%60);
-		uren,minuten=int(minuten/60),int(minuten%60);
-		dagen,uren=int(uren/24),int(uren%24);
-
-		result="";
-		if (dagen>1):
-			result=str(dagen)+" dagen, ";
-		elif (dagen==1):
-			result="1 dag, ";
-
-		if (uren>1):
-			result=result+str(uren)+" uren, ";
-		elif (uren==1):
-			result=result+"1 uur, ";
-
-		if (minuten>1):
-			result=result+str(minuten)+" minuten en ";
-		elif (minuten==1):
-			result=result+"1 minuut en ";
-
-		if (seconden>1):
-			result=result+str(seconden)+" seconden";
-		elif (seconden==1):
-			result=result+"1 seconde";
-		else:
-			result=result+"geen seconden";
-
-	except:
-		result="(nog steeds foutje in maketimestring, voor "+str(ut)+")";
-
-	return result;
 
 def doe_gemiddelde_offlinetijd(channel_, nick_, tu_):
 	print("doe_gemiddelde_offlinetijd("+channel_+", "+nick_+", "+str(tu_)+")\n");
@@ -92,11 +58,15 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
 			tu=int(time.time()+0.5)-int(tijd);
 			tu=tu;
 			if (tu>0):
-				result=maketimestring(tu);
-				reply="Welkom "+nick+", dat was weer "+result;
+				result=format_tijdsduur(tu, 2);
+
+				titel=random.choice(["heer", "meester", "prins", "gast", "joker"]);
+				titel=titel+" "+random.choice(["des duisternis", "van het licht", "des ubers", "des modders", "des oordeels", "van de knaagdieren", "overste", "heerser", "ongezien"]);
+				
+				reply="ACTION presenteert: "+nick+", "+titel+", weer terug na "+result;
 				try:
 					gemiddeld=doe_gemiddelde_offlinetijd(channel_, nick_, tu);
-					reply+=", gemiddeld "+maketimestring(gemiddeld)+" nu";
+					reply+=", gemiddeld "+format_tijdsduur(gemiddeld, 2)+" nu";
 				except:
 					reply+=", geen gemiddelde";
 				piet.send(channel_, reply+".\n");

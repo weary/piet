@@ -8,6 +8,7 @@ sys.path.append(".");
 from calc import supercalc;
 import BeautifulSoup;
 from pistes import cmd_pistes;
+from pietlib import format_localtijd,make_list,format_tijdsduur,timezone_reset,localtimezone,tijdzone_nick,parse_tijd;
 
 
 todofile = "todo.txt";
@@ -22,8 +23,6 @@ try:
 	nicks;
 except:
 	nicks={};
-
-localtimezone; # defined in server.py, assert if not loaded
 
 def db_get(table, keycol, key, valuecol):
 	try:
@@ -77,70 +76,6 @@ def convert(char):
   else:
     return char;
 
-# maak een nederlandse zin van secs. secs moet een tijdsduur weergeven, niet een
-# absolute tijd, zie format_localtijd voor absolute tijd
-def format_tijdsduur(secs):
-	if (secs==0):
-		return "geen tijd";
-	
-	tijd=[];
-	d=int(secs/86400); secs=secs-d*86400;
-	h=int(secs/3600); secs=secs-h*3600;
-	m=int(secs/60); secs=secs-m*60;
-	s=secs;
-	if (d==1):
-		tijd.append("een dag");
-	elif (d>1):
-		tijd.append(str(d)+" dagen");
-		
-	if (h==1):
-		tijd.append("een uur");
-	elif (h>1):
-		tijd.append(str(h)+" uren");
-		
-	if (m==1):
-		tijd.append("een minuut");
-	elif (m>1):
-		tijd.append(str(m)+" minuten");
-		
-	if (s==1):
-		tijd.append("een seconde");
-	elif (s>1):
-		tijd.append(str(s)+" secondes");
-
-	if (len(tijd)==0):
-		return "tijd verprutst";
-	elif (len(tijd)==1):
-		return tijd[0];
-
-	prefix=tijd[:-1];
-	postfix=tijd[-1];
-	return string.join(prefix, ", ")+" en "+postfix;
-
-# zet de gegeven tijd (secs, in seconden sinds epoch) om in lokale tijd voor de
-# gegeven tijdzone in het gegeven formaat. zie tijdzone_nick voor de tijdzone.
-def format_localtijd(secs, format="%H:%M", tijdzone=localtimezone):
-	os.environ['TZ']=tijdzone;
-	time.tzset();
-	result=time.strftime(format, time.localtime(secs));
-	timezone_reset();
-	return result;
-
-
-def make_list(p):
-	p=[a for a in p];
-	if (len(p)==0): return "";
-	last=len(p)-1;
-	r=""
-	for x in p:
-		i=p.index(x);
-		if (i==0):
-			r=x;
-		elif (i<last):
-			r=r+", "+x;
-		else:
-			r=r+" en "+x;
-	return r;
 				
 def change_auth(params):
 	global nicks;
@@ -1161,7 +1096,9 @@ def remind(regel):
 	except:
 		traceback.print_exc();
 		return "frop";
-	split=re.match("\s*(((\d+\s*(d|dagen|dag|uren|uur|u|h|min|m|s|sec)\s*)+)|(\d+:\d+[:\d+]\s*))", regel);
+	relformat="\s*(((\d+\s*(d|dagen|dag|uren|uur|u|h|min|m|s|sec)\s*)+)";
+	absformat="((\d{1,2}[-/ ]\d{1,2}[-/ ]\d{4} )?\d+:\d+[:\d+]\s*))";
+	split=re.match(relformat+"|"+absformat, regel);
 	if (split==None):
 		return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van";
 	now=int(round(time.time()));
@@ -1194,23 +1131,14 @@ def remind(regel):
 		piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
 	else: # absolute time
 		try:
-			tijd = time.strptime(tijd, "%H:%M");
+			tijd=parse_tijd(tijd, tz)-time.time();
 		except:
-			try:
-				tijd = time.strptime(tijd, "%H:%M:%S");
-			except:
-				return "volgens mij hou je me voor de gek, wat is dit voor rare tijd?";
-		os.environ['TZ']=tz;
-		time.tzset();
-		lc=time.localtime();
-		tijd=(tijd[3]-lc[3])*3600+(tijd[4]-lc[4])*60+(tijd[5]-lc[5]);
-		if (tijd<0): tijd+=24*3600;
-		timezone_reset();
+			return "volgens mij hou je me voor de gek, wat is dit voor rare tijd?";
 		if (tijd<120):
 			piet.send(channel, "dat is al over "+str(tijd)+" seconden! maar goed, ik zal herinneren\n");
 		else:
 			piet.send(channel, "goed, ik zal je waarschuwen. maar pas over "+format_tijdsduur(tijd)+", hoor\n");
-	if (tijd<5*60):
+	if (tijd<5*60 and tijd>=0):
 		chan=channel;
 		time.sleep(tijd);
 		piet.send(chan, string.strip(parse(result, False, True)));
@@ -1343,7 +1271,7 @@ def tempwereld(regel):
        City="Pittsburgh";
     url="";
 
-    cityurlmap=[("Enschede","?ID=IOVERIJS5","CET"),("Loppersum","?ID=IGRONING8","CET"),("New York","?ID=KNYNEWYO17","EST"),("Groningen","?ID=IGRONING9","CET"),("Leeuwarden","?ID=IFRIESLA16","CET"),("Sydney","?ID=INSWMOOR1","AEST"),("Pittsburgh","?ID=KPAPITTS8","EDT"),("Hilversum","?ID=IHILVERS3","CET"),("Rotterdam","?ID=IZHROTTE2","CET"),("Amsterdam","?ID=INOORDHO1","CET"),("Cairns","?ID=IQUEENSL32","AEST"),("Johannesburg","?ID=IGAUTENG8","SAST")];
+    cityurlmap=[("Enschede","?ID=IOVERIJS5","CET"),("Loppersum","?ID=IGRONING8","CET"),("New York","?ID=KNYNEWYO17","EST"),("Groningen","?ID=IGRONING9","CET"),("Leeuwarden","?ID=IFRIESLA16","CET"),("Sydney","?ID=I90579813","AEST"),("Pittsburgh","?ID=KPAPITTS8","EDT"),("Hilversum","?ID=IHILVERS3","CET"),("Rotterdam","?ID=IZHROTTE2","CET"),("Amsterdam","?ID=INOORDHO1","CET"),("Cairns","?ID=IQUEENSL32","AEST"),("Johannesburg","?ID=IGAUTENG8","SAST")];
     for (name,x,t) in cityurlmap:
       if name==City:
         url=x;
@@ -1502,10 +1430,6 @@ def wiki(regel):
     toreturn += string.strip(line)+'\n';
   return string.strip(toreturn);
 
-def timezone_reset():
-	os.environ['TZ']=localtimezone;
-	time.tzset();
-
 def tijd(regel):
 	inp=piet.db('SELECT name,timezone FROM auth');
 	if (inp==None or len(inp)<=1): # no users
@@ -1529,15 +1453,6 @@ def tijd(regel):
 	for t,tz in tzcalc.iteritems():
 		result=result+", en in "+tz+" is het "+t;
 	return result+"\n";
-
-# geef de tijdzone van de gegeven nick. als nick niet bekend is, dan default tijdzone
-def tijdzone_nick(naam):
-	inp=piet.db('SELECT timezone FROM auth where name="'+naam+'"');
-	if (inp==None or len(inp)<=1):
-		tz=localtimezone;
-	else:
-		tz=inp[1][0];
-	return tz;
 
 def tijdzone(regel):
 	a=string.split(regel, ' ');
@@ -1653,6 +1568,37 @@ def ns(regel):
 
 #parse vanstation argument
   vanStation="";
+  if (len(params)==1) and (regel=="?"):
+    # haal storing site op, kijk of er storing op het ns net zijn"
+    inp,outp,stderr = os.popen3("lynx -source www.ns.nl")
+    result=outp.read()
+    inp.close()
+    outp.close()
+    stderr.close()
+    i1=string.find(result,"URL=")+4
+    i2=string.find(result,"\"",i1)
+    if (i1<0 or i2<0):
+      return "Error in NS site"
+    inp,outp,stderr = os.popen3("lynx -source \"http://www.ns.nl/"+result[i1:i2]+"\"")
+    result=outp.read()
+    inp.close()
+    outp.close()
+    stderr.close()
+    i1=string.find(result,"oring")
+    i1=string.rfind(result[:i1],"href=")+6
+    i2=string.find(result,"\"",i1)
+    url=result[i1:i2]
+    url=string.replace(url,"&amp;","&")
+    inp,outp,stderr = os.popen3("lynx -dump \"http://www.ns.nl/servlet/"+url+"\"")
+    result=outp.read()
+    inp.close()
+    outp.close()
+    stderr.close()
+    i1=string.find(result,"Storingen")+10
+    i1=string.find(result,"Storingen",i1)+10
+    i2=string.find(result,"Naar boven",i1)
+    i2=string.rfind(result[:i2],"[")
+    return string.strip(result[i1:i2])
   if (len(params)<1) or (len(params[0])==0):
     return "mis vertrek plaats";
   if (params[i][0]=="\""):
@@ -1963,6 +1909,10 @@ def reloadding(params):
 			import pistes;
 			reload(pistes);
 			return "och, wie weet is't gelukt";
+		elif params[0]=="pietlib":
+			import pietlib;
+			reload(pietlib);
+			return "tjip, een nieuwe lib!";
 	return "die module ken ik niet"
 
 tweakersthreads=0;
