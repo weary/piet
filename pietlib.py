@@ -5,6 +5,7 @@ localtimezone="Europe/Amsterdam";
 
 # maak lijst gescheiden door ,'s, behalve tussen laatste 2 items, waar "en" komt
 def make_list(p):
+	p=list(p);
 	if len(p)==0:
 		return "";
 	elif len(p)==1:
@@ -27,22 +28,22 @@ def format_tijdsduur(secs, items=2):
 	s=secs;
 	if (d==1):
 		tijd.append("een dag");
-	elif (d>1):
+	elif (d>1 or d<0):
 		tijd.append(str(d)+" dagen");
 		
 	if (h==1):
 		tijd.append("een uur");
-	elif (h>1):
+	elif (h>1 or h<0):
 		tijd.append(str(h)+" uren");
 		
 	if (m==1):
 		tijd.append("een minuut");
-	elif (m>1):
+	elif (m>1 or m<0):
 		tijd.append(str(m)+" minuten");
 		
 	if (s==1):
 		tijd.append("een seconde");
-	elif (s>1):
+	elif (s>1 or m<0):
 		tijd.append(str(s)+" secondes");
 
 	tijd=tijd[:items];
