@@ -11,11 +11,69 @@ def unitinvertcheck(unit1,unit2):
   return unit1==unit2
 
 def calcS(param):
-  # Subtract adn Add rule
+  # Subtract and Add rule
   (error,result,param,unit,dimx,dimy)=calcD(param)
   if (error!=""):
     return (error,result,param,unit,1,1)
   while ((error=="") and (param!="") and ((param[0]=="-") or (param[0]=="+"))):
+    if (dimx>1 and unit[:1]==["D^1"]):
+      sign=param[0]
+      # date format, look if we can add anything to it
+      (error,result2,param,unit2,dimx2,dimy2)=calcD(param[1:])
+      if (error!=""):
+        return(error,0,"","",1,1)
+      if (dimx2>1 and unit2[:1]==["D^1"]):
+        if (sign=="+"):
+          return ("Adding on dates is not allowed",0,"","",1,1)
+        date1=datetime.date(result[0],result[1],result[2])
+        date2=datetime.date(result2[0],result2[1],result2[2])
+        difference=date1-date2
+        if (dimx==3):
+          sec1=0
+        else:
+          sec1=result[3]
+        if (dimx2==3):
+          sec2=0
+        else:
+          sec2=result2[3]
+        return ("",(difference.days*86400)+difference.seconds+(difference.microseconds*1e-6)+(sec1-sec2),param,"s^1",1,1)
+      if (dimx2!=1 or dimy2!=1 or unit2!="s^1"):
+        return("Can only add time to a date",0,"","",1,1)
+      thisdate=datetime.date(result[0],result[1],result[2])
+      if (len(result)>3):
+        offset=datetime.timedelta(seconds=(result2+result[3]))
+        reminder=(result2+result[3])%86400
+      else:
+        offset=datetime.timedelta(seconds=result2)
+        reminder=result2%86400
+          
+      if (sign=="-"):
+        try:
+          thisdate-=offset
+          if reminder!=0:
+            thisdate-=datetime.timedelta(seconds=86400)
+            reminder=86400-reminder
+        except:
+          return("Year underflow error",0,"","",1,1)
+      else:
+        try:
+          thisdate+=offset
+        except:
+          return("Year overflow error",0,"","",1,1)
+      result[0]=thisdate.year
+      result[1]=thisdate.month
+      result[2]=thisdate.day
+      if reminder!=0:
+        if (len(result)>3):
+          result[3]=reminder
+        else:
+          result+=[reminder]
+        unit=["D^1","D^1","D^1","s^1"]
+        dimx=4
+        continue
+      unit=["D^1","D^1","D^1"]
+      dimx=3
+      continue
     op=param[0]
     (error,result2,param,unit2,dimx2,dimy2)=calcD(param[1:])
     if (dimx!=dimx2) or (dimy!=dimy2):
@@ -50,6 +108,8 @@ def calcD(param):
     return (error,result,param,"",1,1)
   
   while ((error=="") and (param!="") and ((param[0]=="/") or (param[0]=="*"))):
+    if (dimx>1 and unit[:1]==["D^1"]):
+      return ("Multiplication and dividing not allowed on dates",0,"","",1,1)
     op=param[0]
     (error,result2,param,unit2,dimx2,dimy2)=calcP(param[1:])
     if (dimx==1) and (dimy==1) and (dimx2==1) and (dimy2==1):
@@ -359,16 +419,55 @@ def calcM(param):
       return("",matrixvalue[0],param,matrixunit[0],1,1)
     return("",matrixvalue,param,matrixunit,value,value)
 
+# date function
+  if param[:10]=="dayofweek(":
+    (error,value,param,unit,dimx,dimy)=calcS(param[10:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (dimx<3 or unit[:1]!=["D^1"]):
+      return("DayOfWeek function works on dates only",0,"","",1,1)
+    if (param[:1]!=")"):
+      return("Missing )",0,"","",1,1)
+    thisday=datetime.date(value[0],value[1],value[2])
+    return("",thisday.weekday(),param[1:],"DW^1",1,1)
+  if param[:8]=="weekday(":
+    (error,value,param,unit,dimx,dimy)=calcS(param[8:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (dimx<3 or unit[:1]!=["D^1"]):
+      return("DayOfWeek function works on dates only",0,"","",1,1)
+    if (param[:1]!=")"):
+      return("Missing )",0,"","",1,1)
+    thisday=datetime.date(value[0],value[1],value[2])
+    return("",thisday.weekday(),param[1:],"DW^1",1,1)
+  if param[:4]=="dow(":
+    (error,value,param,unit,dimx,dimy)=calcS(param[4:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (dimx<3 or unit[:1]!=["D^1"]):
+      return("DayOfWeek function works on dates only",0,"","",1,1)
+    if (param[:1]!=")"):
+      return("Missing )",0,"","",1,1)
+    thisday=datetime.date(value[0],value[1],value[2])
+    return("",thisday.weekday(),param[1:],"DW^1",1,1)
+  if param[:4]=="day(":
+    (error,value,param,unit,dimx,dimy)=calcS(param[4:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (dimx<3 or unit[:1]!=["D^1"]):
+      return("DayOfWeek function works on dates only",0,"","",1,1)
+    if (param[:1]!=")"):
+      return("Missing )",0,"","",1,1)
+    thisday=datetime.date(value[0],value[1],value[2])
+    return("",thisday.weekday(),param[1:],"DW^1",1,1)
+
 # matrix functions
   if param[:4]=="det(":
     (error,value,param,unit,dimx,dimy)=calcS(param[4:])
     if error!="":
       return(error,0,"","",1,1)
     if (param[:1]!=")"):
-      if error=="":
-        return("Missing )",0,"","",1,1)
-      else:
-        return(error,0,"","",1,1)
+      return("Missing )",0,"","",1,1)
 
     if dimx!=dimy:
       return("det() expects a square matrix",0,"","",1,1)
@@ -420,13 +519,13 @@ def calcM(param):
     year=int(re.compile('[0-9]+').search(datestring[i:]).group())
     month=monthmap[month]
     try:
-      a=datetime.date(year,month,day)
+      datetime.date(year,month,day)
     except:
       return("Invalide date type",0,"","",1,1)
     param=param[digitscheck.end():]
-    if (param[:1]!="_"):
+    if (param[:1]!="_" or param[:3]=="_in"):
       return("",[year,month,day],param,["D^1","D^1","D^1"],3,1)
-    param=param[2:]
+    param=param[1:]
   digits=re.compile('[0-9]+\:[0-9]+(\:[0-9]+(\.[0-9]+)?)?') # time format
   digitscheck= digits.match(param)
   if digitscheck:
@@ -642,6 +741,8 @@ def supercalc(toparse):
     toparse=toparse[:len(toparse)-4];
   toparse=string.lower(toparse)
 
+  toparse=string.strip(string.replace(toparse," in ","_in_"))
+
   # if time after date change space to _ so it doesn't get lost
   digits=re.compile('[0-9]+(\-|\ )?'+months+'(\-|\ )?[0-9]+(\ )+[0-9]+\:')
   digitscheck= digits.search(toparse)
@@ -650,7 +751,6 @@ def supercalc(toparse):
     toparse=toparse[:i]+"_"+toparse[i+1:]
     digitscheck= digits.search(toparse)
 
-  toparse=string.strip(string.replace(toparse," in ","_in_"))
   toparse=string.replace(toparse," per ","/")
   toparse=string.replace(toparse," ","")
   toparse=string.replace(toparse,"kilo)","kg)")
@@ -744,6 +844,14 @@ def supercalc(toparse):
       else:
         return pref+sec+s100+" sec"
     result=str(result)
+    if (string.find(unit,"DW^")>=0 and unit!="DW^1"):
+      return "Operations on days of week are not allowed"
+    if unit=="DW^1":
+      try:
+        return daysofweek[int(result)]
+      except:
+        return "Operations on days of week are not allowed"
+
     if result[len(result)-2:]==".0":
       result=result[:len(result)-2]
     if unit=="W":
@@ -760,6 +868,55 @@ def supercalc(toparse):
     result+=" "+unit
     return result
   else:
+    if (unit[0]=="D^1"):
+#Date format
+      if left!="":
+        return "Reached end of line, could not parse: "+left
+      try:
+        reply=str(result[2])+" "+selectmonth[result[1]]+" "+str(result[0])
+      except:
+        return "Year underflow error"
+      if (len(result)>3):
+        result=result[3]
+        s100=str(result)
+        if string.find(s100,"e-")>0:
+          return s100+" sec"
+        if string.find(s100,"e")>0:
+          s100=""
+        else:
+          s100=s100[string.find(s100,".")+1:]
+        hours=math.floor(result/3600)
+        result-=hours*3600
+        hours=string.replace(str(hours),".0","")
+        min=math.floor(result/60)
+        result-=min*60
+        min=string.replace(str(min),".0","")
+        sec=math.floor(result)
+        sec=string.replace(str(sec),".0","")
+        if s100=="0":
+          s100=""
+        else:
+          s100="."+s100;
+        result=""
+        if (hours!="0"):
+          if len(min)==1:
+            min="0"+min
+          if len(sec)==1:
+            sec="0"+sec
+          return reply+" "+hours+":"+min+":"+sec+s100    
+        if (min!="0"):
+          if len(sec)==1:
+            sec="0"+sec
+          if len(min)==1:
+            min="0"+min
+          return reply+" 0:"+min+":"+sec+s100        
+        else:
+          if (len(sec)<2):
+            return reply+" 0:00:0"+sec+s100
+          return reply+" 0:00:"+sec+s100
+
+      return reply
+    print unit[0]
 #Matrix format
     if left!="":
       return "Reached end of line, could not parse: "+left
@@ -805,6 +962,10 @@ units+=[("g",1.0,"g^1"),("gram",1.0,"g^1"),("ton",1e+6,"g^1")]
 # volume
 
 units+=[("liter",1e-3,"m^3")]
+
+#airspeed
+
+units+=[("mach",340.277777777,"m^1*s^-1")]
 
 #tijd
 
@@ -884,3 +1045,5 @@ units.sort(lambda (x1,x2,x3), (y1,y2,y3): cmp(len(y1),len(x1)))
 
 months='(jan|januari|january|feb|februari|february|mar|mrt|maart|march|apr|april|mei|may|jun|juni|june|jul|juli|july|aug|augustus|august|sep|september|oct|okt|oktober|october|nov|november|dec|december)'
 monthmap={"jan":1, "januari":1, "january":1, "feb":2, "februari":2, "february":2, "mar":3, "mrt":3, "maart":3, "march":3, "apr":4, "april":4, "mei":5, "may":5, "jun":6, "juni":6, "june":6, "jul":7, "juli":7, "july":7, "aug":8, "augustus":8, "august":8, "sep":9, "september":9, "oct":10, "okt":10, "oktober":10, "october":10, "nov":11, "november":11, "dec":12, "december":12}
+selectmonth={1:"Jan", 2:"Feb", 3:"Mar", 4:"Apr", 5:"May", 6:"Jun", 7:"Jul", 8:"Aug", 9:"Sep", 10:"Oct", 11:"Nov", 12:"Dec"}
+daysofweek=["Monday","Tuesday","Wednesday","Thursday","Friday","Saterday","Sunday"]
