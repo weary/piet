@@ -8,7 +8,7 @@ sys.path.append(".");
 from calc import supercalc;
 import BeautifulSoup;
 from pistes import cmd_pistes;
-from pietlib import format_localtijd,make_list,format_tijdsduur,timezone_reset,localtimezone,tijdzone_nick,parse_tijd;
+import pietlib;
 
 
 todofile = "todo.txt";
@@ -88,35 +88,39 @@ def change_auth(params):
 		return "auth [<newauth> <nick> [<password>]]";
 
 	if (parcount==0):
-		pietnick=piet.nick();
-		ns=set(nicks)-set([pietnick]);
 		try:
-			a=piet.db("SELECT name,auth FROM auth ORDER BY name")[1:];
-			a=set([(na,au) for (na,au) in a if not(na==pietnick)]);
+			pietnick=piet.nick();
+			ns=set(nicks)-set([pietnick]);
+			try:
+				a=piet.db("SELECT name,auth FROM auth ORDER BY name")[1:];
+				a=set([(na,au) for (na,au) in a if not(na==pietnick)]);
+			except:
+				a=set([]);
+
+			anames=set([n for (n,au) in a]);
+			
+			present=set([(n,au) for (n,au) in a if (n in ns)]);
+			away=a-present;
+			unknown=ns-anames;
+
+			if (len(present)>0):
+				present=pietlib.make_list([n+"("+str(a)+")" for (n,a) in present]);
+			else:
+				present="niemand";
+			if (len(away)>0):
+				away=pietlib.make_list([n+"("+str(a)+")" for (n,a) in away]);
+			else:
+				away="niemand";
+			if (len(unknown)>0):
+				unknown=pietlib.make_list(unknown);
+			else:
+				unknown="niemand";
+
+			msg="Van de aanwezigen ken ik "+present+", en ken ik "+unknown+" niet. "+away+" ken ik ook nog, maar die zijn hier niet"
+			return msg;
 		except:
-			a=set([]);
-
-		anames=set([n for (n,au) in a]);
-		
-		present=set([(n,au) for (n,au) in a if (n in ns)]);
-		away=a-present;
-		unknown=ns-anames;
-
-		if (len(present)>0):
-			present=make_list([n+"("+str(a)+")" for (n,a) in present]);
-		else:
-			present="niemand";
-		if (len(away)>0):
-			away=make_list([n+"("+str(a)+")" for (n,a) in away]);
-		else:
-			away="niemand";
-		if (len(unknown)>0):
-			unknown=make_list(unknown);
-		else:
-			unknown="niemand";
-
-		msg="Van de aanwezigen ken ik "+present+", en ken ik "+unknown+" niet. "+away+" ken ik ook nog, maar die zijn hier niet"
-		return msg;
+			traceback.print_exc();
+			return "ik heb geen idee, zoek het lekker zelf uit";
 
 	newauth=int(par[0]);
 	parnick=par[1];
@@ -1050,7 +1054,7 @@ def remind_thread(frop):
 			print "remind thread: calculating sleep time (now="+repr(now)+")";
 			next=now+(5*60);
 			try:
-				tijd=min(next, int(piet.db("SELECT MIN(tijd) from reminds")[1][0]));
+				tijd=min(next, int(float(piet.db("SELECT MIN(tijd) from reminds")[1][0])));
 			except:
 				print "remind thread: geen reminds meer";
 				break;
@@ -1058,7 +1062,7 @@ def remind_thread(frop):
 
 			wachttijd=tijd-now;
 			if (wachttijd>0):
-				print "remind thread slaapt voor "+format_tijdsduur(wachttijd);
+				print "remind thread slaapt voor "+pietlib.format_tijdsduur(wachttijd);
 				time.sleep(wachttijd);
 			else:
 				print "remind thread slaapt niet";
@@ -1071,9 +1075,9 @@ def remind_thread(frop):
 				for m in msgs:
 					if (len(m)!=4):
 						print "WARNING: malformed db response in remind: "+repr(m);
-					telaat=now-int(m[3]);
+					telaat=now-int(float(m[3]));
 					if (telaat>0):
-						piet.send(m[0], m[2]+" (ja, "+format_tijdsduur(telaat)+" te laat)");
+						piet.send(m[0], m[2]+" (ja, "+pietlib.format_tijdsduur(telaat)+" te laat)");
 					else:
 						piet.send(m[0], m[2]);
 				piet.db("DELETE FROM reminds WHERE tijd<="+repr(now+1));
@@ -1106,7 +1110,7 @@ def remind(regel):
 	result = string.strip(regel[split.end():]);
 	if (len(result)==0):
 		result=nick+": ik moest je ergens aan herinneren, maar zou niet meer weten wat";
-	tz=tijdzone_nick(nick);
+	tz=pietlib.tijdzone_nick(nick);
 	if (string.find(tijd, ":")==-1): # relative time if no :
 		tijd=re.sub(" ", "", tijd);
 		tijd=string.replace(tijd, "dagen", "d");
@@ -1127,17 +1131,17 @@ def remind(regel):
 			return "tijdsaanduiding klopt niet";
 		elif (tijd == 0):
 			return "dat is nu. je bent wel erg vergeetachtig, niet?";
-		tijdstr=format_localtijd(now+tijd, "%H:%M", tz);
+		tijdstr=pietlib.format_localtijd(now+tijd, "%H:%M", tz);
 		piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
 	else: # absolute time
 		try:
-			tijd=parse_tijd(tijd, tz)-time.time();
+			tijd=pietlib.parse_tijd(tijd, tz)-time.time();
 		except:
 			return "volgens mij hou je me voor de gek, wat is dit voor rare tijd?";
 		if (tijd<120):
 			piet.send(channel, "dat is al over "+str(tijd)+" seconden! maar goed, ik zal herinneren\n");
 		else:
-			piet.send(channel, "goed, ik zal je waarschuwen. maar pas over "+format_tijdsduur(tijd)+", hoor\n");
+			piet.send(channel, "goed, ik zal je waarschuwen. maar pas over "+pietlib.format_tijdsduur(tijd)+", hoor\n");
 	if (tijd<5*60 and tijd>=0):
 		chan=channel;
 		time.sleep(tijd);
@@ -1165,7 +1169,8 @@ def list_reminds(regel):
 			return "ik herinner je helemaal nergens aan..";
 
 		now=int(round(time.time()));
-		msgs=["over "+format_tijdsduur(int(x[3])-now)+", \""+x[2]+"\"" for x in msgs if len(x)==4]; # pak tijd
+		[piet.send("weary", repr(int(round(float(x[3])))-now)) for x in msgs if len(x)==4];
+		msgs=["over "+pietlib.format_tijdsduur(int(round(float(x[3])))-now)+", \""+x[2]+"\"" for x in msgs if len(x)==4]; # pak tijd
 		piet.send(channel, string.join(msgs, '\n'));
 
 	except:
@@ -1445,7 +1450,7 @@ def tijd(regel):
 	# tzcalc is mapping van tijd naar tijdzone
 
 	# zoek lokale tijd op, die moet voorop
-	timezone_reset();
+	pietlib.timezone_reset();
 	result=time.strftime("%H:%M", time.localtime());
 	if (tzcalc.has_key(result)): del tzcalc[result];
 
@@ -1467,7 +1472,7 @@ def tijdzone(regel):
 				s[tz]=n;
 		return string.join([tz+": "+ns for tz,ns in s.iteritems()], '\n');
 	elif (len(a)==1):
-		tz=tijdzone_nick(a[0]);
+		tz=pietlib.tijdzone_nick(a[0]);
 		return a[0]+" huppelt rond in "+tz+"\n";
 	elif(len(a)==2):
 		oldauth=piet.db('SELECT auth FROM auth WHERE name="'+a[0]+'"');
@@ -1598,7 +1603,15 @@ def ns(regel):
     i1=string.find(result,"Storingen",i1)+10
     i2=string.find(result,"Naar boven",i1)
     i2=string.rfind(result[:i2],"[")
-    return string.strip(result[i1:i2])
+    lines=string.split(result[i1:i2],'\n')
+    result=""
+    for line in lines:
+      result+=string.strip(line)
+      if (len(line)>0 and (line[len(line)-1]==".")):
+        result+="\n"
+      else:
+        result+=" "
+    return string.strip(result)
   if (len(params)<1) or (len(params[0])==0):
     return "mis vertrek plaats";
   if (params[i][0]=="\""):
