@@ -162,6 +162,46 @@ try:
 except:
   boottime=time.time();
 
+def hex2dec(params):
+	if (params[:2]=="0x" or params[-1]=='h'):
+		if (params[-1]=='h'): params=params[:-1];
+		if (params[:2]=='0x'): params=params[2:];
+		try:
+			val=int(params, 16);
+		except:
+			traceback.print_exc();
+			return "doe nou niet alsof dat hexadecimaal is.. dat is't niet";
+		result="0x"+params+" wordt door sommigen aangeduidt als "+str(val);
+		if (val>=2**7 and val<=2**8):
+			result+=", en soms ook als -"+str(2**8-val);
+		elif (val>=2**15 and val<=2**16):
+			result+=", en soms ook als -"+str(2**16-val);
+		elif (val>=2**31 and val<=2**32):
+			result+=", en soms ook als -"+str(2**32-val);
+		elif (val>=2**63 and val<=2**64):
+			result+=", en soms ook als -"+str(2**64-val);
+		return result;
+	try:
+		print "converting \""+params+"\""
+		val=int(params);
+	except:
+		traceback.print_exc();
+		return "ACTION stuurt een grote boze heks op je af";
+	if (val>=0):
+		return str(val)+" is ook wel "+hex(val);
+	if (val>=-(2**7)):
+		return str(val)+" is dus "+hex(2**8+val);
+	elif (val>=-(2**15)):
+		return str(val)+" is dus "+hex(2**16+val);
+	elif (val>=-(2**31)):
+		return str(val)+" is dus "+hex(2**32+val);
+	elif (val>=-(2**63)):
+		return str(val)+" is dus "+hex(2**64+val);
+	else:
+		return str(val)+" is wel heel klein, "+hex(val);
+	
+		
+	
 def uptime(params):
 	ut=time.time()-boottime;
 	minutes,seconds=int(ut/60),int(ut%60);
@@ -2064,6 +2104,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "reload":            (1000, reloadding, "reload <module> reload iets voor piet"),
 		"uptime":            (200, uptime, "uptime, verteld tijd sinds eerste python command"),
 		"zoek":              (1000, zoek, "zoek vrouw, zoekt willekeurige vrouw in overijsel"),
+		"hex":               (101, hex2dec, "hex <nummer>, reken van/naar hex"),
     "test": (100, mytest, "ding"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
