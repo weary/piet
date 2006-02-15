@@ -546,6 +546,31 @@ def calcM(param):
     if (date==1):
       return("",[year,month,day,value],param[len(timestring):],["D^1","D^1","D^1","s^1"],4,1)
     return("",value,param[len(timestring):],"s^1",1,1)
+
+# hex check
+  if re.match("(\-)?0x([0-9]|[a-f])+",param):
+    digits=re.match("(\-)?0x([0-9]|[a-f])+",param).group()
+    param=param[len(digits):]
+    if param[:1]!=".":
+      chars=re.compile('[a-z]|\(|[0-9]|\$')
+      if chars.match(param):
+        (error,value2,left,unit,dimx,dimy)=calcP(param)
+        return (error,int(digits,16)*value2,left,unit,1,1)
+
+      return("",int(digits,16),param,"",1,1)
+    value=1.0*int(digits,16)
+    if re.match("([0-9]|[a-f])+",param[1:]):
+      digits=re.match("([0-9]|[a-f])+",param[1:]).group()
+      value+=(int(digits,16))/math.pow(16,len(digits))
+      param=param[len(digits)+1:]
+      chars=re.compile('[a-z]|\(|[0-9]|\$')
+      if chars.match(param):
+        (error,value2,left,unit,dimx,dimy)=calcP(param)
+        return (error,value*value2,left,unit,1,1)
+      return ("",value,param,"",1,1)
+    else:
+      return("Reached end of line, could not parse: "+param,0,"","",1,1)
+      
   digits=re.compile('(\-)?[0-9]+(\.[0-9]+)?((e\+[0-9]+)|(e\-[0-9]+)|(e[0-9]+))?')
   digitscheck= digits.match(param)
   if digitscheck:

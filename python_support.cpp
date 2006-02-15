@@ -223,7 +223,11 @@ void python_cmd::operator()()
 		python_object module(PyDict_GetItemString(dict, "__main__"));
 		python_object moduledict(PyModule_GetDict(module));
 		python_object func(PyDict_GetItemString(moduledict, _cmd.c_str()));
-		assert(PyCallable_Check(func));
+		if (!PyCallable_Check(func))
+		{
+			std::cout << "PY: ERROR: callable check failed for " << _cmd << "\n";
+			return;
+		}
 		func.incref();
 
 		python_object retval(PyObject_CallObject(func, _args));

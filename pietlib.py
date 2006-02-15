@@ -18,6 +18,7 @@ def make_list(p):
 # maak een nederlandse zin van secs. secs moet een tijdsduur weergeven, niet een
 # absolute tijd, zie format_localtijd voor absolute tijd, items geeft de precisie
 def format_tijdsduur(secs, items=2):
+	secs=round(secs);
 	if (secs==0):
 		return "geen tijd";
 	

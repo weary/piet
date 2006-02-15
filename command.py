@@ -6,6 +6,7 @@ import piet;
 from telnetlib import Telnet;
 sys.path.append(".");
 from calc import supercalc;
+import Distance;
 import BeautifulSoup;
 from pistes import cmd_pistes;
 import pietlib;
@@ -1209,7 +1210,7 @@ def list_reminds(regel):
 			return "ik herinner je helemaal nergens aan..";
 
 		now=int(round(time.time()));
-		[piet.send("weary", repr(int(round(float(x[3])))-now)) for x in msgs if len(x)==4];
+		#[piet.send("weary", repr(int(round(float(x[3])))-now)) for x in msgs if len(x)==4];
 		msgs=["over "+pietlib.format_tijdsduur(int(round(float(x[3])))-now)+", \""+x[2]+"\"" for x in msgs if len(x)==4]; # pak tijd
 		piet.send(channel, string.join(msgs, '\n'));
 
@@ -1284,6 +1285,7 @@ def docommand(cmd):
 def tempwereld(regel):
   regel=string.lower(regel)
   regel=string.replace(regel,"new york","new_york");
+  regel=string.replace(regel,"den haag","den_haag");
   params=string.split(regel, ' ');
   if (len(params)<1) or (len(params[0])==0):
     params=string.split("enschede sydney",' ');
@@ -1294,6 +1296,8 @@ def tempwereld(regel):
       City="Enschede";
     elif (City=="r'dam" or City=="rotterdam"):
       City="Rotterdam";
+    elif (City=="den_haag" or City=="d'haag"):
+      City="Den Haag";
     elif (City=="j'burg" or City=="johannesburg"):
       City="Johannesburg";
     elif (City=="a'dam" or City=="amsterdam"):
@@ -1316,7 +1320,7 @@ def tempwereld(regel):
        City="Pittsburgh";
     url="";
 
-    cityurlmap=[("Enschede","?ID=IOVERIJS5","CET"),("Loppersum","?ID=IGRONING8","CET"),("New York","?ID=KNYNEWYO17","EST"),("Groningen","?ID=IGRONING9","CET"),("Leeuwarden","?ID=IFRIESLA16","CET"),("Sydney","?ID=I90579813","AEST"),("Pittsburgh","?ID=KPAPITTS8","EDT"),("Hilversum","?ID=IHILVERS3","CET"),("Rotterdam","?ID=IZHROTTE2","CET"),("Amsterdam","?ID=INOORDHO1","CET"),("Cairns","?ID=IQUEENSL32","AEST"),("Johannesburg","?ID=IGAUTENG8","SAST")];
+    cityurlmap=[("Enschede","?ID=IOVERIJS5","CET"),("Loppersum","?ID=IGRONING8","CET"),("New York","?ID=KNYNEWYO17","EST"),("Groningen","?ID=IGRONING9","CET"),("Leeuwarden","?ID=IFRIESLA16","CET"),("Sydney","?ID=INSWWEST1","AEST"),("Pittsburgh","?ID=KPAPITTS8","EDT"),("Hilversum","?ID=IHILVERS3","CET"),("Rotterdam","?ID=IZHROTTE2","CET"),("Amsterdam","?ID=INOORDHO1","CET"),("Cairns","?ID=IQUEENSL32","AEST"),("Johannesburg","?ID=IGAUTENG8","SAST"),("Den Haag","?ID=IZUIDHOL11","CET")];
     for (name,x,t) in cityurlmap:
       if name==City:
         url=x;
@@ -1836,7 +1840,7 @@ def tel(regel):
     return "socrates' telefoonnummer is 06-51825810";
   elif (naam=="weary"):
     return "weary's telefoonnummer is +31 6 5111 5487";
-  elif ((naam=="semyon") or (naam=="Semyon") or (naam=="simon")):
+  elif ((naam=="semyon") or (naam=="simon")):
     return "simon's telefoonnummer is +61 2 98 03 37 59";
   else:
     params=string.split(regel," ");
@@ -1958,6 +1962,10 @@ def reloadding(params):
 			import calc
 			reload(calc)
 			return "'t is vast gelukt";
+		if params[0]=="distance" or params[0]=="Distance":
+			import Distance
+			reload(Distance)
+			return "Distance lib ready to go";
 		elif params[0]=="pistes":
 			import pistes;
 			reload(pistes);
@@ -2021,6 +2029,36 @@ def tweakers(regel):
 	else:
 		return "aan of uit, hoe moeilijk kan het nou helemaal wezen?\n";
 	return "uh, ok\n";
+
+def versie(regel):
+  regel=string.lower(regel)
+  if (regel=="centericq" or regel=="cicq"):
+    inp,outp,stderr=os.popen3("wget -O - -q http://www.centericq.de/");
+    result=outp.read()
+    result=string.lower(result)
+    outp.close()
+    inp.close()
+    stderr.close()
+    version=re.search("centericq [0-9]+.[0-9]+.[0-9]+", result)
+    if (version!=None):
+      x=version.start()+10
+      y=version.end()
+      return "Laatste Centericq versie "+result[x:y]
+    return "Kan het versie nummer van Centericq niet vinden"
+  if (regel[:5]=="linux"):
+    inp,outp,stderr=os.popen3("wget -O - -q http://kernel.org/kdist/rss.xml")
+    result=outp.read()
+    result=string.lower(result)
+    outp.close()
+    inp.close()
+    stderr.close()
+    version=re.search("[0-9]+.[0-9]+.[0-9]+(.[0-9]+)?: stable\"", result)
+    if (version!=None):
+      version=result[version.start():version.end()]
+      x=string.find(version,":")
+      return "Laatste linux kernel versie "+version[:x]
+    return "Kan het laatste versie nummer van de linux kernel niet vinden"
+  return regel+" ken ik niet"
 
 
 d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <woorden> of anagram en <woorden> om engels te forceren."),
@@ -2089,6 +2127,8 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "tv":                (100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
 		"trigram":					 (1000, trigram, "praat nonsens"),
     "url":               (100, url, "geef willekeurige oude url"),
+    "versie":            (100, versie, "versie <x> zoekt laatste versie op van software dinges"),
+    "version":           (100, versie, ""),
     "mep":               (100, mep, ""),
     "geef":              (100, geef, ""),
 		"pistes":            (100, cmd_pistes, "pistes, doet iets met skipistes"),
@@ -2099,6 +2139,9 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "tijd":		 (0, tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
     "tijdzone":		 (1000, tijdzone, "tijdzone [naam [tijdzone]], verander tijdzones van mensen. zie /usr/share/zoneinfo."),
     "ns":                (100, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
+    "hoever":            (100, Distance.Distance, "hoever <van> <naar>"),
+    "afstand":            (100, Distance.Distance, ""),
+    "distance":            (100, Distance.Distance, ""),
     "trein":                (1200, trein, ""),
     "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
     "reload":            (1000, reloadding, "reload <module> reload iets voor piet"),
@@ -2114,7 +2157,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
 def parse(param_org, first, magzeg):
 	global auth,nick;
 
-	if (param_org[:1]>="0" and param_org[:1]<="9") or (param_org[:1]=="(") or (param_org[:1]=="["):
+	if (param_org[:1]>="0" and param_org[:1]<="9") or (param_org[:1]=="(") or (param_org[:1]=="[") or (param_org[:1]=="-"):
 		param_org="calc "+param_org;
 
 	command="";
