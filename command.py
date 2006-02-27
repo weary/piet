@@ -77,7 +77,24 @@ def convert(char):
   else:
     return char;
 
-				
+def auth_iedereen(params):
+	result=[];
+	pietnick=piet.nick();
+	for i in nicks:
+		if i==pietnick: continue;
+		c="Europe/Amsterdam"
+		try:
+			c=piet.db("SELECT timezone FROM auth WHERE name=\""+i+"\"")[1][0];
+		except:
+			traceback.print_exc();
+		result.insert(0, (i, c));
+	piet.db("DELETE FROM auth");
+	for (n,c) in result:
+		a=1000;
+		if n==nick: a=1200;
+		piet.db("INSERT INTO auth VALUES(\""+n+"\", "+repr(a)+", \""+c+"\")");
+	return "iedereen!";
+
 def change_auth(params):
 	global nicks;
 	localauth=auth;
@@ -2099,6 +2116,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "temp":              (0,temp, "temp, de temperatuur van sommige plaatsen in de wereld"), 
     "watis":             (1001, watis, "watis <iets>, geeft veel bla over <iets>"),
     "kop dicht":         (1000, leeg, "kop dicht, hou op met spammen"),
+		"auth iedereen":     (1200, auth_iedereen, "auth iedereen, geef iedereen authorisatie 1000 (inclusief jezelf)"),
     "auth":              (-6, change_auth, "auth [<niveau> <nick> [<paswoord>]], geef een authenticatieniveau"),
     "spreuk":            (0, spreuk, "spreuk, geef een leuke(?) spreuk"),
     "oneliner":          (0, spreuk, ""),
