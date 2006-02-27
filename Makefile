@@ -10,11 +10,11 @@ SOURCES=$(filter-out test.cpp,$(wildcard *.cpp))
 OBJS:=$(patsubst %.cpp, %.o, $(SOURCES))
 DEPS:=$(patsubst %.o,.%.d,$(OBJS))
 
-LDLIBS=-ldl -llua -llualib -lcrypt -lpthread -lpython2.4
+LDLIBS=-ldl -lcrypt -lpthread -lpython2.4 -lsqlite3
 
-all: .depend pietbot test
+all: .depend pietbot
 
-pietbot: $(OBJS) /home/weary/lubi/detail/lubi.a
+pietbot: $(OBJS)
 	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 test: test.o

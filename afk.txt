@@ -587,4 +587,6 @@ wbps#Wungle's Body Part Suggestion (magic)
 wgs#Wungle's Great Sucking (magic)
 wms#Wurphle's Midnight Snack (magic)
 yee#Yordon's Extremal Extension (magic)
-
+npc#non-playing character
+npc#non-player character
+mwd#micro warp drive

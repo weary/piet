@@ -104,7 +104,7 @@ blub#0.0625#ACTION unblubt NICK
 blub#1.0#ACTION blubt mee
 dum#0.1#diedum#dump
 dum#0.11111111111#dum? ach...#dump
-dum#0.125#to dum or not dum, that's the idle#dump
+dum#0.125#to dum or not dum dum, that's the idle#dump
 dum#0.25#dum dum#dump
 dum#0.375#dum? ach#dump
 dum#0.5# < weary> bool(ach) => dum is wel goed#dump
