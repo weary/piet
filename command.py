@@ -127,14 +127,13 @@ def change_auth(params):
 				present="niemand";
 			if (len(away)>0):
 				away=pietlib.make_list([n+"("+str(a)+")" for (n,a) in away]);
-			else:
-				away="niemand";
 			if (len(unknown)>0):
 				unknown=pietlib.make_list(unknown);
 			else:
 				unknown="niemand";
 
-			msg="Van de aanwezigen ken ik "+present+", en ken ik "+unknown+" niet. "+away+" ken ik ook nog, maar die zijn hier niet"
+			msg="Van de aanwezigen ken ik "+present+", en ken ik "+unknown+" niet.";
+			if (len(away)>0): msg=msg+away+" ken ik ook nog, maar die zijn hier niet";
 			return msg;
 		except:
 			traceback.print_exc();
@@ -171,6 +170,7 @@ def change_auth(params):
 					parnick+"\","+str(newauth)+",\""+oldtz+"\")");
 		else:
 			piet.db("REPLACE INTO auth(name,auth) VALUES(\""+parnick+"\","+str(newauth)+")");
+		# check_names(nick_, channel_, msg_), would be nice, strange library dependancy though
 		return "ok, "+parnick+" heeft nu authenticatieniveau "+str(newauth)+"\n";
 	return "bogus"; # never reached, i think
 
@@ -1189,7 +1189,7 @@ def remind(regel):
 			return "tijdsaanduiding klopt niet";
 		elif (tijd == 0):
 			return "dat is nu. je bent wel erg vergeetachtig, niet?";
-		tijdstr=pietlib.format_localtijd(now+tijd, "%H:%M", tz);
+		tijdstr=pietlib.format_localtijd(now+tijd, tz);
 		piet.send(channel, "ok, ergens rond "+tijdstr+" zal ik dat wel's roepen dan, als ik zin heb\n");
 	else: # absolute time
 		try:
@@ -2089,6 +2089,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "vertaal":           (100, vertaal, "vertaal <brontaal> <doeltaal> <regel>, vertaalt <regel> van de taal <brontaal> naar de taal <doeltaal>"),
     "weer":              (100, weer, "weer, zoek het weer op"),
     "zeg":               (0, zeg, "zeg <text> [tegen <naam>], ga napraten"),
+		"rot52":             (0, zeg, ""),
     "ping":              (100, ping, "ping, zeg pong"),
     "remind":            (300, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
     "sin?":              (500, sin, "sin, lookup sin's ip-address"),

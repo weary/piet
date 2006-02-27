@@ -56,14 +56,17 @@ def format_tijdsduur(secs, items=2):
 
 
 # convert tijd-string naar secs t.o.v epoch
+# als er geen datum gegeven is, en de tijd<nu is, dan wordt er 24 uur bij opgeteld
 def parse_tijd(tijd, tijdzone):
 	tijd=string.strip(tijd);
 	datesplit=re.match("(\d{1,2})[-/ ](\d{1,2})[-/ ](\d{4})", tijd);
 	datum=""; datumformat="";
+	have_date=False;
 	if (datesplit!=None):
 		datumformat="%d-%m-%Y ";
 		datum=datesplit.group(1)+"-"+datesplit.group(2)+"-"+datesplit.group(3)+" ";
 		tijd=string.strip(tijd[datesplit.end():]);
+		have_date=True;
 			
 	try:
 		tijd = time.strptime(datum+tijd, datumformat+"%H:%M");
@@ -80,8 +83,13 @@ def parse_tijd(tijd, tijdzone):
 		tijd=(tijd[3]-lc[3])*3600+(tijd[4]-lc[4])*60+(tijd[5]-lc[5])+time.time();
 		#if (tijd<0): tijd+=24*3600;
 	timezone_reset();
-	
-	return tijd;
+
+	if not(have_date):
+		rel_tijd=tijd-time.time();
+		if (rel_tijd<0 and rel_tijd>-24*3600):
+			tijd+=24*3600;
+
+	return round(tijd);
 
 
 # geef de tijdzone van de gegeven nick. als nick niet bekend is, dan default tijdzone
@@ -101,11 +109,24 @@ def timezone_reset():
 
 
 # zet de gegeven tijd (secs, in seconden sinds epoch) om in lokale tijd voor de
-# gegeven tijdzone in het gegeven formaat. zie tijdzone_nick voor de tijdzone.
-def format_localtijd(secs, format="%H:%M", tijdzone=localtimezone):
+# gegeven tijdzone in een handig formaat. zie tijdzone_nick voor de tijdzone.
+def format_localtijd(secs, tijdzone=localtimezone):
 	os.environ['TZ']=tijdzone;
 	time.tzset();
-	result=time.strftime(format, time.localtime(secs));
+	now=time.localtime();
+	morgen=time.localtime(time.time()+24*3600);
+	overmorgen=time.localtime(time.time()+48*3600);
+	loc=time.localtime(secs);
+	if (now[0]!=loc[0]):
+		result=time.strftime("%d-%m-%Y %H:%M", loc);
+	elif (morgen[:3]==loc[:3]):
+		result=time.strftime("morgen, %H:%M", loc);
+	elif (overmorgen[:3]==loc[:3]):
+		result=time.strftime("overmorgen, %H:%M", loc);
+	elif (now[:3]!=loc[:3]):
+		result=time.strftime("%d %b %H:%M", loc);
+	else:
+		result=time.strftime("%H:%M", loc);
 	timezone_reset();
 	return result;
 
