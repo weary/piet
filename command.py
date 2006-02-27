@@ -443,12 +443,12 @@ def zeg(params):
 	else:
 		return "doe het lekker zelf ofzo";
 
-def rot13(params):
-  params = string.strip(parse(params, False, True));
-  inp, outp = os.popen2("tr A-Za-z N-ZA-Mn-za-m");
-  inp.write(params);
-  inp.close();
-  return outp.read()+"\n";
+def rot_nr(cmd):
+	n,y=string.split(cmd, " ", 1);
+	n=int(n)%26;
+	y=string.strip(parse(y, False, True));
+	return "".join([x.isalpha() and (ord(x.lower())-ord("a")>=26-n and chr(ord(x)+n-26) or chr(ord(x)+n)) or x for x in y])
+
 
 def afk(woord):
 	result1=afk_hylke(woord);
@@ -1299,6 +1299,7 @@ def docommand(cmd):
   inp.close();
   return result;
 
+
 def tempwereld(regel):
   regel=string.lower(regel)
   regel=string.replace(regel,"new york","new_york");
@@ -2089,14 +2090,13 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "vertaal":           (100, vertaal, "vertaal <brontaal> <doeltaal> <regel>, vertaalt <regel> van de taal <brontaal> naar de taal <doeltaal>"),
     "weer":              (100, weer, "weer, zoek het weer op"),
     "zeg":               (0, zeg, "zeg <text> [tegen <naam>], ga napraten"),
-		"rot52":             (0, zeg, ""),
+		"rot":             (0, rot_nr, "rot<nr> <text>, versleutel <text> met het rot<nr> algorithme"),
     "ping":              (100, ping, "ping, zeg pong"),
     "remind":            (300, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
     "sin?":              (500, sin, "sin, lookup sin's ip-address"),
     "nmblookup":         (500, nmblookup, "nmblookup <host>, zoek op campusnet naar een ip"),
     "PING":              (100, ping, ""),
     "hallo?":            (100, ping, ""),
-    "rot13":             (0, rot13, "rot13 <text>, doe een rot13 op text"),
     "afk":               (100, afk, "afk <afk>, zoek een afkorting op"),
     "spel":              (0, spell_nl, "spel <woord/zin>, spellcheck een woord/zin in het nederlands"),
     "spell":             (0, spell_en, "spell <woord/zin>, spellcheck een woord/zin in het engels"),
