@@ -49,14 +49,15 @@ std::ostream &operator <<(std::ostream &os_, const python_cmd &pc_);
 
 struct python_lock
 {
-	python_lock(const std::string &occasion_);
+	python_lock(const std::string &/*occasion_*/);
 	~python_lock();
 
-	static pthread_key_t _key;
-	static void global_init();
-	static void global_deinit();
+	//static pthread_key_t _key;
+	static void global_init(){};
+	static void global_deinit(){};
 
 	//const std::string _occasion;
+	PyGILState_STATE _state;
 };
 
 #endif // __PIET_PYTHON_SUPPORT_H__

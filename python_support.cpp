@@ -59,31 +59,8 @@ std::string obj2str(PyObject *obj)
 	else if (PyTraceBack_Check(obj))
 	{
 		str << "obj-traceback";
-		PyObject* f=PyFile_FromString("/tmp/plop.txt", "w+");
-		if (f)
-		{
-			PyTraceBack_Print(obj, f);
-			Py_DECREF(f);
-			int handle=open("/tmp/plop.txt", O_RDONLY);
-			if (handle>0)
-			{
-				char buf[2048];
-				int c=read(handle, buf, 2048);
-				if (c>0)
-				{
-					buf[c]=0;
-					str << "\n" << buf;
-				}
-				else
-					str << "(unknown3)";
-				
-				str << buf;
-			}
-			else
-				str << "(unknown2)";
-		}
-		else
-			str << "(unknown)";
+		PyObject *f = PySys_GetObject("stderr");
+		PyTraceBack_Print(obj, f);
 	}
 	else if (PyClass_Check(obj))
 	{
@@ -261,39 +238,12 @@ std::ostream &operator <<(std::ostream &os_, const python_cmd &pc_)
 	return os_;
 }
 
-python_lock::python_lock(const std::string &occasion_)
-	//: _occasion(occasion_)
+python_lock::python_lock(const std::string &/*occasion_*/)
+	: _state(PyGILState_Ensure())
 {
-	int lockcount = (int)pthread_getspecific(_key);
-	pthread_setspecific(_key, (void *)(lockcount+1));
-	//std::cout << "PL: acquiring python lock for " << _occasion;
-	//if (lockcount) std::cout << ", already had " << lockcount;
-	//std::cout << ".\n" << std::flush;
-	if (lockcount==0) PyEval_AcquireLock();
-	//std::cout << "PL: acquired by " << _occasion << "\n" << std::flush;
 }
 python_lock::~python_lock()
 {
-	int lockcount = ((int)pthread_getspecific(_key)) - 1;
-	pthread_setspecific(_key, (void *)(lockcount));
-	//std::cout << "PL: releasing python lock for " << _occasion;
-	//if (lockcount) std::cout << ", but still " << lockcount << " left, so no real release";
-	//std::cout << ".\n" << std::flush;
-	if (lockcount==0) PyEval_ReleaseLock();
-	//std::cout << "PL: released for " << _occasion << "\n" << std::flush;
+	PyGILState_Release(_state);
 }
-
-void python_lock::global_init()
-{
-	//std::cout << "PL: initialising python locks\n" << std::flush;
-	assert(pthread_key_create(&_key, NULL)==0);
-}
-
-void python_lock::global_deinit()
-{
-	//std::cout << "PL: de-initialising python locks\n" << std::flush;
-	pthread_key_delete(_key);
-}
-
-pthread_key_t python_lock::_key;
 

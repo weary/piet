@@ -60,7 +60,7 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
 			if (tu>0):
 				result=format_tijdsduur(tu, 2);
 
-				titel=random.choice(["heer", "meester", "prins", "gast", "joker", "orgelspeler", "held", "bedwinger"]);
+				titel=random.choice(["heer", "meester", "prins", "gast", "joker", "orgelspeler", "held", "bedwinger", "plaag"]);
 				titel=titel+" "+random.choice(["des duisternis", "van het licht", "des ubers", "des modders", "des oordeels", "van de knaagdieren", "overste", "heerser", "ongezien", "enzo", "extraordinaire", "(gevallen)", "in rust"]);
 				
 				reply="ACTION presenteert: "+nick+", "+titel+", weer terug na "+result;

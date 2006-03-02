@@ -1100,7 +1100,7 @@ try:
 	remind_threads;
 except:
 	remind_threads=0;
-def remind_thread(frop):
+def remind_thread(channel, frop):
 	global remind_threads;
 	if (remind_threads>0):
 		print repr(remind_threads)+"th remind thread refusing to start";
@@ -1212,9 +1212,9 @@ def remind(regel):
 			string.replace(nick, '"', '""')+"\",\""+
 			string.replace(result, '"', '""')+"\","+
 			repr(now+tijd)+");");
-	piet.thread("remind_thread", channel); # make sure a thread is running
+	piet.thread(channel, "remind_thread", ""); # make sure a thread is running
 	return "";
-piet.thread("remind_thread", channel);
+piet.thread(channel, "remind_thread", "");
 
 def list_reminds(regel):
 	try:

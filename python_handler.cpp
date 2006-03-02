@@ -2,6 +2,7 @@
 #include "bot.h"
 #include "sender.h"
 #include "piet_db.h"
+#include "atd.h"
 #include <signal.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
@@ -72,18 +73,8 @@ void *python_threadfunc(void *p)
 	{
 		python_lock guard("threadfunc");
 
-		PyInterpreterState * mainInterpreterState = data->main_thread_state->interp;
-		PyThreadState * myThreadState = PyThreadState_New(mainInterpreterState);
-		PyThreadState_Swap(myThreadState);
-
 		if (!data->cmd._cmd.empty())
-		{
 			data->cmd();
-		}
-
-		PyThreadState_Swap(NULL);
-		PyThreadState_Clear(myThreadState);
-		PyThreadState_Delete(myThreadState);
 	}
 
 	data->ready=true;
@@ -180,44 +171,22 @@ static PyObject * piet_thread(PyObject *self, PyObject *args)
 	PY_ASSERT(PyTuple_Check(args), "need tuple argument");
 
 	// call like:
-	// piet.thread(func, channel, funcparams...)
-	// func will be called like func(channel, funcparams...)
+	// piet.thread(channel, command, param)
+	// func will be called like func(channel, param)
 
 	PyTupleObject *t=reinterpret_cast<PyTupleObject *>(args);
 	int n=t->ob_size;
-	PY_ASSERT(n>=2, "need at least function and channel parameters");
-	PY_ASSERT(PyString_Check(t->ob_item[0]), "function name needs to be specified as string");
-	PY_ASSERT(PyString_Check(t->ob_item[1]), "channel is not a string");
+	PY_ASSERT(n==3, "need a channel, a command and a param");
+	PY_ASSERT(PyString_Check(t->ob_item[2]), "channel is not a string");
+	PY_ASSERT(PyString_Check(t->ob_item[2]), "command is not a string");
+	PY_ASSERT(PyString_Check(t->ob_item[2]), "param is not a string");
+
+	atd_t::instance().at(0, "", 
+			PyString_AsString(t->ob_item[0]),
+			PyString_AsString(t->ob_item[1]),
+			PyString_AsString(t->ob_item[2]));
 	
-	std::string cmd_str=PyString_AsString(t->ob_item[0]);
-	std::string channel_str=PyString_AsString(t->ob_item[1]);
-	std::cout << "piet_thread: cmd=\"" << cmd_str << "\", chan=\"" << channel_str << "\"\n";
-	
-	python_cmd cmd(channel_str, cmd_str, n-1);
 
-	for (int m=1; m<n; ++m)
-	{
-		PyObject *p=t->ob_item[m];
-		Py_INCREF(p);
-		cmd.add_param(p);
-	}
-	std::cout << "piet_thread: cmd=" << cmd << "\n";
-
-	python_handler::instance().read_and_exec(channel_str, "command.py", cmd);
-	
-	std::cout << "piet_thread: cmd draait, klaar\n";
-#if 0
-
-	python_cmd(g_config.get_channel
-	// parse the incoming arguments
-	if (!PyArg_Parse(args, "(s)", &nick))
-	{
-		return NULL;
-	}
-
-	send(":%s NICK :%s\n", g_config.get_nick().c_str(), nick);
-
-#endif
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -362,7 +331,8 @@ void python_handler::read_and_exec(
   p->cmd=cmd_;
   p->ready=false;
 
-	checkfile_and_read(channel_, file_);
+	if (!file_.empty())
+		checkfile_and_read(channel_, file_);
 
   int result=pthread_create(&(p->thread), NULL, python_threadfunc, p.get());
   if (result)

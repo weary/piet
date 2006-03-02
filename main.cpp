@@ -2,6 +2,8 @@
 //#include "lua_if.h"
 #include "passwd.h"
 #include "sender.h"
+#include "python_handler.h"
+#include "atd.h"
 #include "piet_db.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/format.hpp>
@@ -161,7 +163,11 @@ int main(int argc, char *argv[])
 			polls[0].fd=sok; polls[0].events=POLLIN|POLLPRI; polls[0].revents=0;
 			int n=poll(polls, 1, 1000/*ms*/);
 			if (n<0 && errno==EINTR)
+			{
+				send(":%s PRIVMSG %s :Aaaargh Ik ga dood! help help!\n",
+						g_config.get_nick().c_str(), g_config.get_channel().c_str());
 				continue;
+			}
 			else if (n<0)
 			{ // error
 				int e=errno;
@@ -182,6 +188,20 @@ int main(int argc, char *argv[])
 			{ // something to receive on sok
 				recv_buf+=receive(sok);
 				process_receive(recv_buf);
+			}
+
+			{
+				time_t now;
+				time(&now);
+				atd_entry_list_t atd_list;
+				atd_t::instance().pop_until(now, atd_list);
+				atd_entry_list_t::const_iterator i=atd_list.begin();
+				for (; i!=atd_list.end(); ++i)
+				{
+					python_cmd cmd(i->_channel, i->_command, 2);
+					cmd << i->_channel << i->_param;
+					python_handler::instance().read_and_exec(i->_channel, i->_file, cmd);
+				}
 			}
 
 			if (--garbagecollect_count==0)

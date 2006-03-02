@@ -68,7 +68,7 @@ static void send_one_line(const std::string header, std::string text, bool high_
 
   while (!text.empty())
   {
-    unsigned int sendlen=text.length();
+		std::string::size_type sendlen=text.length();
     if (sendlen>450)
     {
       sendlen=text.find_last_of(' ', 450);
@@ -93,7 +93,7 @@ void sendstr(const std::string msg, bool high_prio)
   std::string header;
   std::string alltext;
   { // extract header
-    unsigned int p=msg.find_first_of(':', 1);
+		std::string::size_type p=msg.find_first_of(':', 1);
     if (p!=std::string::npos)
       header=msg.substr(0,p+1), alltext=msg.substr(p+1);
     else
@@ -102,7 +102,7 @@ void sendstr(const std::string msg, bool high_prio)
 
   while (!alltext.empty())
   {
-    unsigned int enterpos=alltext.find_first_of('\n');
+		std::string::size_type enterpos=alltext.find_first_of('\n');
     if (enterpos==std::string::npos)
       send_one_line(header, alltext, high_prio), alltext.erase();
     else
