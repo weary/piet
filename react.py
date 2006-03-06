@@ -1,9 +1,21 @@
 #!/usr/bin/python
 
-import sys,string,random,re,time;
+import sys,string,random,re,time,urllib,BeautifulSoup,traceback;
 import piet;
 
 #execfile("random_line.py");
+
+def get_url_title(channel, url):
+	if url[0:4].lower()!="http": url="http://"+url;
+	try:
+		input=urllib.urlopen(url).read();
+	except:
+		piet.send(channel, "nou, dat lijkt misschien wel wat op een url, maar 't bestaat niet hoor\n");
+	try:
+		soup=BeautifulSoup.BeautifulSoup(input);
+		piet.send(channel, "de titel van dat ding is: "+soup.html.title.string+"\n");
+	except:
+		traceback.print_exc();
 
 def do_react(channel, nick, pietnick, line):
 	reactfile = "react.txt"
@@ -23,9 +35,16 @@ def do_react(channel, nick, pietnick, line):
 	inf.write(line+"\n");
 	inf.close();
 
+	ready=False;
+
+	# check for url's in the input
+	urlmatch=re.search("((https?://|www\.)[^ \t]*)", line);
+	if (urlmatch):
+		get_url_title(channel, urlmatch.group(0));
+		ready=True;
+
 	random.seed();
 	i=0;
-	ready=False;
 	result="";
 	while (i<len(lines)) and (not(ready)):
 		try:
