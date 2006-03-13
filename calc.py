@@ -273,9 +273,22 @@ def calcP(param):
     result**=result2
   return (error,result,param,unit,dimx,dimy)
 
+def factorial(x):
+    if x == 0:
+        return 1
+    else:
+        return x * factorial(x-1)
+
 def calcT(param):
   #rule for transposing matrices
   (error,value,param,unit,dimx,dimy)=calcM(param)
+  while param[:1]=="!":
+    if error!="":
+      return(error,value,param,unit,dimx,dimy)
+    if dimx!=1 or dimy!=1:
+      return("Parse error factorial expects non matrix type",0,"","",1,1)
+    value=factorial(value)
+    param=param[1:]
   if param[:2]=="*t":
     param=param[1:]
   while param[:1]=="t":
@@ -460,6 +473,27 @@ def calcM(param):
       return("Missing )",0,"","",1,1)
     thisday=datetime.date(value[0],value[1],value[2])
     return("",thisday.weekday(),param[1:],"DW^1",1,1)
+  if param[:8]=="weekdag(":
+    (error,value,param,unit,dimx,dimy)=calcS(param[8:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (dimx<3 or unit[:1]!=["D^1"]):
+      return("DayOfWeek function works on dates only",0,"","",1,1)
+    if (param[:1]!=")"):
+      return("Missing )",0,"","",1,1)
+    thisday=datetime.date(value[0],value[1],value[2])
+    return("",thisday.weekday()+7,param[1:],"DW^1",1,1)
+  if param[:4]=="dag(":
+    language="nl"
+    (error,value,param,unit,dimx,dimy)=calcS(param[4:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (dimx<3 or unit[:1]!=["D^1"]):
+      return("DayOfWeek function works on dates only",0,"","",1,1)
+    if (param[:1]!=")"):
+      return("Missing )",0,"","",1,1)
+    thisday=datetime.date(value[0],value[1],value[2])
+    return("",thisday.weekday()+7,param[1:],"DW^1",1,1)
 
 # matrix functions
   if param[:4]=="det(":
@@ -1072,3 +1106,4 @@ months='(jan|januari|january|feb|februari|february|mar|mrt|maart|march|apr|april
 monthmap={"jan":1, "januari":1, "january":1, "feb":2, "februari":2, "february":2, "mar":3, "mrt":3, "maart":3, "march":3, "apr":4, "april":4, "mei":5, "may":5, "jun":6, "juni":6, "june":6, "jul":7, "juli":7, "july":7, "aug":8, "augustus":8, "august":8, "sep":9, "september":9, "oct":10, "okt":10, "oktober":10, "october":10, "nov":11, "november":11, "dec":12, "december":12}
 selectmonth={1:"Jan", 2:"Feb", 3:"Mar", 4:"Apr", 5:"May", 6:"Jun", 7:"Jul", 8:"Aug", 9:"Sep", 10:"Oct", 11:"Nov", 12:"Dec"}
 daysofweek=["Monday","Tuesday","Wednesday","Thursday","Friday","Saterday","Sunday"]
+daysofweek+=["Maandag","Dinsdag","Woensdag","Donderdag","Vrijdag","Zaterdag","Zondag"]
