@@ -9,6 +9,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/regex.hpp>
 #include <boost/format.hpp>
 #include <crypt.h>
 #include <netdb.h>
@@ -78,11 +79,14 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
   //   1. op een kanaal: "NICK: zeg hallo"
   //   2. rechtstreeks: "zeg hallo"
   // of onpersoonlijk, alle andere gevallen op een kanaal
-  bool on_channel=(channel!=g_config.get_nick());
+  const std::string pietnick=g_config.get_nick();
+  bool on_channel=(channel!=pietnick);
   bool personal=!on_channel;
-  if (msg.substr(0, g_config.get_nick().length()+1)==(g_config.get_nick()+":"))
+  const boost::regex personal_regex("^("+pietnick+"|piet)[:,>]");
+	boost::match_results<std::string::const_iterator> what;
+  if (boost::regex_search(msg, what, personal_regex, boost::format_sed))
   {
-    msg.erase(0, g_config.get_nick().length()+1);
+    msg.erase(0, what.length());
     personal=true;
   }
 

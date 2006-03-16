@@ -1,4 +1,4 @@
-import os,time,string,re;
+import os,time,string,re,traceback;
 import piet;
 
 localtimezone="Europe/Amsterdam";

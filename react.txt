@@ -227,10 +227,8 @@ mooi#0.1#ACTION krijgt er tranen van in zijn ogen
 diablo#0.1#moet het nou alweer over dat spel gaan?
 diablo#0.1#stomme rpg
 ik zie#0.5#ACTION ziet het nu ook
-kunstje#0.111#ACTION rent zenuwachtig een rondje maar doet verder niets
-speciaals
-kunstje#0.125ACTION gaat op z'n achterste bitjes staan en kwijlt over je
-schoenen
+kunstje#0.111#ACTION rent zenuwachtig een rondje maar doet verder niets speciaals
+kunstje#0.125ACTION gaat op z'n achterste bitjes staan en kwijlt over je schoenen
 kunstje#0.143#ACTION maakt een sprongetje
 kunstje#0.166#ACTION is een brave piet en doet een kunstje
 kunstje#0.2#ACTION pakt NICK op en slaat 'm door een stoeptegel
@@ -254,6 +252,7 @@ bodempje#1.0#alleen maar een bodempje?
 !tv#1.0#ben geen snotbot zeg
 rendt#1.0#rendt met dt, zeg, alsof er niet al genoeg overbodig letters over het kanaal vliegen
 jawel#0.5#nee, echt niet
+ww, echt niet?#1.0#nee, echt niet
 \o/#0.1666666#ACTION steekt ook blij z'n handen in de lucht
 \o/#0.3333333#ACTION juicht
 mlaapsokken#1.0#huh? slaapkoppen zul je bedoelen
@@ -302,5 +301,6 @@ tikken
 zobiezo#1.0#tsk. sowieso dus.
 dt ik #1.0#hee, daar kan een letter uitgespaard worden na die d
 curl#1.0#curl? dat zou ik toch zo gebruiken: curl -d @get_reports.xml -H content-type:text/xml http://localhost/cgi-bin/disp.fcgi
-
-
+pff#0.4#ACTION geeft NICK een plakkertje.
+krul#1.0#curl
+crul#1.0#s/cr/kr/

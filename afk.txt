@@ -473,7 +473,7 @@ YBS#you ll be sorry
 YG#young gentleman
 YL#young lady
 YM#young man
-stfu#houdt je smoel
+stfu#houd je smoel
 YSF#you stupid fuck
 FFS#for fucks sake
 QRA#What is the name of your station ?  The name of my station is... 

@@ -399,7 +399,7 @@ def itaweer(woord):
 	if (woord=="it"):
 		cmd = "wget -O - \"http://www.televideo.rai.it/televideo/pub/solotesto.jsp?regione=&pagina=704&sottopagina=01\" 2>/dev/null | grep -A 2 PISA | perl -ni -e 'trim; $_ =~ s/\s+/ /g; print \"Oggi: $_\\n\";';wget -O - \"http://www.televideo.rai.it/televideo/pub/solotesto.jsp?regione=&pagina=705&sottopagina=01\" 2>/dev/null | grep -A 2 PISA | perl -ni -e 'trim; $_ =~ s/\s+/ /g; print \"Domani: $_\\n\";'"
 	else:
-		cmd = "wget -O - \"http://www.televideo.rai.it/televideo/pub/solotesto.jsp?regione=TOSCANA&pagina=313&sottopagina=01\" 2>/dev/null|grep -i "+woord+" | perl -ni -e '$_ =~ s/\s+/ /g;($dummy,$loc,$min,$max) = split / /, $_ ; print \"$loc: min=$min max=$max\";'";
+		cmd = "wget -O - \"http://www.televideo.rai.it/televideo/pub/solotesto.jsp?regione=TOSCANA&pagina=313&sottopagina=01\" 2>/dev/null | grep -i "+woord+" | perl -ni -e '$_ =~ s/\s+/ /g;($dummy,$loc,$min,$max) = split / /, $_ ; print \"$loc: min=$min max=$max\";'";
 
 	inp,outp,stderr = os.popen3(cmd);
 	result=outp.read();
