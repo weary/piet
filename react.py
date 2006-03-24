@@ -17,6 +17,21 @@ def get_url_title(channel, url):
 	except:
 		traceback.print_exc();
 
+def do_search_replace(channel, nick, regmatchobj, lastchat):
+	try:
+		matchstring = regmatchobj.group();
+		matchresult = string.split(matchstring, '/');
+	
+		fromstring = matchresult[1];
+		tostring = matchresult[2];
+	
+		replaceresult = string.replace(lastchat, fromstring, tostring);
+		piet.send(channel, "Volgens mij bedoelde " + nick + " dit: " + replaceresult);
+		return True;
+	except:
+		return False;
+
+lastnicklog = {};
 def do_react(channel, nick, pietnick, line):
 	reactfile = "react.txt"
 	loosfile = "loos.txt"
@@ -43,6 +58,17 @@ def do_react(channel, nick, pietnick, line):
 		get_url_title(channel, urlmatch.group(0));
 		ready=True;
 
+	if(not(ready)):
+		try:
+			lastchat = lastnicklog[nick];
+			srmatch = re.match("^(s[/][A-Za-z0-9 ]+[/][A-Za-z0-9 ]*[/]?)$", line);	
+			if(srmatch):
+				sr_result = do_search_replace(channel, nick, srmatch, lastnicklog[nick]);				
+				if(sr_result):
+					ready=True;
+		except:
+			# Not gonna happen
+					
 	random.seed();
 	i=0;
 	result="";
@@ -104,3 +130,4 @@ def do_react(channel, nick, pietnick, line):
 		result=string.replace(result, "piet", pietnick);
 		piet.send(channel, result+"\n");
 	
+	lastnicklog[nick] = line;
