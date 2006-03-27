@@ -304,3 +304,41 @@ curl#1.0#curl? dat zou ik toch zo gebruiken: curl -d @get_reports.xml -H content
 pff#0.4#ACTION geeft NICK een plakkertje.
 krul#1.0#curl
 crul#1.0#s/cr/kr/
+(Y)#1.0#breezah miepje zou met (Y) toch een Thumbs up bedoelen
+(N)#1.0#breezah miepje zou met (N) toch een Thumbs down bedoelen
+(B)#1.0#breezah miepje zou met (B) toch een pot bier bedoelen
+(D)#1.0#breezah miepje zou met (D) toch een Martini glass bedoelen
+(X)#1.0#breezah miepje zou met (X) toch een Girl bedoelen
+(Z)#1.0#breezah miepje zou met (Z) toch een Boy bedoelen
+(6)#1.0#breezah miepje zou met (6) toch een Devil smiley bedoelen
+:-[#1.0#breezah miepje zou met :-[ toch een Vampire bat bedoelen
+(})#1.0#breezah miepje zou met (}) toch een Right hug  bedoelen
+({)#1.0#breezah miepje zou met ({) toch een Left hug bedoelen
+(M)#1.0#breezah miepje zou met (M) toch een MSN Messenger or Windows Messenger icon (think a BitlBee logo here ;) bedoelen
+:-S#1.0#breezah miepje zou met :-S toch een Crooked smiley (Confused smiley) bedoelen
+:-$#1.0#breezah miepje zou met :-$ toch een Embarrassed smiley bedoelen
+(H)#1.0#breezah miepje zou met (H) toch een Smiley with sunglasses bedoelen
+:-@#1.0#breezah miepje zou met :-@ toch een Angry smiley bedoelen
+(A)#1.0#breezah miepje zou met (A) toch een Angel smiley bedoelen
+(L)#1.0#breezah miepje zou met (L) toch een Red heart (Love)  bedoelen
+(U)#1.0#breezah miepje zou met (U) toch een Broken heart bedoelen
+(K)#1.0#breezah miepje zou met (K) toch een Red lips (Kiss) bedoelen
+(G)#1.0#breezah miepje zou met (G) toch een Gift with bow bedoelen
+(F)#1.0#breezah miepje zou met (F) toch een Red rose bedoelen
+(W)#1.0#breezah miepje zou met (W) toch een Wilted rose bedoelen
+(P)#1.0#breezah miepje zou met (P) toch een Camera bedoelen
+(~)#1.0#breezah miepje zou met (~) toch een Film strip bedoelen
+(T)#1.0#breezah miepje zou met (T) toch een Telephone receiver bedoelen
+(@)#1.0#breezah miepje zou met (@) toch een Cat face bedoelen
+(&)#1.0#breezah miepje zou met (&) toch een Dog's head bedoelen
+(C)#1.0#breezah miepje zou met (C) toch een Coffee cup bedoelen
+(I)#1.0#breezah miepje zou met (I) toch een Light bulb bedoelen
+(S)#1.0#breezah miepje zou met (S) toch een Half-moon (Case sensitive!) bedoelen
+(*)#1.0#breezah miepje zou met (*) toch een Star bedoelen
+(8)#1.0#breezah miepje zou met (8) toch een achtste noot bedoelen
+(E)#1.0#breezah miepje zou met (E) toch een Envelope bedoelen
+(^)#1.0#breezah miepje zou met (^) toch een Birthday cake bedoelen
+(O)#1.0#breezah miepje zou met (O) toch een Clock bedoelen
+watbenjedan#1.0#een PRUTSER!
+
+
