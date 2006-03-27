@@ -80,7 +80,6 @@ def quitmsg_is_split(msg_):
 	return bool(re.match('^QUIT :[\w\.\*]+\.\w{2,3} [\w\.\*]+\.\w{2,3}$', msg_));
 
 def check_netsplit(nick_, channel_, command_, msg_):
-	print("check_netsplit("+nick_+", "+channel_+", "+command_+", "+msg_+"):\n");
 	# CREATE TABLE netsplit(channel string,nick string, servers string, timeout int, PRIMARY KEY(channel,nick));
 
 	NETSPLIT_TIMEOUT=3600; # seconds
@@ -140,7 +139,7 @@ def nickchange(nick_, auth_, channel_, newnick):
 			piet.send(channel_, "authenticatie "+str(auth[1])+" nu naar "+newnick+" overgezet, "+\
 					nick_+" heeft 't niet meer nodig lijkt me\n");
 		elif (auth_<otherauth and auth_>0):
-			piet.send("authenticatie "+str(auth_)+" nu naar "+newnick+" overgezet, niet nickchangen om hogere auth te krijgen\n");
+			piet.send(channel_, "authenticatie "+str(auth_)+" nu naar "+newnick+" overgezet, niet nickchangen om hogere auth te krijgen\n");
 	
 	nicks[newnick]=nicks[nick_];
 	del nicks[nick_];
@@ -211,7 +210,9 @@ def do_server(nick_, auth_, channel_, msg_):
 	netsplit=False;
 	if command in ["JOIN", "PART", "QUIT", "KICK"]:
 		if auth_>0:
+			print("check_netsplit("+nick_+", "+channel_+", "+command+", "+msg_+"): ");
 			netsplit=check_netsplit(nick_, channel_, command, msg_);
+			print(repr(netsplit)+"\n");
 			if not(netsplit):
 				check_sleep_time(nick_, auth_, channel_, command, msg_);
 		check_names_delayed(channel_);
