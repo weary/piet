@@ -1,14 +1,15 @@
 #!/usr/bin/python
 
-import sys,string,random,re,time,urllib,BeautifulSoup,traceback;
+import sys,string,random,re,time,BeautifulSoup,traceback;
 import piet;
+import pietlib;
 
 #execfile("random_line.py");
 
 def get_url_title(channel, url):
 	if url[0:4].lower()!="http": url="http://"+url;
 	try:
-		input=urllib.urlopen(url).read();
+		input=pietlib.get_url(url);
 	except:
 		piet.send(channel, "nou, dat lijkt misschien wel wat op een url, maar 't bestaat niet hoor\n");
 	try:
@@ -21,17 +22,27 @@ def do_search_replace(channel, nick, regmatchobj, lastchat):
 	try:
 		matchstring = regmatchobj.group();
 		matchresult = string.split(matchstring, '/');
-	
+
 		fromstring = matchresult[1];
 		tostring = matchresult[2];
-	
+
+		if(lastchat[0:7] == "\001ACTION"):
+			lastchat = "* " + nick + lastchat[7:len(lastchat)-1];
+
 		replaceresult = string.replace(lastchat, fromstring, tostring);
-		piet.send(channel, "Volgens mij bedoelde " + nick + " dit: " + replaceresult);
-		return True;
+		if(replaceresult != lastchat):
+			piet.send(channel, "Volgens mij bedoelde " + nick + " dit: " + replaceresult);
+			return replaceresult;
+		else:
+			return False;
 	except:
 		return False;
-
-lastnicklog = {};
+		
+try:
+	lastnicklog;
+except:
+	lastnicklog = {};
+	
 def do_react(channel, nick, pietnick, line):
 	reactfile = "react.txt"
 	loosfile = "loos.txt"
@@ -58,17 +69,24 @@ def do_react(channel, nick, pietnick, line):
 		get_url_title(channel, urlmatch.group(0));
 		ready=True;
 
+	nicklogset = False;
 	if(not(ready)):
 		try:
 			lastchat = lastnicklog[nick];
-			srmatch = re.match("^(s[/][A-Za-z0-9 ]+[/][A-Za-z0-9 ]*[/]?)$", line);	
+			srmatch = re.match("^(s[/][A-Za-z0-9 ]+[/][A-Za-z0-9 ]*[/]?)$", line);
 			if(srmatch):
-				sr_result = do_search_replace(channel, nick, srmatch, lastnicklog[nick]);				
+				sr_result = do_search_replace(channel, nick, srmatch, lastnicklog[nick]);
 				if(sr_result):
+					lastnicklog[nick] = sr_result;
+					nicklogset = True;
 					ready=True;
 		except:
 			# Not gonna happen
-					
+			3;
+
+	if(not(nicklogset)):
+		lastnicklog[nick] = line;
+
 	random.seed();
 	i=0;
 	result="";
@@ -130,4 +148,3 @@ def do_react(channel, nick, pietnick, line):
 		result=string.replace(result, "piet", pietnick);
 		piet.send(channel, result+"\n");
 	
-	lastnicklog[nick] = line;
