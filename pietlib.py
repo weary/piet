@@ -1,5 +1,17 @@
-import os,time,string,re,traceback;
+import os,time,string,re,traceback,urllib,BeautifulSoup;
 import piet;
+import calc;
+
+class pieturlopener(urllib.FancyURLopener):
+	version = "wget/1.1"
+
+urllib._urlopener = pieturlopener();
+
+def get_url(url):
+	return urllib.urlopen(url).read();
+
+def get_url_soup(url):
+	return BeautifulSoup.BeautifulSoup(get_url(url));
 
 localtimezone="Europe/Amsterdam";
 
@@ -54,21 +66,34 @@ def format_tijdsduur(secs, items=2):
 
 	return make_list(tijd);
 
+dateregex="(\d{1,2})[-/ ](\d{1,2}|"+string.join(calc.monthmap.keys(),'|')+")[-/ ](\d{4})";
 
 # convert tijd-string naar secs t.o.v epoch
 # als er geen datum gegeven is, en de tijd<nu is, dan wordt er 24 uur bij opgeteld
 def parse_tijd(tijd, tijdzone):
 	tijd=string.strip(tijd);
-	datesplit=re.match("(\d{1,2})[-/ ](\d{1,2})[-/ ](\d{4})", tijd);
+	datesplit=re.match(dateregex, tijd);
 	datum=""; datumformat="";
 	have_date=False;
 	if (datesplit!=None):
-		datumformat="%d-%m-%Y ";
-		datum=datesplit.group(1)+"-"+datesplit.group(2)+"-"+datesplit.group(3)+" ";
-		tijd=string.strip(tijd[datesplit.end():]);
 		have_date=True;
-			
+		try:
+			day=int(datesplit.group(1));
+			year=int(datesplit.group(3));
+			month=int(datesplit.group(2));
+		except:
+			try:
+				month=calc.monthmap[datesplit.group(2).lower()];
+			except:
+				have_date=False;
+		if (have_date):
+			datumformat="%d-%m-%Y ";
+			datum=str(day)+"-"+str(month)+"-"+str(year)+" ";
+			tijd=string.strip(tijd[datesplit.end():]);
+
 	try:
+		piet.send("weary", "datum=\""+datum+"\"\n");
+		piet.send("weary", "tijd=\""+tijd+"\"\n");
 		tijd = time.strptime(datum+tijd, datumformat+"%H:%M");
 	except:
 		tijd = time.strptime(datum+tijd, datumformat+"%H:%M:%S");
