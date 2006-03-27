@@ -5,6 +5,7 @@ import sys,string,random,re,os,time,crypt,socket,thread,urllib,traceback;
 import piet;
 from telnetlib import Telnet;
 sys.path.append(".");
+from calc import addcalc;
 from calc import supercalc;
 import Distance;
 import BeautifulSoup;
@@ -60,6 +61,7 @@ def leeg(param):
 
 def onbekend_commando(param):
 	param=string.strip(param);
+	groeten=["hoi", "goeiemorgen", "goedemorgen", "mogge", "hallo", "middag"];
 	if (len(param)==0):
 		return "ok\n";
 	elif (param[-1]=='?'):
@@ -67,6 +69,8 @@ def onbekend_commando(param):
 			return "ja\n";
 		else:
 			return "nee\n";
+	elif param in groeten:
+		return random.choice(groeten)+"\n";
 	return "oh\n";
 
 def convert(char):
@@ -133,7 +137,7 @@ def change_auth(params):
 				unknown="niemand";
 
 			msg="Van de aanwezigen ken ik "+present+", en ken ik "+unknown+" niet.";
-			if (len(away)>0): msg=msg+away+" ken ik ook nog, maar die zijn hier niet";
+			if (len(away)>0): msg=msg+" "+away+" ken ik ook nog, maar die zijn hier niet";
 			return msg;
 		except:
 			traceback.print_exc();
@@ -289,7 +293,7 @@ def vandale(woord):
 
 def rijm(woord):
 	try:
-		input=urllib.urlopen("http://www.rijmwoorden.nl/rijm.pl?woord="+string.strip(woord)).read();
+		input=pietlib.get_url("http://www.rijmwoorden.nl/rijm.pl?woord="+string.strip(woord));
 	except:
 		return "ik kan niet rijmen zonder de website, dus je zult 't zelf moeten doen";
 	soup=BeautifulSoup.BeautifulSoup(input);
@@ -1158,13 +1162,13 @@ def remind(regel):
 	except:
 		traceback.print_exc();
 		return "frop";
-	relformat="\s*(((\d+\s*(d|dagen|dag|uren|uur|u|h|min|m|s|sec)\s*)+)";
-	absformat="((\d{1,2}[-/ ]\d{1,2}[-/ ]\d{4} )?\d+:\d+[:\d+]\s*))";
-	split=re.match(relformat+"|"+absformat, regel);
+	relformat="((\d+\s*(d|dagen|dag|uren|uur|u|h|min|m|s|sec)\s*)+)";
+	absformat="(("+pietlib.dateregex+"\s+)?\d+:\d+[:\d+]\s*)";
+	split=re.match("\s*("+absformat+"|"+relformat+")", regel); #abs voor rel, want 1m en 1maart lijken op elkaar
 	if (split==None):
 		return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van";
 	now=int(round(time.time()));
-	tijd=string.strip(regel[split.start():split.end()]);
+	tijd=string.strip(split.group(0));
 	result = string.strip(regel[split.end():]);
 	if (len(result)==0):
 		result=nick+": ik moest je ergens aan herinneren, maar zou niet meer weten wat";
@@ -1569,8 +1573,7 @@ def quote(regel):
   return "Syntax is fout voor quote";
 
 def tv_nuenstraks(regel):
-	input=urllib.urlopen("http://www.tvgids.nl/nustraks/").read();
-	soup=BeautifulSoup.BeautifulSoup(input);
+	soup=pietlib.get_url_soup("http://www.tvgids.nl/nustraks/");
 	t=soup('div', {'id' : 'nuStraks'})[0].div.form.table;
 	needed=set(["Nederland 1", "Nederland 2", "Nederland 3", "RTL 4", "RTL 5", "SBS 6", "NET 5", "RTL 7", "Talpa", "Veronica"]);
 	r="";
@@ -2176,8 +2179,8 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
 def parse(param_org, first, magzeg):
 	global auth,nick;
 
-	if (param_org[:1]>="0" and param_org[:1]<="9") or (param_org[:1]=="(") or (param_org[:1]=="[") or (param_org[:1]=="-"):
-		param_org="calc "+param_org;
+	# check of het een calc commando is en voeg dan calc toe voor  het commando
+	param_org=addcalc(param_org)
 
 	command="";
 	params=param_org;
