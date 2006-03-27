@@ -3,6 +3,12 @@
 
 import string,random,os,math,re,sys,datetime;
 
+def addcalc(param_org):
+  param_org=string.strip(param_org)
+  if (param_org[:1]>="0" and param_org[:1]<="9") or (param_org[:1]=="(") or (param_org[:1]=="[") or (param_org[:1]=="-") or (param_org[:1]=="|") or (param_org[:4]=="det(")  or (param_org[:5]=="sqrt(") or (param_org[:5]=="ceil(") or (param_org[:4]=="abs(") or (param_org[:6]=="floor(") or (param_org[:4]=="exp(") or (param_org[:4]=="log(") or (param_org[:6]=="log10(") or (param_org[:5]=="acos(") or (param_org[:5]=="asin(") or (param_org[:5]=="atan(") or (param_org[:4]=="cos(") or (param_org[:4]=="sin(") or (param_org[:4]=="tan(") or (param_org[:1]=="I" and param_org[1:2]>="0" and param_org[1:2]<="9") or (param_org[:6]=="gauss("):
+    param_org="calc "+param_org;
+  return param_org
+
 def unitinvertcheck(unit1,unit2):
   for i in ["1","2","3","4","5","6","7","8","9"]:
     unit1=string.replace(unit1,"^"+i,"^+"+i)
@@ -122,7 +128,16 @@ def calcD(param):
       #matrix multiplication
       if op=="/":
         #invert matrix is not yet supported
-        return ("Matrix dividing is not supported",0,"","",1,1)
+        if dimx2!=1 and dimy2!=1:
+          return ("Matrix dividing is not supported",0,"","",1,1)
+        #but it is for scalars now
+        newresult=[]
+        for x in result:
+          newresult+=[x/result2]
+        newunit=[]
+        for x in unit:
+          newunit+=[unifyunits(x,unit2,"/")]
+        return ("",newresult,param,newunit,dimx,dimy)
       if (dimx==1) and (dimy==1):
         #scalar
         for x in range(dimx2):
@@ -165,6 +180,15 @@ def calcD(param):
           dimy=newdimy
       else:
         return("Cannot multiply "+str(dimx)+"x"+str(dimy)+" matrix with "+str(dimx2)+"x"+str(dimy2)+" matrix",0,"","",1,1)
+  while ((error=="") and (param[:1]==".")):
+  #vector cross product
+    (error,result2,param,unit2,dimx2,dimy2)=calcP(param[1:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (dimx!=3 or dimy!=1 or dimx2!=3 or dimy2!=1) and (dimx!=1 or dimy!=3 or dimx2!=1 or dimy2!=3):
+       return("Crossproduct is defined in R3 only",0,"","",1,1)
+    newmatrix=[result[1]*result2[2]-result[2]*result2[1],-result[0]*result2[2]+result[2]*result2[0],result[0]*result2[1]-result[1]*result2[0]]
+    return("",newmatrix,param,["","",""],dimx,dimy)
   return (error,result,param,unit,dimx,dimy)
 
 def unifyunits(unit,unit2,op):
@@ -519,6 +543,32 @@ def calcM(param):
         return(error,0,"","",1,1)
     (value,unit)=gauss(value,unit,dimx,dimy)
     return (error,value,param[1:],unit,dimx,dimy)
+  if param[:4]=="len(":
+    (error,value,param,unit,dimx,dimy)=calcS(param[4:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (param[:1]!=")"):
+      return("missing )",0,"","",1,1)
+    if (dimx!=1) and (dimy!=1):
+      return("length only works on vectors",0,"","",1,1)
+    result=0
+    for i in value:
+      result+=i*i
+    return("",math.sqrt(result),param[1:],"",1,1)
+  if param[:1]=="|":
+    (error,value,param,unit,dimx,dimy)=calcS(param[1:])
+    if error!="":
+      return(error,0,"","",1,1)
+    if (param[:1]!="|"):
+      return("missing close |",0,"","",1,1)
+    if (dimx!=1) and (dimy!=1):
+      return("length only works on vectors",0,"","",1,1)
+    if (dimx==1) and (dimy==1):
+      return ("",value,param[1:],unit,1,1)
+    result=0
+    for i in value:
+      result+=i*i
+    return("",math.sqrt(result),param[1:],"",1,1)
   if param[:5]=="rank(":
     (error,value,param,unit,dimx,dimy)=calcS(param[5:])
     if error!="":
@@ -613,7 +663,9 @@ def calcM(param):
     chars=re.compile('[a-z]|\(|[0-9]|\$')
     if chars.match(param):
       (error,value2,left,unit,dimx,dimy)=calcP(param)
-      return (error,value*value2,left,unit,1,1)
+      if (dimx==1 and dimy==1):
+        return (error,value*value2,left,unit,1,1)
+      return(error,value,"*"+param,"",1,1)
     return ("",value,param,"",1,1)
 #matrix
   if (param[:1]=="["):
@@ -798,9 +850,10 @@ def supercalc(toparse):
     toparse=toparse[4:];
   elif toparse[len(toparse)-4:]==" uit":
     toparse=toparse[:len(toparse)-4];
-  toparse=string.lower(toparse)
-
-  toparse=string.strip(string.replace(toparse," in ","_in_"))
+  toparse=string.lower(string.strip(toparse))
+  toparse=string.replace(toparse," aud"," $a")
+  toparse=string.replace(toparse," a$"," $a")
+  toparse=string.replace(toparse," in ","_in_")
 
   # if time after date change space to _ so it doesn't get lost
   digits=re.compile('[0-9]+(\-|\ )?'+months+'(\-|\ )?[0-9]+(\ )+[0-9]+\:')
@@ -975,7 +1028,6 @@ def supercalc(toparse):
           return reply+" 0:00:"+sec+s100
 
       return reply
-    print unit[0]
 #Matrix format
     if left!="":
       return "Reached end of line, could not parse: "+left
@@ -1057,7 +1109,7 @@ units+=[("volt",1.0e+3,"a^-1*g^1*m^2*s^-3"),("ampere",1.0,"a^1"),("a",1.0,"a^1")
 units+=[("joule",1.0e+3,"g^1*m^2*s^-2"),("calorie",4.184e+3,"g^1*m^2*s^-2"),("watt",1.0e+3,"g^1*m^2*s^-3")]
    
 # imperial volume
-units+=[("gallon",3.785411784e-3,"m^3"),("usgallon",3.785411784e-3,"m^3"),("fluidgallon",3.785411784e-3,"m^3"),("drygallon",4.4048428032e-3,"m^3"),("imperialgallon",4.54609e-3,"m^3"),("fluidounce",2.84130625e-5,"m^3"),("oz",2.84130625e-5,"m^3"),("fl.oz",2.84130625e-5,"m^3"),("gill",1.420653125e-4,"m^3"),("schooner",4.25e-4,"m^3"),("pint",5.6826125e-4,"m^3"),("peck",9.09218e-3,"m^3"),("kenning",1.818436e-2,"m^3"),("bucket",1.818436e-2,"m^3"),("bushel",3.636872e-2,"m^3"),("strike",7.273744e-2,"m^3"),("quarter",0.29094976,"m^3"),("pail",0.2909497,"m^3"),("chaldron",1.16379904,"m^3"),("last",2.9094976,"m^3"),("firkin",4.091481e-2,"m^3"),("kilderkin",8.182962e-2,"m^3"),("barrel",0.16365924,"m^3"),("hogshead",0.24548886,"m^3")]
+units+=[("gallon",3.785411784e-3,"m^3"),("usgallon",3.785411784e-3,"m^3"),("fluidgallon",3.785411784e-3,"m^3"),("drygallon",4.4048428032e-3,"m^3"),("imperialgallon",4.54609e-3,"m^3"),("fluidounce",2.84130625e-5,"m^3"),("oz",2.84130625e-5,"m^3"),("fl.oz",2.84130625e-5,"m^3"),("gill",1.420653125e-4,"m^3"),("schooner",4.25e-4,"m^3"),("pint",5.6826125e-4,"m^3"),("peck",9.09218e-3,"m^3"),("kenning",1.818436e-2,"m^3"),("bucket",1.818436e-2,"m^3"),("bushel",3.636872e-2,"m^3"),("strike",7.273744e-2,"m^3"),("quarter",0.29094976,"m^3"),("pail",0.2909497,"m^3"),("chaldron",1.16379904,"m^3"),("last",2.9094976,"m^3"),("firkin",4.091481e-2,"m^3"),("kilderkin",8.182962e-2,"m^3"),("barrel",0.158987294928,"m^3"),("hogshead",0.24548886,"m^3")]
 
 # imperial length
 
