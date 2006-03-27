@@ -590,3 +590,5 @@ yee#Yordon's Extremal Extension (magic)
 npc#non-playing character
 npc#non-player character
 mwd#micro warp drive
+wdl#wotcher deary lawks (discworld)
+
