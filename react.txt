@@ -9,10 +9,6 @@ hoi piet#1.0#hoi NICK
 hallo piet#1.0#hallo NICK
 mogge piet#1.0#morgen NICK
 mogguh#1.0#goeiemorgen slaapkop
-piet#0.0833#volgens mij hebben jullie het over mij
-piet#0.0909#ACTION kijkt argwanend
-piet#0.1#ACTION heeft heus wel in de gaten dat er over hem gebabbeld wordt
-piet#0.1111#ACTION vlucht alvast
 lunch#0.090909#eet smakelijk
 lunch#0.1#ACTION ziet het al voor zich, gebakken eitje, glas jus, warme broodjes
 lunch#0.111111#ACTION neemt als lunch altijd wat webpagina's
@@ -82,6 +78,10 @@ slaat piet#0.3#het digitale bloed spuit uit piet zijn hoofd
 slaat piet#1#ACTION rent gillend op NICK af
 mept piet#0.5#ACTION ontwijkt de slag maar struikelt en gaat ontzettend op zijn bek
 mept piet#1#ACTION rent gillende het kanaal rond
+kietelt piet#0.5#ACTION schatert het uit
+kietelt piet#1.0#ACTION rolt door z'n computerkast van't lachen
+slacht piet#0.5#ACTION constateert dat NICK enorm faalt en huppelt blij rond
+slacht piet#1#ACTION bloedt wat in de rondte
 kick piet#1#ACTION is nog steeds op het kanaal anders
 kickt piet#1#ACTION is nog steeds op het kanaal anders
 kijkt naar piet#1#ACTION ziet het alweer aan komen
@@ -227,15 +227,20 @@ mooi#0.1#ACTION krijgt er tranen van in zijn ogen
 diablo#0.1#moet het nou alweer over dat spel gaan?
 diablo#0.1#stomme rpg
 ik zie#0.5#ACTION ziet het nu ook
-kunstje#0.111#ACTION rent zenuwachtig een rondje maar doet verder niets speciaals
-kunstje#0.125ACTION gaat op z'n achterste bitjes staan en kwijlt over je schoenen
-kunstje#0.143#ACTION maakt een sprongetje
-kunstje#0.166#ACTION is een brave piet en doet een kunstje
-kunstje#0.2#ACTION pakt NICK op en slaat 'm door een stoeptegel
-kunstje#0.25#ACTION wacht rustig af tot iemand anders begint
-kunstje#0.33#ACTION doet een stapje naar achteren
-kunstje#0.5#ACTION spawnt een leeuw achter NICK, en kijkt vrolijk toe terwijl de leeuw een achtervolging begint
-kunstje#1.0#nee, nu geen kunstje
+kunstje#0.0714#ACTION kijkt vies en gooit snel z'n thee in de plantenbak
+kunstje#0.0769#ACTION vermomt zich als clippie en peutert in je neus
+kunstje#0.0833#ACTION kijkt NICK vragend aan
+kunstje#0.0909#ACTION kijkt kwaad en stampt heen en weer
+kunstje#0.1000#ACTION bijt in z'n eigen staart
+kunstje#0.1111#ACTION rent zenuwachtig een rondje maar doet verder niets speciaals
+kunstje#0.1250#ACTION gaat op z'n achterste bitjes staan en kwijlt over je schoenen
+kunstje#0.1429#ACTION maakt een sprongetje
+kunstje#0.1666#ACTION is een brave piet en doet een kunstje
+kunstje#0.2000#ACTION pakt NICK op en slaat 'm door een stoeptegel
+kunstje#0.2500#ACTION wacht rustig af tot iemand anders begint
+kunstje#0.3333#ACTION doet een stapje naar achteren
+kunstje#0.5000#ACTION spawnt een leeuw achter NICK, en kijkt vrolijk toe terwijl de leeuw een achtervolging begint
+kunstje#1.0000#nee, nu geen kunstje
 ga nu maar eens lunchen#1.0#eet smakelijk
 ga lunchen#1.0#ik nog niet
 ga nu lunchen#1.0#nu al?
@@ -256,30 +261,30 @@ ww, echt niet?#1.0#nee, echt niet
 \o/#0.1666666#ACTION steekt ook blij z'n handen in de lucht
 \o/#0.3333333#ACTION juicht
 mlaapsokken#1.0#huh? slaapkoppen zul je bedoelen
-koffie#0.040000000000000001#Instant Human; just add coffee!
-koffie#0.03833333333333333#Gaarne de koffie onder de scanner leggen alvorens het mij te voeren
-koffie#0.036666666666666667#Koffie zonder koek is als een student zonder internet
-koffie#0.035000000000000003#ACTION raadt NICK aan het wat extra sterk te zetten, je bent nogal flauw vandaag.
-koffie#0.033333333333333333#ACTION drinkt zijn koffie altijd little endian
-koffie#0.031666666666666669#Koffie? Ik hoopte dat het al bier tijd zou zijn
-koffie#0.029999999999999999#Ja en wie zou er nou weer aan de beurt zijn om de mokken schoon te maken?
-koffie#0.028333333333333332#ACTION vraagt zich wel eens af hoe de Europeanen het al die eeuwen hebben uitgehouden voordat Colombus het koffie uit Amerika had gehaald
-koffie#0.026666666666666668#Niet weer zo'n slappe bak he?
-koffie#0.025000000000000001#Bij het denken aan koffie loopt het water mij al in de diskdrive
-koffie#0.023333333333333334#ACTION merkt op dat een student meer bier dan koffie behoort te drinken
-koffie#0.021666666666666667#Als je begint te hallucineren en overal regenbogen ziet is het een goed moment om met koffie drinken te stoppen.
-koffie#0.02#ACTION vraagt zich af over NICK meer bloed of meer koffie in zijn bloedbaan heeft
-koffie#0.018333333333333333#Krijgt die arme koffiepot dan nooit rust?
-koffie#0.016666666666666666#Jullie pesten me expres he, jullie weten best wel dat ik geen koffie kan drinken
-koffie#0.014999999999999999#De laatste keer dat ik een kop koffie had vlogen de stoppen er over de hele calslaan uit
-koffie#0.013333333333333334#ACTION qevaxg mvwa xbssvr urg yvrsfg ebg13
-koffie#0.011666666666666667#Als de koffie niet meer vloeibaar is, weet je dat je het te sterk hebt gezet
-koffie#0.01#Beter een kop koffie in de hand dan 10 in de lucht
-koffie#0.0083333333333333332#koffie is binnen tien minuten klaar
-koffie#0.0066666666666666671#Koffie is beter dan vrouwen omdat koffie er 's ochtends goed uit ziet
-koffie#0.0050000000000000001#hoezo koffie? zou je niet een beetje op je maag passen?
-koffie#0.0033333333333333335#koffie = goed
 koffie#0.0016666666666666668#ho, er zei iemand het woord koffie, nu moet ik even er irritant doen
+koffie#0.0033333333333333335#koffie = goed
+koffie#0.0050000000000000001#hoezo koffie? zou je niet een beetje op je maag passen?
+koffie#0.0066666666666666671#Koffie is beter dan vrouwen omdat koffie er 's ochtends goed uit ziet
+koffie#0.0083333333333333332#koffie is binnen tien minuten klaar
+koffie#0.01#Beter een kop koffie in de hand dan 10 in de lucht
+koffie#0.011666666666666667#Als de koffie niet meer vloeibaar is, weet je dat je het te sterk hebt gezet
+koffie#0.013333333333333334#ACTION qevaxg mvwa xbssvr urg yvrsfg ebg13
+koffie#0.014999999999999999#De laatste keer dat ik een kop koffie had vlogen de stoppen er over de hele calslaan uit
+koffie#0.016666666666666666#Jullie pesten me expres he, jullie weten best wel dat ik geen koffie kan drinken
+koffie#0.018333333333333333#Krijgt die arme koffiepot dan nooit rust?
+koffie#0.02#ACTION vraagt zich af over NICK meer bloed of meer koffie in zijn bloedbaan heeft
+koffie#0.021666666666666667#Als je begint te hallucineren en overal regenbogen ziet is het een goed moment om met koffie drinken te stoppen.
+koffie#0.023333333333333334#ACTION merkt op dat een student meer bier dan koffie behoort te drinken
+koffie#0.025000000000000001#Bij het denken aan koffie loopt het water mij al in de diskdrive
+koffie#0.026666666666666668#Niet weer zo'n slappe bak he?
+koffie#0.028333333333333332#ACTION vraagt zich wel eens af hoe de Europeanen het al die eeuwen hebben uitgehouden voordat Colombus het koffie uit Amerika had gehaald
+koffie#0.029999999999999999#Ja en wie zou er nou weer aan de beurt zijn om de mokken schoon te maken?
+koffie#0.031666666666666669#Koffie? Ik hoopte dat het al bier tijd zou zijn
+koffie#0.033333333333333333#ACTION drinkt zijn koffie altijd little endian
+koffie#0.035000000000000003#ACTION raadt NICK aan het wat extra sterk te zetten, je bent nogal flauw vandaag.
+koffie#0.036666666666666667#Koffie zonder koek is als een student zonder internet
+koffie#0.03833333333333333#Gaarne de koffie onder de scanner leggen alvorens het mij te voeren
+koffie#0.040000000000000001#Instant Human; just add coffee!
 kipei#0.5#kip
 kipei#1.0#ei
 kip of 't ei#0.5#kip
@@ -296,49 +301,67 @@ google #0.05#astalavista!
 hmk#0.5#ACTION groet hare majesteit
 ikea#0.3#meubeltjes! meer!
 jamaar#0.5#wat een prutsmoes, ik had echt wel een betere van je verwacht
-zobiezo#0.5#pas op, groentje gaat je zo vertellen dat je sowieso had moeten
-tikken
+zobiezo#0.5#pas op, groentje gaat je zo vertellen dat je sowieso had moeten tikken
 zobiezo#1.0#tsk. sowieso dus.
 dt ik #1.0#hee, daar kan een letter uitgespaard worden na die d
 curl#1.0#curl? dat zou ik toch zo gebruiken: curl -d @get_reports.xml -H content-type:text/xml http://localhost/cgi-bin/disp.fcgi
 pff#0.4#ACTION geeft NICK een plakkertje.
 krul#1.0#curl
 crul#1.0#s/cr/kr/
-(Y)#1.0#breezah miepje zou met (Y) toch een Thumbs up bedoelen
-(N)#1.0#breezah miepje zou met (N) toch een Thumbs down bedoelen
+(Y)#1.0#breezah miepje zou met (Y) toch een thumbs up bedoelen
+(N)#1.0#breezah miepje zou met (N) toch een thumbs down bedoelen
 (B)#1.0#breezah miepje zou met (B) toch een pot bier bedoelen
-(D)#1.0#breezah miepje zou met (D) toch een Martini glass bedoelen
-(X)#1.0#breezah miepje zou met (X) toch een Girl bedoelen
-(Z)#1.0#breezah miepje zou met (Z) toch een Boy bedoelen
-(6)#1.0#breezah miepje zou met (6) toch een Devil smiley bedoelen
-:-[#1.0#breezah miepje zou met :-[ toch een Vampire bat bedoelen
-(})#1.0#breezah miepje zou met (}) toch een Right hug  bedoelen
+(D)#1.0#breezah miepje zou met (D) toch een martini glas bedoelen
+(X)#1.0#breezah miepje zou met (X) toch een meisje bedoelen
+(Z)#1.0#breezah miepje zou met (Z) toch een jochie bedoelen
+(6)#1.0#breezah miepje zou met (6) toch een duivelse glimlach bedoelen
+:-[#1.0#breezah miepje zou met :-[ toch een vampier vleermuis bedoelen
+(})#1.0#breezah miepje zou met (}) toch een Right hug bedoelen
 ({)#1.0#breezah miepje zou met ({) toch een Left hug bedoelen
-(M)#1.0#breezah miepje zou met (M) toch een MSN Messenger or Windows Messenger icon (think a BitlBee logo here ;) bedoelen
+(M)#1.0#breezah miepje zou met (M) toch een MSN Messenger or Windows Messenger plaatje bedoelen
 :-S#1.0#breezah miepje zou met :-S toch een Crooked smiley (Confused smiley) bedoelen
 :-$#1.0#breezah miepje zou met :-$ toch een Embarrassed smiley bedoelen
 (H)#1.0#breezah miepje zou met (H) toch een Smiley with sunglasses bedoelen
 :-@#1.0#breezah miepje zou met :-@ toch een Angry smiley bedoelen
 (A)#1.0#breezah miepje zou met (A) toch een Angel smiley bedoelen
-(L)#1.0#breezah miepje zou met (L) toch een Red heart (Love)  bedoelen
-(U)#1.0#breezah miepje zou met (U) toch een Broken heart bedoelen
+(L)#1.0#breezah miepje zou met (L) toch een rood hart (echte liefde) bedoelen
+(U)#1.0#breezah miepje zou met (U) toch een gebroken hart bedoelen
 (K)#1.0#breezah miepje zou met (K) toch een Red lips (Kiss) bedoelen
 (G)#1.0#breezah miepje zou met (G) toch een Gift with bow bedoelen
-(F)#1.0#breezah miepje zou met (F) toch een Red rose bedoelen
-(W)#1.0#breezah miepje zou met (W) toch een Wilted rose bedoelen
-(P)#1.0#breezah miepje zou met (P) toch een Camera bedoelen
+(F)#1.0#breezah miepje zou met (F) toch een rooie roos bedoelen
+(W)#1.0#breezah miepje zou met (W) toch een verwelkte roos bedoelen
+(P)#1.0#breezah miepje zou met (P) toch een camera bedoelen
 (~)#1.0#breezah miepje zou met (~) toch een Film strip bedoelen
 (T)#1.0#breezah miepje zou met (T) toch een Telephone receiver bedoelen
 (@)#1.0#breezah miepje zou met (@) toch een Cat face bedoelen
 (&)#1.0#breezah miepje zou met (&) toch een Dog's head bedoelen
-(C)#1.0#breezah miepje zou met (C) toch een Coffee cup bedoelen
+(C)#1.0#breezah miepje zou met (C) toch een koffie kopje bedoelen
 (I)#1.0#breezah miepje zou met (I) toch een Light bulb bedoelen
 (S)#1.0#breezah miepje zou met (S) toch een Half-moon (Case sensitive!) bedoelen
-(*)#1.0#breezah miepje zou met (*) toch een Star bedoelen
+(*)#1.0#breezah miepje zou met (*) toch een sterretje bedoelen
 (8)#1.0#breezah miepje zou met (8) toch een achtste noot bedoelen
-(E)#1.0#breezah miepje zou met (E) toch een Envelope bedoelen
-(^)#1.0#breezah miepje zou met (^) toch een Birthday cake bedoelen
-(O)#1.0#breezah miepje zou met (O) toch een Clock bedoelen
+(E)#1.0#breezah miepje zou met (E) toch een envelope bedoelen
+(^)#1.0#breezah miepje zou met (^) toch een verjaardagstaart bedoelen
+(O)#1.0#breezah miepje zou met (O) toch een klok bedoelen
 watbenjedan#1.0#een PRUTSER!
+en wat ben je dan#1.0#een PRUTSER!
+adios amigos#1.0#jaja, ga nou maar
+check#0.2#dubbelcheck
+spam#0.2#spam spam spam spam. lovely spam! wonderful spam! 
+piet#0.0833#volgens mij hebben jullie het over mij
+piet#0.0909#ACTION kijkt argwanend
+piet#0.1#ACTION heeft heus wel in de gaten dat er over hem gebabbeld wordt
+piet#0.1111#ACTION vlucht alvast
+ideale man#0.5#ACTION kijkt eens om zich heen
+ideale man#1.0#ACTION valt om van het lachen
+tralala#1.0#ACTION zing een liedje
+tralala#0.5#trala lala tirli didi
+trala la#0.5#trala lala tirli didi
+trala la#1.0#ACTION zing een liedje
+kluts kwijt#1.0#ACTION ziet de kluts wel, maar vertelt niet waar
+kluts#0.5#ACTION schudt nog wat
+kluts#1.0#ik weet niet wat een kluts is hoor, een of andere stuk auto ofzo?
+
+
 
 
