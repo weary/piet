@@ -5,6 +5,10 @@ standaart#1#je zou clippie bijzonder blij maken als je standaart volgende keer a
 piet!!!!#1.0#NICK, jij zieke geest, 3 uitroeptekens is echt meer dan zat
 piet!!!#1.0#ja, hoi NICK
 piet!!#1.0#ACTION trekt, bij wijze van begroeting, aan NICK's neus
+piet????#1.0#3 vraagtekens is echt voldoende om totale verwarring aan te geven
+piet???#1.0#dat jij mij niet begrijpt, kan ik niks aan doen
+piet??#1.0#als je me niet begrijpt, lees je 't nog maar eens
+piet?#1.0#ja?
 hoi piet#1.0#hoi NICK
 hallo piet#1.0#hallo NICK
 mogge piet#1.0#morgen NICK
@@ -73,6 +77,8 @@ ramt piet#1.0#ACTION vlucht voor zijn leven
 piet nogmaals#0.5#ACTION wordt er wat moe van
 stampt piet#0.5#Nee, au, niet doen
 stampt piet#1#ACTION zijgt ter aarde
+gooit piet#0.5#ACTION vliegt met een boogje
+gooit piet#1.0#ACTION landt in een piet-vormige krater
 aait piet#1#ACTION ziet het alweer aan komen
 slaat piet#0.3#het digitale bloed spuit uit piet zijn hoofd
 slaat piet#1#ACTION rent gillend op NICK af
@@ -114,6 +120,7 @@ pakt piet's#1.0#ACTION kijkt verdwaasd wat hij nu weer mist
 bijl#0.5#ACTION likt z'n bijl#bijlezen#bijlage
 slaat piet#0.5#ACTION valt maar eens om
 breekt piet's#1#ACTION zoekt zijn stukken weer bij elkaar
+steekt piet in#1.0#neeeeeeee!
 steekt piet#0.5#ACTION denkt dat ie ergens lekt
 aait piet#0.5#eughl, ga een vriendin zoeken ofzo
 apt-get#0.2#Ja, apt-get dat even, of ben je weer je rootpasswd vergeten?
@@ -354,13 +361,16 @@ piet#0.1#ACTION heeft heus wel in de gaten dat er over hem gebabbeld wordt
 piet#0.1111#ACTION vlucht alvast
 ideale man#0.5#ACTION kijkt eens om zich heen
 ideale man#1.0#ACTION valt om van het lachen
-tralala#1.0#ACTION zing een liedje
+tralala#1.0#ACTION zingt een liedje
 tralala#0.5#trala lala tirli didi
 trala la#0.5#trala lala tirli didi
-trala la#1.0#ACTION zing een liedje
+trala la#1.0#ACTION zingt een liedje
 kluts kwijt#1.0#ACTION ziet de kluts wel, maar vertelt niet waar
 kluts#0.5#ACTION schudt nog wat
 kluts#1.0#ik weet niet wat een kluts is hoor, een of andere stuk auto ofzo?
+piet heeft altijd gelijk#1.0#maar natuurlijk!
+piet heeft gelijk#1.0#tuurlijk heb ik gelijk, twijfelt niemand aan
+piet heeft geen gelijk#1.0#echt wel!
 
 
 
