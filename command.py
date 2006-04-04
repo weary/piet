@@ -1261,7 +1261,7 @@ def mep(regel):
   params=string.split(regel,' ');
   if (len(params)<1) or (len(params[0])==0):
     return "ACTION mept er lustig op los";
-  if (params[0]=="piet"):
+  if (params[0]=="piet" or params[0]=="jezelf"):
     return "ACTION heeft een hekel aan zichzelf, maar doet niet aan zelfverminking";
   r=random.random();
   if (r<=0.1):
