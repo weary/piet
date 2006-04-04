@@ -60,6 +60,7 @@ const scommand commands[]= {
 { "\001PING",    COM_CTCPPING, 100 },
 { "stop",        COM_SHUTUP, 1000 },
 { "kop dicht",   COM_SHUTUP, 1000 },
+{ "stfu",   COM_SHUTUP, 1000 },
 { "koffie?",     COM_BUSY_ASK, 121},
 //{ "je heet nu ", COM_RENICK, 200 },
 { "wees stil",   COM_BESILENT, 1000 },
