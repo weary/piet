@@ -81,10 +81,14 @@ def onbekend_commando(param):
 	return "oh\n";
 
 def emote(action, nicks):
+	if len(action)==0 or len(nicks)==0:
+		return "ACTION frot";
 	toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht", \
 						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",\
 						 "nouwelijks", "bijna, maar toch maar niet"];
-	return "ACTION "+action+"t "+pietlib.make_list(nicks)+" "+random.choice(toevoeging);
+	if action[-1]!='t':
+		action=action+"t";
+	return "ACTION "+action+" "+pietlib.make_list(nicks)+" "+random.choice(toevoeging);
 
 
 
