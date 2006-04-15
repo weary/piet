@@ -86,6 +86,8 @@ def emote(action, nicks):
 	toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht", \
 						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",\
 						 "nouwelijks", "bijna, maar toch maar niet"];
+	if action[-1] in "aeoui":
+		action=action+action[-1];
 	if action[-1]!='t':
 		action=action+"t";
 	return "ACTION "+action+" "+pietlib.make_list(nicks)+" "+random.choice(toevoeging);
