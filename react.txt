@@ -70,7 +70,7 @@ java#0.05#Java, haha. Als ik daar in geschreven was duurde het eeuwen voordat ik
  krant#0.2#Kranten zijn uit, ga eens wat websites lezen
 Socrates#0.05#ik denk niet dat Socrates gaat reageren hoor
 Socrates#0.1#als je dan toch met Socrates bezig bent, vraag m ook even naar de koffie
-nee piet#0.5#Waarom niet?
+nee piet#0.5#waarom niet?
 ramt piet#0.3333#ACTION geeft NICK een dreun voor zn hoofd
 ramt piet#0.6666#ACTION keert NICK zn andere wang toe
 ramt piet#1.0#ACTION vlucht voor zijn leven
@@ -234,6 +234,8 @@ mooi#0.1#ACTION krijgt er tranen van in zijn ogen
 diablo#0.1#moet het nou alweer over dat spel gaan?
 diablo#0.1#stomme rpg
 ik zie#0.5#ACTION ziet het nu ook
+kunstje#0.0625#ACTION heeft geen werk, en hoeft dus niks te doen
+kunstje#0.0667#ACTION huppelt wat rond
 kunstje#0.0714#ACTION kijkt vies en gooit snel z'n thee in de plantenbak
 kunstje#0.0769#ACTION vermomt zich als clippie en peutert in je neus
 kunstje#0.0833#ACTION kijkt NICK vragend aan
@@ -361,10 +363,10 @@ piet#0.1#ACTION heeft heus wel in de gaten dat er over hem gebabbeld wordt
 piet#0.1111#ACTION vlucht alvast
 ideale man#0.5#ACTION kijkt eens om zich heen
 ideale man#1.0#ACTION valt om van het lachen
-tralala#1.0#ACTION zingt een liedje
+tralala#1.0#ACTION zingt een ander liedje
 tralala#0.5#trala lala tirli didi
 trala la#0.5#trala lala tirli didi
-trala la#1.0#ACTION zingt een liedje
+trala la#1.0#ACTION zingt ook een liedje
 kluts kwijt#1.0#ACTION ziet de kluts wel, maar vertelt niet waar
 kluts#0.5#ACTION schudt nog wat
 kluts#1.0#ik weet niet wat een kluts is hoor, een of andere stuk auto ofzo?

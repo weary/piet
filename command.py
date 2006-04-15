@@ -62,6 +62,11 @@ def leeg(param):
 def onbekend_commando(param):
 	param=string.strip(param);
 	groeten=["hoi", "goeiemorgen", "goedemorgen", "mogge", "hallo", "middag"];
+
+	split=string.split(param);
+	if (len(split)>=2) and len([1 for x in split[1:] if x in nicks])==len(split)-1:
+		return emote(split[0],split[1:]);
+
 	if (len(param)==0):
 		return "ok\n";
 	elif (param[-1]=='?'):
@@ -71,7 +76,17 @@ def onbekend_commando(param):
 			return "nee\n";
 	elif param in groeten:
 		return random.choice(groeten)+"\n";
+	elif param in ["stfu"]:
+		return "jaja, ik zeur\n";
 	return "oh\n";
+
+def emote(action, nicks):
+	toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht", \
+						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",\
+						 "nouwelijks", "bijna, maar toch maar niet"];
+	return "ACTION "+action+"t "+pietlib.make_list(nicks)+" "+random.choice(toevoeging);
+
+
 
 def convert(char):
   if (char=="\xb4"):

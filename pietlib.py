@@ -92,8 +92,6 @@ def parse_tijd(tijd, tijdzone):
 			tijd=string.strip(tijd[datesplit.end():]);
 
 	try:
-		piet.send("weary", "datum=\""+datum+"\"\n");
-		piet.send("weary", "tijd=\""+tijd+"\"\n");
 		tijd = time.strptime(datum+tijd, datumformat+"%H:%M");
 	except:
 		tijd = time.strptime(datum+tijd, datumformat+"%H:%M:%S");
