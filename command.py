@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys,string,random,re,os,time,crypt,socket,thread,urllib,traceback;
+import sys,string,random,re,os,time,crypt,socket,thread,urllib,traceback,datetime;
 import piet;
 from telnetlib import Telnet;
 sys.path.append(".");
@@ -1655,7 +1655,9 @@ def trein(regel):
 
 def ns(regel):
   params=string.split(regel," ");
-  i=0;
+  i=0
+  vandaag=0
+  morgen=0
 
 #parse vanstation argument
   vanStation="";
@@ -1727,6 +1729,19 @@ def ns(regel):
   else:
     naarStation=params[i];
   i+=1;
+  if params[len(params)-1].lower()=="vandaag":
+    params=params[:len(params)-1]
+    vandaag=1
+  if params[len(params)-1].lower()=="morgen":
+    params=params[:len(params)-1]
+    morgen=1
+  if params[len(params)-2].lower()=="vandaag":
+    params=params[:len(params)-2]+[params[len(params)]]
+    vandaag=1
+  if params[len(params)-2].lower()=="morgen":
+    params=params[:len(params)-2]+[params[len(params)]]
+    morgen=1
+
   if (len(params)==i):
     tijdstring="nu";
   else:
@@ -1742,6 +1757,17 @@ def ns(regel):
   tijd=string.split(tijdstring,":");
   hour=tijd[0];
   minute=tijd[1];
+
+  timenow=str(datetime.datetime.now()).split(":")
+  timenow[0]=timenow[0].split(" ")[1]
+
+  resultstr=""
+  if (vandaag!=1) and (morgen==1 or (int(timenow[0]) > int(hour) or ((int(hour)==int(timenow[0])) and (int(timenow[1]) > int(minute))))):
+    # time is before now, maybe user meant this time tomorrow!
+    resultstr="Tijden voor morgen:\n"
+    day=string.strip((datetime.date(int(year),int(month),int(day))+datetime.timedelta(days=1)).strftime("%d"))
+    month=string.strip((datetime.date(int(year),int(month),int(day))+datetime.timedelta(days=1)).strftime("%m"))
+    year=string.strip((datetime.date(int(year),int(month),int(day))+datetime.timedelta(days=1)).strftime("%Y"))
 
 #NS site is weird! First retrieve the cid
   cmd = "lynx -dump -width=200 www.ns.nl"
@@ -1868,6 +1894,7 @@ def ns(regel):
 #volgend station
     i1=string.find(result,":",i1+1);
     returnstring+="\n";
+  returnstring=resultstr+returnstring
   if (Warning!=""):
     return string.strip("Waarschuwing: "+Warning+"\n"+returnstring);
   return string.strip(returnstring);
@@ -2159,9 +2186,9 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "renick":            (200, randomnaam, "renick, verzint een willekeurige nick"),
     "opme":              (500, opme, "opme, geef @"),
     "koffie?":           (121, leeg, "koffie?, vraag of ie koffie wil"),
-    "simon?":            (150, simon, "simon?, kijkt of simon op sorcsoft ingelogd is"),
-    "citaat":            (150, citaat, "citaat, geeft een random regel text die ooit gezegd is"),
-    "context":            (150, context, "context <text>, geeft de context waarin iets gezegd is"),
+    "simon?":            (100, simon, "simon?, kijkt of simon op sorcsoft ingelogd is"),
+    "citaat":            (100, citaat, "citaat, geeft een random regel text die ooit gezegd is"),
+    "context":            (100, context, "context <text>, geeft de context waarin iets gezegd is"),
     "wees stil":         (1000, leeg, "wees stil, laat piet z'n kop houden met loze dingen"),
     "stil?":             (1000, leeg, "stil?, probeert piet zich stil te houden?"),
     "praat maar":        (1000, leeg, "praat maar, tegenovergestelde van \"wees stil\""),
