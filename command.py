@@ -463,6 +463,7 @@ def zeg(params):
 	if (nicks.has_key(nick)):
 		return nick+", ehm, "+txt;
 	elif (auth>100):
+		txt=txt.replace("'", "''");
 		piet.db("INSERT INTO notes VALUES('"+nick+"','"+txt+"')");
 		return "ik zie helemaal geen "+nick+". misschien later";
 	else:
@@ -1282,7 +1283,7 @@ def mep(regel):
   params=string.split(regel,' ');
   if (len(params)<1) or (len(params[0])==0):
     return "ACTION mept er lustig op los";
-  if (params[0]=="piet" or params[0]=="jezelf"):
+  if (params[0]=="piet" or params[0]=="jezelf" or params[0]=="zichzelf"):
     return "ACTION heeft een hekel aan zichzelf, maar doet niet aan zelfverminking";
   r=random.random();
   if (r<=0.1):
@@ -1541,7 +1542,7 @@ def tijd(regel):
 	result=time.strftime("%H:%M", time.localtime());
 	if (tzcalc.has_key(result)): del tzcalc[result];
 
-	result="hier is het "+result;
+	result="bij mij is het "+result;
 	for t,tz in tzcalc.iteritems():
 		result=result+", en in "+tz+" is het "+t;
 	return result+"\n";
