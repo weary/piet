@@ -8,6 +8,7 @@ import pietlib;
 
 def get_url_title(channel, url):
 	if url[0:4].lower()!="http": url="http://"+url;
+	if len(url)>0 and url[-1]=='?': url=url[0:-1];
 	try:
 		input=pietlib.get_url(url);
 	except:
@@ -64,7 +65,7 @@ def do_react(channel, nick, pietnick, line):
 	ready=False;
 
 	# check for url's in the input
-	urlmatch=re.search("((https?://|www\.)[^ \t]*)", line);
+	urlmatch=re.search("((https?://|www\.)[^ \t,]*)", line);
 	if (urlmatch):
 		get_url_title(channel, urlmatch.group(0));
 		ready=True;

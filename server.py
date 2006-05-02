@@ -147,7 +147,7 @@ def nickchange(nick_, auth_, channel_, newnick):
 
 def checkmessages(channel_):
 	global nicks;
-	where="WHERE nick IN ("+string.join(['"'+x+'"' for x in nicks], ',')+")";
+	where="WHERE lower(nick) IN ("+string.join(['"'+string.lower(x)+'"' for x in nicks], ',')+")";
 	msgs=piet.db("SELECT nick,msg FROM notes "+where);
 	if (msgs!=None and len(msgs)>=2):
 		piet.db("DELETE FROM notes "+where);
