@@ -18,19 +18,19 @@ def unitinvertcheck(unit1,unit2):
 
 def calcS(param):
   # Subtract and Add rule
-  (error,result,param,unit,dimx,dimy)=calcD(param)
+  (error,(result,imag),param,unit,dimx,dimy)=calcD(param)
   if (error!=""):
-    return (error,result,param,unit,1,1)
+    return (error,(result,0),param,unit,1,1)
   while ((error=="") and (param!="") and ((param[0]=="-") or (param[0]=="+"))):
     if (dimx>1 and unit[:1]==["D^1"]):
       sign=param[0]
       # date format, look if we can add anything to it
-      (error,result2,param,unit2,dimx2,dimy2)=calcD(param[1:])
+      (error,(result2,imag),param,unit2,dimx2,dimy2)=calcD(param[1:])
       if (error!=""):
-        return(error,0,"","",1,1)
+        return(error,(0,0),"","",1,1)
       if (dimx2>1 and unit2[:1]==["D^1"]):
         if (sign=="+"):
-          return ("Adding on dates is not allowed",0,"","",1,1)
+          return ("Adding on dates is not allowed",(0,0),"","",1,1)
         date1=datetime.date(result[0],result[1],result[2])
         date2=datetime.date(result2[0],result2[1],result2[2])
         difference=date1-date2
@@ -42,9 +42,9 @@ def calcS(param):
           sec2=0
         else:
           sec2=result2[3]
-        return ("",(difference.days*86400)+difference.seconds+(difference.microseconds*1e-6)+(sec1-sec2),param,"s^1",1,1)
+        return ("",((difference.days*86400)+difference.seconds+(difference.microseconds*1e-6)+(sec1-sec2),0),param,"s^1",1,1)
       if (dimx2!=1 or dimy2!=1 or unit2!="s^1"):
-        return("Can only add time to a date",0,"","",1,1)
+        return("Can only add time to a date",(0,0),"","",1,1)
       thisdate=datetime.date(result[0],result[1],result[2])
       if (len(result)>3):
         offset=datetime.timedelta(seconds=(result2+result[3]))
@@ -60,12 +60,12 @@ def calcS(param):
             thisdate-=datetime.timedelta(seconds=86400)
             reminder=86400-reminder
         except:
-          return("Year underflow error",0,"","",1,1)
+          return("Year underflow error",(0,0),"","",1,1)
       else:
         try:
           thisdate+=offset
         except:
-          return("Year overflow error",0,"","",1,1)
+          return("Year overflow error",(0,0),"","",1,1)
       result[0]=thisdate.year
       result[1]=thisdate.month
       result[2]=thisdate.day
@@ -81,9 +81,9 @@ def calcS(param):
       dimx=3
       continue
     op=param[0]
-    (error,result2,param,unit2,dimx2,dimy2)=calcD(param[1:])
+    (error,(result2,imag),param,unit2,dimx2,dimy2)=calcD(param[1:])
     if (dimx!=dimx2) or (dimy!=dimy2):
-      return("adding matrix: matrices do not have the same dimension",0,"","",1,1)
+      return("adding matrix: matrices do not have the same dimension",(0,0),"","",1,1)
     if (dimx==1) and (dimx2==1) and (dimy==1) and (dimy2==1):
       if unit!="" and unitinvertcheck(unit,unit2):
         if op=="-":
@@ -104,32 +104,39 @@ def calcS(param):
         else:
           result[x]=result[x]-result2[x]
         if unit[x]!=unit2[x]:
-          unit[x]="W"         
-  return (error,result,param,unit,dimx,dimy)
+          unit[x]="W"
+  return (error,(result,imag),param,unit,dimx,dimy)
 
 def calcD(param):
   # Divide and Multiply rule
-  (error,result,param,unit,dimx,dimy)=calcP(param)
+  (error,(result,imag),param,unit,dimx,dimy)=calcP(param)
   if (error!=""):
-    return (error,result,param,"",1,1)
+    return (error,(result,0),param,"",1,1)
   
   while ((error=="") and (param!="") and ((param[0]=="/") or (param[0]=="*"))):
     if (dimx>1 and unit[:1]==["D^1"]):
-      return ("Multiplication and dividing not allowed on dates",0,"","",1,1)
+      return ("Multiplication and dividing not allowed on dates",(0,0),"","",1,1)
     op=param[0]
-    (error,result2,param,unit2,dimx2,dimy2)=calcP(param[1:])
+    (error,(result2,imag2),param,unit2,dimx2,dimy2)=calcP(param[1:])
     if (dimx==1) and (dimy==1) and (dimx2==1) and (dimy2==1):
       unit=unifyunits(unit,unit2,op)
       if op=="/":
-        result/=result2
+        if (imag==0 and imag2==0):
+          result/=result2
+        else:
+          newresult=((result*result2)+(imag*imag2))/((result2*result2)+(imag2*imag2))
+          imag=((imag*result2)-(result*imag2))/((imag2*imag2)+(result2*result2))
+          result=newresult
       else:
-        result*=result2
+        newresult=(result*result2)-(imag*imag2)
+        imag=(result*imag2)+(imag*result2)
+        result=newresult
     else:
       #matrix multiplication
       if op=="/":
         #invert matrix is not yet supported
         if dimx2!=1 and dimy2!=1:
-          return ("Matrix dividing is not supported",0,"","",1,1)
+          return ("Matrix dividing is not supported",(0,0),"","",1,1)
         #but it is for scalars now
         newresult=[]
         for x in result:
@@ -137,21 +144,21 @@ def calcD(param):
         newunit=[]
         for x in unit:
           newunit+=[unifyunits(x,unit2,"/")]
-        return ("",newresult,param,newunit,dimx,dimy)
+        return ("",(newresult,0),param,newunit,dimx,dimy)
       if (dimx==1) and (dimy==1):
         #scalar
         for x in range(dimx2):
           for y in range(dimy2):
             result2[x+(y*dimx2)]=result*result2[x+(y*dimx2)]
             unit2[x+(y*dimx2)]=unifyunits(unit,unit2[x+(y*dimx2)],"*")
-        return (error,result2,param,unit2,dimx2,dimy2)
+        return (error,(result2,0),param,unit2,dimx2,dimy2)
       elif (dimx2==1) and (dimy2==1):
         #scalar
         for x in range(dimx):
           for y in range(dimy):
             result[x+(y*dimx)]=result2*result[x+(y*dimx)]
             unit[x+(y*dimx)]=unifyunits(unit2,unit[x+(y*dimx)],"*")
-        return (error,result,param,unit,dimx,dimy)
+        return (error,(result,0),param,unit,dimx,dimy)
       elif (dimx==dimy2):
         newunit=[]
         newresults=[]
@@ -179,17 +186,18 @@ def calcD(param):
           dimx=newdimx
           dimy=newdimy
       else:
-        return("Cannot multiply "+str(dimx)+"x"+str(dimy)+" matrix with "+str(dimx2)+"x"+str(dimy2)+" matrix",0,"","",1,1)
+        return("Cannot multiply "+str(dimx)+"x"+str(dimy)+" matrix with "+str(dimx2)+"x"+str(dimy2)+" matrix",(0,0),"","",1,1)
   while ((error=="") and (param[:1]==".")):
   #vector cross product
-    (error,result2,param,unit2,dimx2,dimy2)=calcP(param[1:])
+    (error,(result2,imag),param,unit2,dimx2,dimy2)=calcP(param[1:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (dimx!=3 or dimy!=1 or dimx2!=3 or dimy2!=1) and (dimx!=1 or dimy!=3 or dimx2!=1 or dimy2!=3):
-       return("Crossproduct is defined in R3 only",0,"","",1,1)
+       return("Crossproduct is defined in R3 only",(0,0),"","",1,1)
     newmatrix=[result[1]*result2[2]-result[2]*result2[1],-result[0]*result2[2]+result[2]*result2[0],result[0]*result2[1]-result[1]*result2[0]]
-    return("",newmatrix,param,["","",""],dimx,dimy)
-  return (error,result,param,unit,dimx,dimy)
+    return("",(newmatrix,0),param,["","",""],dimx,dimy)
+
+  return (error,(result,imag),param,unit,dimx,dimy)
 
 def unifyunits(unit,unit2,op):
   #unify units for dividing
@@ -262,22 +270,21 @@ def unifyunits(unit,unit2,op):
     elif unit=="":
       unit=unit2;
   return unit
-
-  return (error,result,param,unit,dimx,dimy)
+#  return (error,(result,0),param,unit,dimx,dimy)
 
 def calcP(param):
   # Power rule
-  (error,result,param,unit,dimx,dimy)=calcT(param)
+  (error,(result,imag),param,unit,dimx,dimy)=calcT(param)
   if (error!=""):
-    return (error,result,param,unit,1,1)
+    return (error,(result,0),param,unit,1,1)
   while ((error=="") and (param!="") and (param[0]=="^")):
     if (dimx!=1) or (dimy!=1):
     # matrix to a power something? not defined
-      return("Cannot raise matrix to powers (yet)",0,"","",1,1)
-    (error,result2,param,unit2,dimx,dimy)=calcT(param[1:])
+      return("Cannot raise matrix to powers (yet)",(0,0),"","",1,1)
+    (error,(result2,imag),param,unit2,dimx,dimy)=calcT(param[1:])
     if (dimx!=1) or (dimy!=1):
     # something to a power matrix? not defined
-      return("Cannot raise things to power of matrix",0,"","",1,1)
+      return("Cannot raise things to power of matrix",(0,0),"","",1,1)
     #update unit
     if unit!="W" and unit!="":
       if unit2!="":
@@ -295,7 +302,7 @@ def calcP(param):
         else:
           unit="W"
     result**=result2
-  return (error,result,param,unit,dimx,dimy)
+  return (error,(result,imag),param,unit,dimx,dimy)
 
 def factorial(x):
     if x == 0:
@@ -305,12 +312,12 @@ def factorial(x):
 
 def calcT(param):
   #rule for transposing matrices
-  (error,value,param,unit,dimx,dimy)=calcM(param)
+  (error,(value,imag),param,unit,dimx,dimy)=calcM(param)
   while param[:1]=="!":
     if error!="":
-      return(error,value,param,unit,dimx,dimy)
+      return(error,(value,0),param,unit,dimx,dimy)
     if dimx!=1 or dimy!=1:
-      return("Parse error factorial expects non matrix type",0,"","",1,1)
+      return("Parse error factorial expects non matrix type",(0,0),"","",1,1)
     value=factorial(value)
     param=param[1:]
   if param[:2]=="*t":
@@ -330,7 +337,7 @@ def calcT(param):
       value=newmatrixvalues
       unit=newmatrixunits
    
-  return (error,value,param,unit,dimx,dimy)
+  return (error,(value,imag),param,unit,dimx,dimy)
 
 
 #gaus functie
@@ -415,29 +422,29 @@ def calcM(param):
   for (funcname,func) in functions:
     funcname+='('
     if param[:len(funcname)]==funcname:
-      (error,value,param,unit,dimx,dimy)=calcS(param[len(funcname):])
+      (error,(value,imag),param,unit,dimx,dimy)=calcS(param[len(funcname):])
       if (dimx!=1) or (dimy!=1):
-        return("Function does not work on a matrix",0,"","",1,1)
+        return("Function does not work on a matrix",(0,0),"","",1,1)
       if (error!=""):
-        return(error,0,"","",1,1)
+        return(error,(0,0),"","",1,1)
       if (param[:1]!=")"):
         if error=="":
-          return("Missing )",0,"","",1,1)
+          return("Missing )",(0,0),"","",1,1)
         else:
-          return(error,0,"","",1,1)
+          return(error,(0,0),"","",1,1)
       chars=re.compile('[a-z]')
       if chars.match(param[1:]):
-        (error,result,param,unit,dimx,dimy)=calcM(param[1:])
-        return (error,func.__call__(value)*result,param,"",1,1)
+        (error,(result,imag),param,unit,dimx,dimy)=calcM(param[1:])
+        return (error,(func.__call__(value)*result,0),param,"",1,1)
 
-      return(error,func.__call__(value),param[1:],"",1,1)
+      return(error,(func.__call__(value),0),param[1:],"",1,1)
 # special matrix
   if (param[:1]=="i" and param[1:2]>="0" and  param[1:2]<="9"):
-    (error,value,param,unit,dimx,dimy)=calcM(param[1:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcM(param[1:])
     if error!="" and error!="t unknown":
-      return (error,0,"","",1,1)
+      return (error,(0,0),"","",1,1)
     if dimx!=1 or dimy!=1 or value!=math.floor(value):
-      return ("identity matrix must have simply number",0,"","",1,1)
+      return ("identity matrix must have simply number",(0,0),"","",1,1)
     value=int(value)
     matrixvalue=[]
     matrixunit=[]
@@ -453,131 +460,131 @@ def calcM(param):
       matrixvalue+=matrixline
       matrixunit+=unitline
     if value==1:
-      return("",matrixvalue[0],param,matrixunit[0],1,1)
-    return("",matrixvalue,param,matrixunit,value,value)
+      return("",(matrixvalue[0],0),param,matrixunit[0],1,1)
+    return("",(matrixvalue,0),param,matrixunit,value,value)
 
 # date function
   if param[:10]=="dayofweek(":
-    (error,value,param,unit,dimx,dimy)=calcS(param[10:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[10:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (dimx<3 or unit[:1]!=["D^1"]):
-      return("DayOfWeek function works on dates only",0,"","",1,1)
+      return("DayOfWeek function works on dates only",(0,0),"","",1,1)
     if (param[:1]!=")"):
-      return("Missing )",0,"","",1,1)
+      return("Missing )",(0,0),"","",1,1)
     thisday=datetime.date(value[0],value[1],value[2])
-    return("",thisday.weekday(),param[1:],"DW^1",1,1)
+    return("",(thisday.weekday(),0),param[1:],"DW^1",1,1)
   if param[:8]=="weekday(":
-    (error,value,param,unit,dimx,dimy)=calcS(param[8:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[8:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (dimx<3 or unit[:1]!=["D^1"]):
-      return("DayOfWeek function works on dates only",0,"","",1,1)
+      return("DayOfWeek function works on dates only",(0,0),"","",1,1)
     if (param[:1]!=")"):
-      return("Missing )",0,"","",1,1)
+      return("Missing )",(0,0),"","",1,1)
     thisday=datetime.date(value[0],value[1],value[2])
-    return("",thisday.weekday(),param[1:],"DW^1",1,1)
+    return("",(thisday.weekday(),0),param[1:],"DW^1",1,1)
   if param[:4]=="dow(":
-    (error,value,param,unit,dimx,dimy)=calcS(param[4:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[4:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (dimx<3 or unit[:1]!=["D^1"]):
-      return("DayOfWeek function works on dates only",0,"","",1,1)
+      return("DayOfWeek function works on dates only",(0,0),"","",1,1)
     if (param[:1]!=")"):
-      return("Missing )",0,"","",1,1)
+      return("Missing )",(0,0),"","",1,1)
     thisday=datetime.date(value[0],value[1],value[2])
-    return("",thisday.weekday(),param[1:],"DW^1",1,1)
+    return("",(thisday.weekday(),0),param[1:],"DW^1",1,1)
   if param[:4]=="day(":
-    (error,value,param,unit,dimx,dimy)=calcS(param[4:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[4:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (dimx<3 or unit[:1]!=["D^1"]):
-      return("DayOfWeek function works on dates only",0,"","",1,1)
+      return("DayOfWeek function works on dates only",(0,0),"","",1,1)
     if (param[:1]!=")"):
-      return("Missing )",0,"","",1,1)
+      return("Missing )",(0,0),"","",1,1)
     thisday=datetime.date(value[0],value[1],value[2])
-    return("",thisday.weekday(),param[1:],"DW^1",1,1)
+    return("",(thisday.weekday(),0),param[1:],"DW^1",1,1)
   if param[:8]=="weekdag(":
-    (error,value,param,unit,dimx,dimy)=calcS(param[8:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[8:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (dimx<3 or unit[:1]!=["D^1"]):
-      return("DayOfWeek function works on dates only",0,"","",1,1)
+      return("DayOfWeek function works on dates only",(0,0),"","",1,1)
     if (param[:1]!=")"):
-      return("Missing )",0,"","",1,1)
+      return("Missing )",(0,0),"","",1,1)
     thisday=datetime.date(value[0],value[1],value[2])
-    return("",thisday.weekday()+7,param[1:],"DW^1",1,1)
+    return("",(thisday.weekday()+7,0),param[1:],"DW^1",1,1)
   if param[:4]=="dag(":
     language="nl"
-    (error,value,param,unit,dimx,dimy)=calcS(param[4:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[4:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (dimx<3 or unit[:1]!=["D^1"]):
-      return("DayOfWeek function works on dates only",0,"","",1,1)
+      return("DayOfWeek function works on dates only",(0,0),"","",1,1)
     if (param[:1]!=")"):
-      return("Missing )",0,"","",1,1)
+      return("Missing )",(0,0),"","",1,1)
     thisday=datetime.date(value[0],value[1],value[2])
-    return("",thisday.weekday()+7,param[1:],"DW^1",1,1)
+    return("",(thisday.weekday()+7,0),param[1:],"DW^1",1,1)
 
 # matrix functions
   if param[:4]=="det(":
-    (error,value,param,unit,dimx,dimy)=calcS(param[4:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[4:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (param[:1]!=")"):
-      return("Missing )",0,"","",1,1)
+      return("Missing )",(0,0),"","",1,1)
 
     if dimx!=dimy:
-      return("det() expects a square matrix",0,"","",1,1)
+      return("det() expects a square matrix",(0,0),"","",1,1)
     (value,unit)=det(value,unit,dimx)
-    return (error,value,param[1:],unit,1,1)
+    return (error,(value,0),param[1:],unit,1,1)
 
   if param[:6]=="gauss(":
-    (error,value,param,unit,dimx,dimy)=calcS(param[6:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[6:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (param[:1]!=")"):
       if error=="":
-        return("missing )",0,"","",1,1)
+        return("missing )",(0,0),"","",1,1)
       else:
-        return(error,0,"","",1,1)
+        return(error,(0,0),"","",1,1)
     (value,unit)=gauss(value,unit,dimx,dimy)
-    return (error,value,param[1:],unit,dimx,dimy)
+    return (error,(value,0),param[1:],unit,dimx,dimy)
   if param[:4]=="len(":
-    (error,value,param,unit,dimx,dimy)=calcS(param[4:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[4:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (param[:1]!=")"):
-      return("missing )",0,"","",1,1)
+      return("missing )",(0,0),"","",1,1)
     if (dimx!=1) and (dimy!=1):
-      return("length only works on vectors",0,"","",1,1)
+      return("length only works on vectors",(0,0),"","",1,1)
     result=0
     for i in value:
       result+=i*i
-    return("",math.sqrt(result),param[1:],"",1,1)
+    return("",(math.sqrt(result),0),param[1:],"",1,1)
   if param[:1]=="|":
-    (error,value,param,unit,dimx,dimy)=calcS(param[1:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[1:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (param[:1]!="|"):
-      return("missing close |",0,"","",1,1)
+      return("missing close |",(0,0),"","",1,1)
     if (dimx!=1) and (dimy!=1):
-      return("length only works on vectors",0,"","",1,1)
+      return("length only works on vectors",(0,0),"","",1,1)
     if (dimx==1) and (dimy==1):
-      return ("",value,param[1:],unit,1,1)
+      return ("",(value,0),param[1:],unit,1,1)
     result=0
     for i in value:
       result+=i*i
-    return("",math.sqrt(result),param[1:],"",1,1)
+    return("",(math.sqrt(result),0),param[1:],"",1,1)
   if param[:5]=="rank(":
-    (error,value,param,unit,dimx,dimy)=calcS(param[5:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[5:])
     if error!="":
-      return(error,0,"","",1,1)
+      return(error,(0,0),"","",1,1)
     if (param[:1]!=")"):
       if error=="":
-        return("missing )",0,"","",1,1)
+        return("missing )",(0,0),"","",1,1)
       else:
-        return(error,0,"","",1,1)
+        return(error,(0,0),"","",1,1)
     (value,unit)=gauss(value,unit,dimx,dimy)
     rank=0
     for y in range(dimy):
@@ -588,7 +595,7 @@ def calcM(param):
           x=dimx
         else:
           x+=1
-    return (error,rank,param[1:],"",1,1)
+    return (error,(rank,0),param[1:],"",1,1)
 
   #date and time format
   date=0
@@ -605,11 +612,62 @@ def calcM(param):
     try:
       datetime.date(year,month,day)
     except:
-      return("Invalide date type",0,"","",1,1)
+      return("Invalide date type",(0,0),"","",1,1)
     param=param[digitscheck.end():]
     if (param[:1]!="_" or param[:3]=="_in"):
-      return("",[year,month,day],param,["D^1","D^1","D^1"],3,1)
+      return("",([year,month,day],0),param,["D^1","D^1","D^1"],3,1)
     param=param[1:]
+  complexnumber=re.compile('-?((0x[0-9a-f]+(\.[0-9a-f]+)?)|([0-9]+(\.[0-9]+)?))(\+|-)((0x[0-9a-f]+(\.[0-9a-f]+)?)|([0-9]+(\.[0-9]+)?))?i')
+  complexcheck=complexnumber.match(param)
+  if complexcheck:
+    l=len(complexcheck.group())
+    if ((param[l:l+1]=="") or (param[l:l+1]=="_") or (param[l:l+1]=="*") or (param[l:l+1]=="/") or (param[l:l+1]=="+") or (param[l:l+1]=="-") or (param[l:l+1]=="^")):
+      sign=1
+      if param[:1]=="-":
+        sign=-1
+        param=param[1:]
+      #if I is follwed by a number it's the identity matrix
+      realpart=re.match('((0x[0-9a-f]+(\.[0-9a-f]+)?)|([0-9]+(\.[0-9]+)?))',param).group()
+      (_,(realvalue,_),_,_,_,_)=calcP(realpart)
+      realvalue*=sign
+      param=param[len(realpart):]
+      sign=1
+      if param[:1]=="-":
+        sign=-1
+      param=param[1:]
+      if re.match('((0x[0-9a-f]+(\.[0-9a-f]+)?)|([0-9]+(\.[0-9]+)?))',param):
+        complexpart=re.match('((0x[0-9a-f]+(\.[0-9a-f]+)?)|([0-9]+(\.[0-9]+)?))',param).group()
+        (_,(complexvalue,_),_,_,_,_)=calcP(complexpart)
+      else:
+        complexvalue=1
+        complexpart=""
+      complexvalue*=sign
+      param=param[len(complexpart)+1:]
+      if param[:1]=="_":
+        param=param[1:]
+      return ("",(realvalue,complexvalue),param,"",1,1)
+  complexnumber=re.compile('-?((0x[0-9a-f]+(\.[0-9a-f]+)?)|([0-9]+(\.[0-9]+)?))?i')
+  complexcheck=complexnumber.match(param)
+  if complexcheck:
+    l=len(complexcheck.group())
+    if ((param[l:l+1]=="") or (param[l:l+1]=="_") or (param[l:l+1]=="*") or (param[l:l+1]=="/") or (param[l:l+1]=="+") or (param[l:l+1]=="-") or (param[l:l+1]=="^")):
+      sign=1
+      if param[:1]=="-":
+        sign=-1
+        param=param[1:]
+      #if I is follwed by a number it's the identity matrix
+      if re.match('((0x[0-9a-f]+(\.[0-9a-f]+)?)|([0-9]+(\.[0-9]+)?))',param):
+        complexpart=re.match('((0x[0-9a-f]+(\.[0-9a-f]+)?)|([0-9]+(\.[0-9]+)?))',param).group()
+        (_,(complexvalue,_),_,_,_,_)=calcP(complexpart)
+      else:
+        complexvalue=1
+        complexpart=""
+      complexvalue*=sign
+      param=param[len(complexpart)+1:]
+      if param[:1]=="_":
+        param=param[1:]
+      print param
+      return ("",(0,complexvalue),param,"",1,1)
   digits=re.compile('[0-9]+\:[0-9]+(\:[0-9]+(\.[0-9]+)?)?') # time format
   digitscheck= digits.match(param)
   if digitscheck:
@@ -628,8 +686,8 @@ def calcM(param):
       value+=float(timestring[i1+1:])
       value*=60      
     if (date==1):
-      return("",[year,month,day,value],param[len(timestring):],["D^1","D^1","D^1","s^1"],4,1)
-    return("",value,param[len(timestring):],"s^1",1,1)
+      return("",([year,month,day,value],0),param[len(timestring):],["D^1","D^1","D^1","s^1"],4,1)
+    return("",(value,0),param[len(timestring):],"s^1",1,1)
 
 # hex check
   if re.match("(\-)?0x([0-9]|[a-f])+",param):
@@ -638,10 +696,10 @@ def calcM(param):
     if param[:1]!=".":
       chars=re.compile('[a-z]|\(|[0-9]|\$')
       if chars.match(param):
-        (error,value2,left,unit,dimx,dimy)=calcP(param)
-        return (error,int(digits,16)*value2,left,unit,1,1)
+        (error,(value2,imag),left,unit,dimx,dimy)=calcP(param)
+        return (error,(int(digits,16)*value2,0),left,unit,1,1)
 
-      return("",int(digits,16),param,"",1,1)
+      return("",(int(digits,16),0),param,"",1,1)
     value=1.0*int(digits,16)
     if re.match("([0-9]|[a-f])+",param[1:]):
       digits=re.match("([0-9]|[a-f])+",param[1:]).group()
@@ -649,9 +707,9 @@ def calcM(param):
       param=param[len(digits)+1:]
       chars=re.compile('[a-z]|\(|[0-9]|\$')
       if chars.match(param):
-        (error,value2,left,unit,dimx,dimy)=calcP(param)
-        return (error,value*value2,left,unit,1,1)
-      return ("",value,param,"",1,1)
+        (error,(value2,imag),left,unit,dimx,dimy)=calcP(param)
+        return (error,(value*value2,0),left,unit,1,1)
+      return ("",(value,0),param,"",1,1)
     else:
       return("Reached end of line, could not parse: "+param,0,"","",1,1)
       
@@ -662,17 +720,17 @@ def calcM(param):
     param=string.strip(param[digitscheck.end():])
     chars=re.compile('[a-z]|\(|[0-9]|\$')
     if chars.match(param):
-      (error,value2,left,unit,dimx,dimy)=calcP(param)
+      (error,(value2,imag),left,unit,dimx,dimy)=calcP(param)
       if (dimx==1 and dimy==1):
-        return (error,value*value2,left,unit,1,1)
-      return(error,value,"*"+param,"",1,1)
-    return ("",value,param,"",1,1)
+        return (error,(value*value2,0),left,unit,1,1)
+      return(error,(value,0),"*"+param,"",1,1)
+    return ("",(value,0),param,"",1,1)
 #matrix
   if (param[:1]=="["):
     x1=param[1:].find("]")
     x2=param[1:].find("[")
     if x1 < 0:
-      return("Missing ]",0,"","",1,1)
+      return("Missing ]",(0,0),"","",1,1)
     if ((x2>0) and (x1<x2)) or (x2<0):
       matrixelements=param[1:x1+1].split(",")
       dimx=len(matrixelements)
@@ -680,7 +738,7 @@ def calcM(param):
       matrixunits=[]
       error=""
       for matrixel in matrixelements:
-        (error1,value,left,unit,_,_)=calcS(matrixel)
+        (error1,(value,imag),left,unit,_,_)=calcS(matrixel)
         if (error1!="") or (left!=""):
           error="Error reading matrix elements"
         matrixvalues+=[value]
@@ -688,8 +746,8 @@ def calcM(param):
       if dimx==1:
         if param[x1+2:x1+3]=="t":
           x1+=1
-        return(error,matrixvalues[0],param[x1+2:],matrixunits[0],1,1)
-      return (error,matrixvalues,param[x1+2:],matrixunits,dimx,1)
+        return(error,(matrixvalues[0],0),param[x1+2:],matrixunits[0],1,1)
+      return (error,(matrixvalues,0),param[x1+2:],matrixunits,dimx,1)
     if (x2>=0) and (x2<x1):
       dimx=0
       error=""
@@ -697,7 +755,7 @@ def calcM(param):
       matrixunits=[]
       x2=param[1:].find("]]")
       if x2 < 0:
-        return ("Error reading matrix elements",0,"","",1,1)
+        return ("Error reading matrix elements",(0,0),"","",1,1)
       rows=param[2:x2+1].split("],[")
       dimy=len(rows)
       for row in rows:
@@ -705,9 +763,9 @@ def calcM(param):
         if dimx==0:
           dimx=len(matrixelements)
         elif dimx!=len(matrixelements):
-          return("Error reading matrix elements",0,"","",1,1)
+          return("Error reading matrix elements",(0,0),"","",1,1)
         for matrixel in matrixelements:
-          (error1,value,left,unit,_,_)=calcS(matrixel)
+          (error1,(value,imag),left,unit,_,_)=calcS(matrixel)
           if (error1!="") or (left!=""):
             error=error1
           matrixvalues+=[value]
@@ -715,22 +773,22 @@ def calcM(param):
       if dimx==1 and dimy==1:
         if param[x2+3:x2+4]=="t":
           x2+=1
-        return(error,matrixvalues[0],param[x2+3:],matrixunits[0],1,1)
-      return (error,matrixvalues,param[x2+3:],matrixunits,dimx,dimy)
+        return(error,(matrixvalues[0],0),param[x2+3:],matrixunits[0],1,1)
+      return (error,(matrixvalues,0),param[x2+3:],matrixunits,dimx,dimy)
       
-    return ("Matrix format error",0,"","",1,1)
+    return ("Matrix format error",(0,0),"","",1,1)
 
   if (param[:1]=="("):
-    (error,value,param,unit,dimx,dimy)=calcS(param[1:])
+    (error,(value,imag),param,unit,dimx,dimy)=calcS(param[1:])
     if param[:1]!=")":
       if error=="":
-        return("missing )",0,"","",1,1)
+        return("missing )",(0,0),"","",1,1)
       else:
-        return(error,0,"","",1,1)
+        return(error,(0,0),"","",1,1)
     chars=re.compile('[a-z]|\(|[0-9]|\$')
     if chars.match(param[1:]):
-      return(error,value,"*"+param[1:],unit,dimx,dimy)
-    return(error,value,param[1:],unit,dimx,dimy)
+      return(error,(value,0),"*"+param[1:],unit,dimx,dimy)
+    return(error,(value,0),param[1:],unit,dimx,dimy)
 
   #2 based prefixes
   prefix=[("kilob",1024),("megab",1048576),("gigab",1073741824),("terrab",1099511627776),("petab",1125899906842624),("exab",1152921504606846976),("zettab",1180591620717411303424),("yottab",1208925819614629174706176)]
@@ -738,17 +796,17 @@ def calcM(param):
 
   for(thisprefix,power) in prefix:
     if param[:len(thisprefix)]==thisprefix:
-      (error_p,value_p,param_p,unit_p,dimx_p,dimy_p)=calcM(param[len(thisprefix)-1:])
+      (error_p,(value_p,imag),param_p,unit_p,dimx_p,dimy_p)=calcM(param[len(thisprefix)-1:])
       if (unit_p[:2]=="b^"):
-        return (error_p,value_p*power,param_p,unit_p,1,1)
+        return (error_p,(value_p*power,0),param_p,unit_p,1,1)
 
 
   #prefixes
   prefix=[("yotta",1e24),("zetta",1e21),("exa",1e18),("peta",1e15),("tera",1e12),("giga",1e9),("mega",1e6),("kilo",1e3),("hecto",1e2),("deca",1e1),("deci",1e-1),("centi",1e-2),("milli",1e-3),("micro",1e-6),("nano",1e-9),("pico",1e-12),("femto",1e-15),("atto",1e-18),("zepto",1e-21),("yocto",1e-24)]
   for(thisprefix,power) in prefix:
     if param[:len(thisprefix)]==thisprefix:
-      (error,value,param,unit,dimx,dimy)=calcM(param[len(thisprefix):])
-      return (error,value*power,param,unit,1,1)
+      (error,(value,imag),param,unit,dimx,dimy)=calcM(param[len(thisprefix):])
+      return (error,(value*power,0),param,unit,1,1)
 
   for (thisunit,convertrate,siunit) in units:
     if param[:len(thisunit)]==thisunit:
@@ -758,7 +816,7 @@ def calcM(param):
         endpos+=1
       if param[endpos:endpos+2]=="es":
         endpos+=1
-      return("",convertrate,param[endpos:],siunit,1,1)
+      return("",(convertrate,0),param[endpos:],siunit,1,1)
 
   #check for money currency
   
@@ -770,7 +828,7 @@ def calcM(param):
       if param[endpos:endpos+1]=="s":
         endpos+=1
       if name=="EUR":
-        return("",1,param[endpos:],"$^1",1,1)
+        return("",(1,0),param[endpos:],"$^1",1,1)
       cmd = "echo -e \"Amount=1&From=EUR&To="+name+"\"";
       cmd += " | lynx -post_data http://www.xe.com/ucc/convert.cgi";
       inp,outp,stderr = os.popen3(cmd);
@@ -780,54 +838,54 @@ def calcM(param):
       stderr.close();
       i1=string.find(result,"Euro = ")+7;
       i2=string.find(result," ",i1)
-      return("",1/float(result[i1:i2]),param[endpos:],"$^1",1,1)
+      return("",(1/float(result[i1:i2]),0),param[endpos:],"$^1",1,1)
 
   unit=""
 
   if param[:2]=="pi":
     chars=re.compile('[a-z]')
     if chars.match(param[2:]):
-      (error,result,param,unit,dimx,dimy)=calcM(param[2:])
-      return (error,3.1415926535897932384*result,param,unit,1,1)
+      (error,(result,imag),param,unit,dimx,dimy)=calcM(param[2:])
+      return (error,(3.1415926535897932384*result,0),param,unit,1,1)
 
-    return ("",3.14159265358979323846,param[2:],"",1,1)
+    return ("",(3.14159265358979323846,0),param[2:],"",1,1)
 
   if param[:1]=="e":
     chars=re.compile('[a-z]')
     if chars.match(param[1:]):
-      (error,result,param,unit,dimx,dimy)=calcM(param[1:])
-      return (error,2.7182818284590452353602874713*result,param,unit,1,1)
-    return ("",2.7182818284590452353602874713,param[1:],"",1,1)
+      (error,(result,imag),param,unit,dimx,dimy)=calcM(param[1:])
+      return (error,(2.7182818284590452353602874713*result,0),param,unit,1,1)
+    return ("",(2.7182818284590452353602874713,0),param[1:],"",1,1)
 
   if param[:5]=="dozen":
     chars=re.compile('[a-z]')
     if chars.match(param[5:]):
-      (error,result,param,unit,dimx,dimy)=calcM(param[5:])
-      return (error,12*result,param,unit,1,1)
-    return ("",12,param[5:],unit,1,1)
+      (error,(result,imag),param,unit,dimx,dimy)=calcM(param[5:])
+      return (error,(12*result,0),param,unit,1,1)
+    return ("",(12,0),param[5:],unit,1,1)
 
   if param[:6]=="dozijn":
     chars=re.compile('[a-z]')
     if chars.match(param[6:]):
-      (error,result,param,unit,dimx,dimy)=calcM(param[6:])
-      return (error,12*result,param,unit,1,1)
+      (error,(result,imag),param,unit,dimx,dimy)=calcM(param[6:])
+      return (error,(12*result,0),param,unit,1,1)
 
-    return ("",12,param[6:],unit,1,1)
+    return ("",(12,0),param[6:],unit,1,1)
 
   if param[:5]=="gross":
     chars=re.compile('[a-z]')
     if chars.match(param[5:]):
-      (error,result,param,unit,dimx,dimy)=calcM(param[5:])
-      return (error,144*result,param,unit,1,1)
+      (error,(result,imag),param,unit,dimx,dimy)=calcM(param[5:])
+      return (error,(144*result,0),param,unit,1,1)
 
-    return ("",144,param[5:],unit,1,1)
+    return ("",(144,0),param[5:],unit,1,1)
 
   nametype=re.compile('[a-z]*')
   nametype=nametype.match(param)
   nametype=nametype.group()
   if nametype=="":
-    return ("Parse Error",1,"","",1,1)
-  return (nametype+" unknown",1,param,unit,1,1)
+    return ("Parse Error",(1,0),"","",1,1)
+  return (nametype+" unknown",(1,0),param,unit,1,1)
 
 def supercalc(toparse):
   if toparse[:4]=="help":
@@ -854,6 +912,7 @@ def supercalc(toparse):
   toparse=string.replace(toparse," aud"," $a")
   toparse=string.replace(toparse," a$"," $a")
   toparse=string.replace(toparse," in ","_in_")
+  toparse=string.replace(toparse,"i ","i_")
 
   # if time after date change space to _ so it doesn't get lost
   digits=re.compile('[0-9]+(\-|\ )?'+months+'(\-|\ )?[0-9]+(\ )+[0-9]+\:')
@@ -869,7 +928,7 @@ def supercalc(toparse):
   toparse=string.replace(toparse,"kilo_","kg_")
   if toparse[len(toparse)-4:]=="kilo":
     toparse=toparse[:len(toparse)-4]+"kg"
-  (error,result,left,unit,dimx,dimy)= calcS(toparse)
+  (error,(result,imag),left,unit,dimx,dimy)= calcS(toparse)
   if dimx==1 and dimy==1:
     if left[:7]=="celsius":
       left=left[7:]
@@ -891,7 +950,7 @@ def supercalc(toparse):
       left=left[10:]
     if left[:4]=="_in_":
       backupunit=left[4:]
-      (error,result2,left,unit2,dimx,dimy)=calcS(left[4:])
+      (error,(result2,imag),left,unit2,dimx,dimy)=calcS(left[4:])
       if (error!=""):
         return error
       if (left!=""):
@@ -956,6 +1015,7 @@ def supercalc(toparse):
       else:
         return pref+sec+s100+" sec"
     result=str(result)
+    imag=str(imag)
     if (string.find(unit,"DW^")>=0 and unit!="DW^1"):
       return "Operations on days of week are not allowed"
     if unit=="DW^1":
@@ -966,6 +1026,8 @@ def supercalc(toparse):
 
     if result[len(result)-2:]==".0":
       result=result[:len(result)-2]
+    if imag[len(imag)-2:]==".0":
+      imag=imag[:len(imag)-2]
     if unit=="W":
       unit=random.choice(["Quantum fluctuations","Random distortions","Hyper Wave-entanglements","Chrono particle inductions","Parallel Chi","meta Universe inhibitors","Semi Nuclear Helices","Thaume bubbles"])
     else:
@@ -977,7 +1039,21 @@ def supercalc(toparse):
       unit=string.replace(unit,"b^","byte^")
       unit=string.replace(unit,"cd^","candela^")
     unit=string.replace(unit,"^1","")
+    if imag!="0":
+      if result=="0":
+        result=""
+      if imag[:1]=="-":
+        result+=imag+"i"
+      else:
+        if result!="":
+          result+="+"+imag+"i"
+        else:
+          result=imag+"i"
+          if imag=="1":
+             result="i"
     result+=" "+unit
+    result=string.replace(result,"+1i","+i")
+    result=string.replace(result,"-1i","-i")
     return result
   else:
     if (unit[0]=="D^1"):
