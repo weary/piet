@@ -2,16 +2,21 @@ import os,time,string,re,traceback,urllib,BeautifulSoup;
 import piet;
 import calc;
 
-class pieturlopener(urllib.FancyURLopener):
-	version = "wget/1.1"
+defaultagent = "wget/1.1";
 
-urllib._urlopener = pieturlopener();
+def get_url(url, agent=defaultagent):
+	class pieturlopener(urllib.FancyURLopener):
+		version = agent;
+	
+	oldopener=urllib._urlopener;
+	urllib._urlopener = pieturlopener();
+	a=urllib.urlopen(url).read();
+	urllib._urlopener = oldopener;
+	return a;
 
-def get_url(url):
-	return urllib.urlopen(url).read();
 
-def get_url_soup(url):
-	return BeautifulSoup.BeautifulSoup(get_url(url));
+def get_url_soup(url, agent=defaultagent):
+	return BeautifulSoup.BeautifulSoup(get_url(url,agent));
 
 localtimezone="Europe/Amsterdam";
 

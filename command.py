@@ -475,39 +475,66 @@ def rot_nr(cmd):
 	y=string.strip(parse(y, False, True));
 	return "".join([x.isalpha() and (ord(x.lower())-ord("a")>=26-n and chr(ord(x)+n-26) or chr(ord(x)+n)) or x for x in y])
 
+# make sure every entry occurs only once
+def unique(l):
+	u = {}
+	for x in l:
+		u[x] = 1
+	return u.keys()
 
 def afk(woord):
-	result1=afk_hylke(woord);
-	result2=afk_eelco(woord);	
-	result=result1 + result2;
-	if (len(result)==0):
-		r="Geen afkortingen gevonden voor "+woord+"\n";
-	elif (len(result)==1):
-		try:
-			r=result[0][0]+" staat voor \""+result[0][1]+"\", "+result[0][2]+"\n";
-		except:
-			r="";
-			print "piet failure: ",result;
-	else:
-		r="ik ken "+str(len(result))+" verklaringen voor "+woord+", namelijk:\n";
-		for i in result:
-			try:
-				r+="  "+i[0]+": \""+i[1]+"\", "+i[2]+"\n";
-			except:
-				r="";
-				print "piet failure: ",result;
-	return r;
+	result=[];
+	failed=[];
+	try:
+		result=result+afk_source1(woord);
+	except:
+		traceback.print_exc();
+		failed=failed+["afkortingen.net"];
+	try:
+		result=result+afk_source2(woord);
+	except:
+		traceback.print_exc();
+		failed=failed+["thefreedictionary.com"];
+	try:
+		result=result+afk_source3(woord);
+	except:
+		traceback.print_exc();
+		failed=failed+["m'n hoofd"];
 	
-def afk_hylke(woord):
-	woord=string.strip(woord);
-	comm="lynx -source http://www.afkorting.net/cgi-local/s.pl?pg=a\&s="+woord;
-	outp, inp = os.popen2(comm);
-	outp.close();
-	result=inp.read();
-	result=re.findall("<TR>.*</TR>", result);
-	result=[re.findall("<T[DH]>[^<]*</T[DH]>", i) for i in result];
-	result=[[i[4:-5] for i in result_inner] for result_inner in result];
-	return result;
+	try:
+		result=unique(result);
+	except:
+		traceback.print_exc();
+
+	s="";
+	if (len(result)==0):
+		s="niks gevonden!\n";
+	else:
+		s=string.join(result, '\n');
+	
+	if (len(failed)>0):
+		s+="d'r ging van alles mis met: "+pietlib.make_list(failed)+"\n";
+	
+	return s;
+
+def afk_source1(woord):
+	a=pietlib.get_url_soup("http://www.afkorting.net/cgi-local/s.pl?pg=a\&s="+woord);
+	r=[i.td.nextSibling for i in a.table("tr")];
+	r=[i.string+" ("+i.nextSibling.string+")" for i in r if i!=BeautifulSoup.Null]
+	return r;
+
+# input: searchword
+# output: list of possible meanings
+def afk_source2(woord):
+	a=pietlib.get_url_soup("http://acronyms.thefreedictionary.com/"+woord, "bla/bla");
+	r=[i.td.nextSibling.string for i in a("table", {'class': 'AcrFinder'})[0]('tr')];
+	return r[1:];
+
+def afk_source3(woord):
+	woord=woord.lower();
+	wordmap=open("afk.txt").read().split("\n");
+	wordmap=[i.split('#', 1) for i in wordmap];
+	return [i[1] for i in wordmap if len(i)>=2 and i[0].lower()==woord];
 
 def changelog(dinges):
   command="darcs cha --last=5 | sed -e '/^$/d;N;s/\\n//g;s/<[a-zA-Z]\\+@[a-zA-Z\\.]\\+>//;s/[\\t\\ ]\\+/ /g'";
@@ -516,48 +543,6 @@ def changelog(dinges):
   inp.close();
   return "echt veel is er niet veranderd...\n"+result;
 
-
-def afk_eelco(woord):
-  inf = open("afk.txt");
-  lines = string.split(inf.read(), '\n');
-  i=0;
-  result=[];
-  while (i<len(lines)):
-    try:
-      (keyw, reactline) = string.split(lines[i], '#');
-      search0=keyw
-      search1=string.upper(keyw);
-      search2=string.lower(keyw);
-      search3=keyw+".";
-      search4="";
-      for j in keyw:
-        search4+=j+'.';
-      found=[];
-      if (woord == search0):
-        if (reactline not in found):
-          result+=[[keyw,reactline,'-']];
-          found+=[reactline];
-      if (woord == search1):
-        if (reactline not in found):
-          result+=[[keyw,reactline,'-']];
-          found+=[reactline];
-      if (woord == search2):
-        if (reactline not in found):
-          result+=[[keyw,reactline,'-']];
-          found+=[reactline];
-      if (woord == search3):
-        if (reactline not in found):
-          result+=[[keyw,reactline,'-']];
-          found+=[reactline];
-      if (woord == search4):
-        if (reactline not in found):
-          result+=[[keyw,reactline,'-']];
-          found+=[reactline];
-    except:
-      result+="";
-    i=i+1;
-  return result;
-	
 def spell_int(woorden, lang):
   outp, inp = os.popen2("aspell -a --lang="+lang);
   outp.write(woorden);
