@@ -83,9 +83,11 @@ def onbekend_commando(param):
 def emote(action, nicks):
 	if len(action)==0 or len(nicks)==0:
 		return "ACTION frot";
+	if len(nicks)==1 and nicks[0]==piet.nick():
+		nicks=[nick];
 	toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht", \
 						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",\
-						 "nouwelijks", "bijna, maar toch maar niet"];
+						 "nauwelijks", "bijna, maar toch maar niet", "vol overgave"];
 	if action[-1] in "aeoui":
 		action=action+action[-1];
 	if action[-1]!='t':
