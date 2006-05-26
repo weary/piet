@@ -64,7 +64,7 @@ eten koken#0.3333333#ACTION is opeens blij dat ie niet hoeft mee te eten
 gaat koken#0.3333333#ACTION is opeens blij dat ie niet hoeft mee te eten
 verslag#0.1#ACTION is opeens blij dat ie een domme bot is en dat hij dus geen verslagen hoeft te schrijven.
 verslag#0.05#Wie heeft ooit het verslag schrijven uitgevonden?
-plaatje#0.1#Maak van dat plaatjes eens ascii art, dan kan ik het ook zien
+plaatje#0.1#Maak van die plaatjes eens ascii art, dan kan ik het ook zien
 feature#0.1#ACTION heeft altijd wat moeite met het verschil tussen features en bugs
 java#0.05#Java, haha. Als ik daar in geschreven was duurde het eeuwen voordat ik een reactie kon geven.
  krant#0.2#Kranten zijn uit, ga eens wat websites lezen
@@ -320,13 +320,14 @@ crul#1.0#s/cr/kr/
 (Y)#1.0#breezah miepje zou met (Y) toch een thumbs up bedoelen
 (N)#1.0#breezah miepje zou met (N) toch een thumbs down bedoelen
 (B)#1.0#breezah miepje zou met (B) toch een pot bier bedoelen
+(b)#1.0#breezah miepje zou met (B) toch een pot bier bedoelen
 (D)#1.0#breezah miepje zou met (D) toch een martini glas bedoelen
 (X)#1.0#breezah miepje zou met (X) toch een meisje bedoelen
 (Z)#1.0#breezah miepje zou met (Z) toch een jochie bedoelen
 (6)#1.0#breezah miepje zou met (6) toch een duivelse glimlach bedoelen
 :-[#1.0#breezah miepje zou met :-[ toch een vampier vleermuis bedoelen
-(})#1.0#breezah miepje zou met (}) toch een Right hug bedoelen
-({)#1.0#breezah miepje zou met ({) toch een Left hug bedoelen
+(})#1.0#breezah miepje zou met (}) toch een omhelzing van rechts bedoelen
+({)#1.0#breezah miepje zou met ({) toch een omhelzing van links bedoelen
 (M)#1.0#breezah miepje zou met (M) toch een MSN Messenger or Windows Messenger plaatje bedoelen
 :-S#1.0#breezah miepje zou met :-S toch een Crooked smiley (Confused smiley) bedoelen
 :-$#1.0#breezah miepje zou met :-$ toch een Embarrassed smiley bedoelen
