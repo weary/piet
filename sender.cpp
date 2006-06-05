@@ -113,17 +113,27 @@ void sendstr(const std::string msg, bool high_prio)
 // call send, with normal priority
 void send(const char *fmt, ...)
 {
-  va_list ap; va_start(ap, fmt);
-  char *p=new char[1024];
-  int n = vsnprintf(p, 1024, fmt, ap);
-  if ((n<0)||(n>1023))
-  {
-    delete(p); p=new char[n+1];
-    n = vsnprintf(p, n+1, fmt, ap);
-  }
-  va_end(ap);
-  sendstr(std::string(p), false);
-  delete(p);
+	va_list ap;
+	int size=1024;
+
+	char *p=new char[size];
+	va_start(ap, fmt);
+	int n = vsnprintf(p, size, fmt, ap);
+	va_end(ap);
+
+	if (n <= -1 || n >= size)
+	{
+		size = n+1; /* precisely what is needed */
+		delete[](p); p=new char[size];
+		va_start(ap, fmt);
+		n = vsnprintf(p, size, fmt, ap);
+		va_end(ap);
+	}
+
+	assert(n > -1 && n < size);
+
+	sendstr(std::string(p), false);
+	delete[](p);
 }
 
 // separate thread that checks the send queue
