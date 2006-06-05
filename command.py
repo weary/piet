@@ -591,7 +591,7 @@ def spell_en(woorden):
 
 def random_sentence(woorden):
 	try:
-		s=get_url_soup("http://watchout4snakes.com/creativitytools/RandomSentence/RandomSentence.aspx");
+		s=pietlib.get_url_soup("http://watchout4snakes.com/creativitytools/RandomSentence/RandomSentence.aspx");
 		l=s.findAll("span", {"class":"randomSentence"})[0].contents[0];
 		return l.encode();
 	except:
