@@ -479,64 +479,84 @@ def rot_nr(cmd):
 
 # make sure every entry occurs only once
 def unique(l):
-	u = {}
-	for x in l:
-		u[x] = 1
-	return u.keys()
+	try:
+		u = {}
+		for x in l:
+			u[x.lower()] = x
+		return u.values()
+	except:
+		traceback.print_exc();
+
+def conf(s):
+	return s.encode('latin1', 'replace');
 
 def afk(woord):
-	result=[];
-	failed=[];
-	try:
-		result=result+afk_source1(woord);
-	except:
-		traceback.print_exc();
-		failed=failed+["afkortingen.net"];
-	try:
-		result=result+afk_source2(woord);
-	except:
-		traceback.print_exc();
-		failed=failed+["thefreedictionary.com"];
-	try:
-		result=result+afk_source3(woord);
-	except:
-		traceback.print_exc();
-		failed=failed+["m'n hoofd"];
-	
-	try:
-		result=unique(result);
-	except:
-		traceback.print_exc();
+	result1=afk_source1(woord);
+	result2=afk_source2(woord);
+	result3=afk_source3(woord);
+
+	result=result1;
+	rest=[];
+
+	if (len(result)>8):
+		rest=result2+result3;
+	else:
+		result=unique(result1+result2);
+		if (len(result)>8):
+			rest=result3;
+		else:
+			result=unique(result1+result2+result3);
 
 	s="";
-	if (len(result)==0):
+	if len(result)==0:
 		s="niks gevonden!\n";
 	else:
-		s=string.join(result, '\n');
-	
-	if (len(failed)>0):
-		s+="d'r ging van alles mis met: "+pietlib.make_list(failed)+"\n";
+		if len(result)<12:
+			s=string.join(result, '\n');
+			if len(rest)>0:
+				s=s+'\n'+pietlib.make_list(rest);
+		else:
+			s=pietlib.make_list(result); # ignore rest, we already have a lot
 	
 	return s;
 
-def afk_source1(woord):
-	a=pietlib.get_url_soup("http://www.afkorting.net/cgi-local/s.pl?pg=a\&s="+woord);
-	r=[i.td.nextSibling for i in a.table("tr")];
-	r=[i.string+" ("+i.nextSibling.string+")" for i in r if i!=BeautifulSoup.Null]
-	return r;
+def afk_source2(woord):
+	try:
+		a=pietlib.get_url_soup("http://www.afkorting.net/cgi-local/s.pl?pg=a&s="+woord);
+		r=a.table.findAll("tr", recursive=False);
+		r=[i.findAll("td") for i in r];
+		r=[conf(i[1].contents[0]) for i in r if len(i)>=2];
+		return r;
+	except:
+		traceback.print_exc();
+		piet.send(channel, "helaas, afkortingen.net wilde me niet te woord staan\n");
+	return [];
 
 # input: searchword
 # output: list of possible meanings
-def afk_source2(woord):
-	a=pietlib.get_url_soup("http://acronyms.thefreedictionary.com/"+woord, "bla/bla");
-	r=[i.td.nextSibling.string for i in a("table", {'class': 'AcrFinder'})[0]('tr')];
-	return r[1:];
-
 def afk_source3(woord):
-	woord=woord.lower();
-	wordmap=open("afk.txt").read().split("\n");
-	wordmap=[i.split('#', 1) for i in wordmap];
-	return [i[1] for i in wordmap if len(i)>=2 and i[0].lower()==woord];
+	try:
+		a=pietlib.get_url_soup("http://acronyms.thefreedictionary.com/"+woord, "bla/bla");
+		r=a("table", {'class': 'AcrFinder'})[0]('tr');
+		r=[i("td", recursive=False) for i in r];
+		r=[conf(i[1].contents[0]) for i in r if len(i)>=2];
+		return r;
+	except:
+		traceback.print_exc();
+		piet.send(channel, "helaas, thefreedictionary is veel te ver weg\n");
+	return [];
+		
+
+def afk_source1(woord):
+	try:
+		woord=woord.lower();
+		wordmap=open("afk.txt").read().split("\n");
+		wordmap=[i.split('#', 1) for i in wordmap];
+		return [i[1] for i in wordmap if len(i)>=2 and i[0].lower()==woord];
+	except:
+		traceback.print_exc();
+		piet.send(channel, "helaas, de afkortingen die ik uit m'n hoofd ken zijn zoek\n");
+	return [];
 
 def changelog(dinges):
   command="darcs cha --last=5 | sed -e '/^$/d;N;s/\\n//g;s/<[a-zA-Z]\\+@[a-zA-Z\\.]\\+>//;s/[\\t\\ ]\\+/ /g'";
@@ -567,7 +587,17 @@ def spell_de(woorden):
 def spell_en(woorden):
   woorden = string.strip(parse(woorden, False, True));
   return spell_int(woorden, "en_GB-only");
-  
+
+
+def random_sentence(woorden):
+	try:
+		s=get_url_soup("http://watchout4snakes.com/creativitytools/RandomSentence/RandomSentence.aspx");
+		l=s.findAll("span", {"class":"randomSentence"})[0].contents[0];
+		return l.encode();
+	except:
+		traceback.print_exc();
+		return "'t is stuk, nu geen zin";
+
 def help(param):
   global d,auth;
   try:
@@ -1642,7 +1672,7 @@ def tv_nuenstraks(regel):
 		channel=str(td[0].span.string);
 		if (channel in needed):
 			line="  "+channel+", "+str(td[1].div.a.string);
-			if (th[1].string!=BeautifulSoup.Null):
+			if (th[1].contents[0]!=None):
 				line=line+", om "+str(th[1].string)+" "+str(td[3].div.a.string);
 			else:
 				line=line+", en daarna niks meer";
@@ -2234,6 +2264,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "mep":               (100, mep, ""),
     "geef":              (100, geef, ""),
 		"pistes":            (100, cmd_pistes, "pistes, doet iets met skipistes"),
+		"sentence":          (100, random_sentence, "sentence, geef een willekeurige engelse zin"),
     "dum":               (0, dum, ""),
     "wiki":		 (500, wiki, "wiki <woord> Freeware encyclopedie"),
     "tel":               (1000, tel, "geef weary's mobielnr"),
