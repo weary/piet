@@ -734,7 +734,7 @@ def vertaal(regel):
        "Dutch": "Nederlands",
        "English": "Engels"};
     doel=d[doel];
-    result="ik ben opeens vergeten hoe je dit naar het "+doel+" vertaalt.";
+    result="wuh, nu even niet vertalen naar "+doel+" hoor, probeer het nog eens.";
   return result;
 
 def dvorak2qwerty(params):
@@ -1051,6 +1051,8 @@ def geordi(input):
   return line;
 
 def jeheetnu(input):
+	while (len(input)<4):
+		input=input+"-";
 	return "NICK "+input;
 
 def randomnaam(input):
@@ -1171,7 +1173,7 @@ def remind(regel):
 	except:
 		traceback.print_exc();
 		return "frop";
-	relformat="((\d+\s*(d|dagen|dag|uren|uur|u|h|min|m|s|sec)\s*)+)";
+	relformat="((\d+\s*(j|jaar|jaren|w|week|weken|d|dagen|dag|uren|uur|u|h|min|m|s|sec)\s*)+)\W";
 	absformat="(("+pietlib.dateregex+"\s+)?\d+:\d+[:\d+]\s*)";
 	split=re.match("\s*("+absformat+"|"+relformat+")", regel); #abs voor rel, want 1m en 1maart lijken op elkaar
 	if (split==None):
@@ -1184,6 +1186,10 @@ def remind(regel):
 	tz=pietlib.tijdzone_nick(nick);
 	if (string.find(tijd, ":")==-1): # relative time if no :
 		tijd=re.sub(" ", "", tijd);
+		tijd=string.replace(tijd, "jaren", "j");
+		tijd=string.replace(tijd, "jaar", "j");
+		tijd=string.replace(tijd, "weken", "w");
+		tijd=string.replace(tijd, "week", "w");
 		tijd=string.replace(tijd, "dagen", "d");
 		tijd=string.replace(tijd, "dag", "d");
 		tijd=string.replace(tijd, "uren", "h");
@@ -1194,6 +1200,8 @@ def remind(regel):
 		tijd=string.replace(tijd, "m", "*60 ");
 		tijd=string.replace(tijd, "h", "*3600 ");
 		tijd=string.replace(tijd, "d", "*24*3600 ");
+		tijd=string.replace(tijd, "w", "*7*24*3600 ");
+		tijd=string.replace(tijd, "j", "*365*24*3600 ");
 		tijd=string.replace(tijd, "s", " ");
 		tijd=string.strip(tijd);
 		tijd=re.sub('\ +', '+', tijd);
@@ -1534,6 +1542,38 @@ def tijd(regel):
 		result=result+", en in "+tz+" is het "+t;
 	return result+"\n";
 
+def find_timezone(param):
+  path='/usr/share/zoneinfo/';
+  try:
+    if (stat.S_ISREG(os.stat(path+param).st_mode)):
+      return param;
+  except:
+    pass;
+  param=param.lower();
+  submatch=[];
+  fullmatch=[];
+  for root, dirs, files in os.walk(path):
+    files=[i for i in files if i.lower().find(param)>-1];
+    root=root[len(path):];
+    if len(root)>0: 
+      root=root+"/";
+    for i in files:
+      submatch.insert(999, root+i);
+    files=[i for i in files if i.lower()==(param)];
+    for i in files:
+      fullmatch.insert(999, root+i);
+  if len(fullmatch)>0:
+    if len(fullmatch)>0:
+      piet.send(channel,"hmm, ik kan kiezen uit "+pietlib.make_list(fullmatch));
+    fullmatch.sort(lambda x,y: cmp(len(x),len(y)));
+    return fullmatch[0];
+  if len(submatch)>0:
+    if len(submatch)>0:
+      piet.send(channel,"hmm, ik kan kiezen uit "+pietlib.make_list(submatch));
+    submatch.sort(lambda x,y: cmp(len(x),len(y)));
+    return submatch[0];
+  raise "onbekende tijdzone";
+
 def tijdzone(regel):
 	a=string.split(regel, ' ');
 	if (a==None or len(a)==0 or len(a[0])==0):
@@ -1550,13 +1590,23 @@ def tijdzone(regel):
 		tz=pietlib.tijdzone_nick(a[0]);
 		return a[0]+" huppelt rond in "+tz+"\n";
 	elif(len(a)==2):
+		try:
+			tijdzone=find_timezone(a[1]);
+		except:
+			traceback.print_exc();
+			return "sorry, ik doe alleen tijdzones van de planeet aarde\n";
+
 		oldauth=piet.db('SELECT auth FROM auth WHERE name="'+a[0]+'"');
 		if (oldauth==None or len(oldauth)<2):
-			piet.db('REPLACE INTO auth(name,timezone) VALUES("'+a[0]+'","'+a[1]+'")');
+			piet.db('REPLACE INTO auth(name,timezone) VALUES("'+a[0]+'","'+tijdzone+'")');
 		else:
 			piet.db('REPLACE INTO auth(name,auth,timezone) VALUES("'+a[0]+'",'+\
-				oldauth[1][0]+',"'+a[1]+'")');
-		return "ach, is dat zo? ok, dan zet ik "+a[0]+" in "+a[1]+"\n";
+				oldauth[1][0]+',"'+tijdzone+'")');
+
+		if tijdzone==a[1]:
+			return "zozo, jij kent je tijdzones goed. ik zet "+a[0]+" in "+tijdzone+"\n";
+		else:
+			return "ik zet "+a[0]+" wel in "+tijdzone+", dat lijkt wel wat op "+a[1]+"\n";
 	return "zeges, tiepgraag mannetje, 2 parameters is echt 't maximum hoor\n";
 
 def quote(regel):
@@ -1651,26 +1701,20 @@ def ns(regel):
   vanStation="";
   if (len(params)==1) and (regel=="?"):
     # haal storing site op, kijk of er storing op het ns net zijn"
-    inp,outp,stderr = os.popen3("lynx -source www.ns.nl")
+    inp,outp,stderr = os.popen3("lynx -source www.ns.nl/pages/index.html")
     result=outp.read()
     inp.close()
     outp.close()
     stderr.close()
-    i1=string.find(result,"URL=")+4
+    i1=string.find(result,"toringen")
+    i1=string.rfind(result[:i1],"href")
+    i1=string.find(result,"\"",i1)+1
     i2=string.find(result,"\"",i1)
     if (i1<0 or i2<0):
       return "Error in NS site"
-    inp,outp,stderr = os.popen3("lynx -source \"http://www.ns.nl/"+result[i1:i2]+"\"")
-    result=outp.read()
-    inp.close()
-    outp.close()
-    stderr.close()
-    i1=string.find(result,"oring")
-    i1=string.rfind(result[:i1],"href=")+6
-    i2=string.find(result,"\"",i1)
     url=result[i1:i2]
     url=string.replace(url,"&amp;","&")
-    inp,outp,stderr = os.popen3("lynx -dump \"http://www.ns.nl/servlet/"+url+"\"")
+    inp,outp,stderr = os.popen3("lynx -dump \"http://www.ns.nl"+url+"\"")
     result=outp.read()
     inp.close()
     outp.close()
@@ -2109,7 +2153,7 @@ def versie(regel):
     outp.close()
     inp.close()
     stderr.close()
-    version=re.search("[0-9]+.[0-9]+.[0-9]+(.[0-9]+)?: stable\"", result)
+    version=re.search("[0-9]+.[0-9]+.[0-9]+(.[0-9]+)?: stable", result)
     if (version!=None):
       version=result[version.start():version.end()]
       x=string.find(version,":")
