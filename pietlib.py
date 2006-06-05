@@ -4,19 +4,24 @@ import calc;
 
 defaultagent = "wget/1.1";
 
-def get_url(url, agent=defaultagent):
+def get_url(url, postdata={}, agent=defaultagent):
 	class pieturlopener(urllib.FancyURLopener):
 		version = agent;
 	
 	oldopener=urllib._urlopener;
 	urllib._urlopener = pieturlopener();
-	a=urllib.urlopen(url).read();
+	if (len(postdata)==0):
+		a=urllib.urlopen(url).read();
+	else:
+		if (type(postdata)==dict):
+			postdata=urllib.urlencode(postdata);
+		a=urllib.urlopen(url,postdata).read();
 	urllib._urlopener = oldopener;
 	return a;
 
 
 def get_url_soup(url, agent=defaultagent):
-	return BeautifulSoup.BeautifulSoup(get_url(url,agent));
+	return BeautifulSoup.BeautifulSoup(get_url(url,{},agent));
 
 localtimezone="Europe/Amsterdam";
 
