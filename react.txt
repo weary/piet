@@ -1,5 +1,9 @@
 janee#0.5#ja
 janee#1.0#nee
+hoe heet je piet#1.0#ik heet nu piet
+hoe heet je, piet#1.1#ik heet nu piet
+piet hoe heet je#1.1#ik heet nu piet
+piet, hoe heet je#1.1#ik heet nu piet
 gezecht#1.0#ACTION merkt op dat je dat als gezegd spelt
 standaart#1#je zou clippie bijzonder blij maken als je standaart volgende keer als standaard spelt
 piet!!!!#1.0#NICK, jij zieke geest, 3 uitroeptekens is echt meer dan zat
@@ -13,6 +17,7 @@ hoi piet#1.0#hoi NICK
 hallo piet#1.0#hallo NICK
 mogge piet#1.0#morgen NICK
 mogguh#1.0#goeiemorgen slaapkop
+moge#0.5#ook een goeiemorgen toegewenst
 lunch#0.090909#eet smakelijk
 lunch#0.1#ACTION ziet het al voor zich, gebakken eitje, glas jus, warme broodjes
 lunch#0.111111#ACTION neemt als lunch altijd wat webpagina's
@@ -74,7 +79,8 @@ nee piet#0.5#waarom niet?
 ramt piet#0.3333#ACTION geeft NICK een dreun voor zn hoofd
 ramt piet#0.6666#ACTION keert NICK zn andere wang toe
 ramt piet#1.0#ACTION vlucht voor zijn leven
-piet nogmaals#0.5#ACTION wordt er wat moe van
+piet nogmaals#0.333#nu alweer?!?
+piet nogmaals#0.500#ACTION wordt er wat moe van
 stampt piet#0.5#Nee, au, niet doen
 stampt piet#1#ACTION zijgt ter aarde
 gooit piet#0.5#ACTION vliegt met een boogje
@@ -84,6 +90,12 @@ slaat piet#0.3#het digitale bloed spuit uit piet zijn hoofd
 slaat piet#1#ACTION rent gillend op NICK af
 mept piet#0.5#ACTION ontwijkt de slag maar struikelt en gaat ontzettend op zijn bek
 mept piet#1#ACTION rent gillende het kanaal rond
+compressed piet#1.0#ACTION was al niet zo groot, maar nu helemaal niks meer
+comprimeerd piet#1.0#ACTION blaast zichzelf maar weer op
+scp't piet#1.0#ACTION blijft lekker zitten waar'ie zit
+delete piet#1.0#ACTION valt je nu lastig vanuit de prullenbak
+zaagt piet#1.0#ACTION waarschuwt voor splinters
+bewerkt piet#1.0#ACTION hoopt dat het resultaat mooi is
 kietelt piet#0.5#ACTION schatert het uit
 kietelt piet#1.0#ACTION rolt door z'n computerkast van't lachen
 slacht piet#0.5#ACTION constateert dat NICK enorm faalt en huppelt blij rond
@@ -165,9 +177,6 @@ blub#0.1#NICK is weer in een idle loop vast geraakt
 blub#1.0#ACTION blubt mee
 dum dum dum#1#dum dum dum went the dismal drums demanding the demise of us all.
 geprobeert#1.0#Je zou mijn vriendje Clippie blij maken als je geprobeerd met een d schrijft
-hoe heet je piet#1.0#ik heet nu piet
-hoe heet je, piet#1.1#ik heet nu piet
-piet hoe heet je#1.1#ik heet nu piet
 schiet piet#1.0#ACTION zijn kogelvrije vest houdt alles makkelijk tegen
 evennaar#1.0#ik denk zo dat je evenaar bedoelt
 versie#0.2#ja maar dat is een beta versie hoor...
@@ -198,6 +207,7 @@ hakt piet#1.0#ACTION wordt gehacked
 ramt piet#1.0#ACTION zet het op het huilen
 scheldt piet#1.0#schelden doet geen zeer
 pakt piet#1.0#blijf van me af NICK
+duwt piet#1.0#ACTION wil niet geduwt worden en gaat zelf al
 jammer hoor#0.2#ach
 jammer hoor#0.2#inderdaad diep triest
 geen idee#0.1#ACTION weet het ook niet
@@ -234,6 +244,7 @@ mooi#0.1#ACTION krijgt er tranen van in zijn ogen
 diablo#0.1#moet het nou alweer over dat spel gaan?
 diablo#0.1#stomme rpg
 ik zie#0.5#ACTION ziet het nu ook
+kunstje#0.0588#ACTION pakt een schepje en verpot NICK
 kunstje#0.0625#ACTION heeft geen werk, en hoeft dus niks te doen
 kunstje#0.0667#ACTION huppelt wat rond
 kunstje#0.0714#ACTION kijkt vies en gooit snel z'n thee in de plantenbak
@@ -313,8 +324,9 @@ jamaar#0.5#wat een prutsmoes, ik had echt wel een betere van je verwacht
 zobiezo#0.5#pas op, groentje gaat je zo vertellen dat je sowieso had moeten tikken
 zobiezo#1.0#tsk. sowieso dus.
 dt ik #1.0#hee, daar kan een letter uitgespaard worden na die d
-curl#1.0#curl? dat zou ik toch zo gebruiken: curl -d @get_reports.xml -H content-type:text/xml http://localhost/cgi-bin/disp.fcgi
+curl#1.0#curl? dat zou ik toch zo gebruiken: curl -d @/tmp/request.xml -H content-type:text/xml http://localhost/cgi-bin/disp.fcgi
 pff#0.4#ACTION geeft NICK een plakkertje.
+Pff#0.4#ACTION legt NICK uit dat een echte pfff gewoon zonder hoofdletter kan
 krul#1.0#curl
 crul#1.0#s/cr/kr/
 (Y)#1.0#breezah miepje zou met (Y) toch een thumbs up bedoelen
