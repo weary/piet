@@ -1272,6 +1272,7 @@ def list_reminds(regel):
 		qry="SELECT channel,nick,msg,tijd FROM reminds";
 		if (regel!="all"):
 			qry+=" WHERE nick=\""+nick+"\"";
+		qry+=" ORDER BY tijd";
 		try:
 			msgs=piet.db(qry)[1:];
 		except:
@@ -2162,7 +2163,7 @@ def tweakers(regel):
 	return "uh, ok\n";
 
 def versie(regel):
-  regel=string.lower(regel)
+  regel=string.lower(string.strip(regel));
   if (regel=="centericq" or regel=="cicq"):
     inp,outp,stderr=os.popen3("wget -O - -q http://www.centericq.de/");
     result=outp.read()
@@ -2189,6 +2190,8 @@ def versie(regel):
       x=string.find(version,":")
       return "Laatste linux kernel versie "+version[:x]
     return "Kan het laatste versie nummer van de linux kernel niet vinden"
+  if len(regel)==0:
+    return "ik ben nu versie "+str(random.randint(0,9))+"."+str(random.randint(0,9))+", maar dat kan straks wel anders wezen";
   return regel+" ken ik niet"
 
 
