@@ -39,6 +39,49 @@ def do_search_replace(channel, nick, regmatchobj, lastchat):
 	except:
 		return False;
 		
+
+#create table paginas(tijd integer, nick text, paginas integer)
+def check_pagina(channel, nick, paginas):
+  try:
+    paginas=int(paginas);
+    nu=int(time.time());
+    piet.db("INSERT INTO paginas VALUES("+str(nu)+", \""+nick+"\", "+str(paginas)+");");
+    first=piet.db("SELECT tijd,paginas FROM paginas WHERE nick=\""+nick+"\" ORDER BY tijd LIMIT 1")[1];
+    first=[int(a) for a in first]
+    prev=int(piet.db("SELECT paginas FROM paginas WHERE nick=\""+nick+"\" ORDER BY tijd DESC LIMIT 2")[2][0]);
+
+    # sinds vorige keer
+    mutatie=paginas-prev;
+    r="";
+    if mutatie>1:
+        r="dat zijn er weer "+str(mutatie);
+    elif mutatie>0:
+        r="weer eentje dus";
+    elif mutatie<-1:
+        r="hee, dat zijn er "+str(-mutatie)+" minder"
+    elif mutatie<0:
+        r="pagina'tje minder, altijd goed"
+    else:
+        r="echt opschieten doet't niet"
+    
+    # sinds begin
+    dpag=paginas-int(first[1]);
+    dtijd=nu-int(first[0]);
+    d=float(dpag)/dtijd;
+    d=d*(24*60*60); eenheid="dag";
+    if abs(d)<0.5:
+        d=d*7;
+        eenheid="week";
+    if abs(d)<0.5:
+        d=d*52;
+        eenheid="jaar";
+    d=round(d,2);
+    
+    r=r+" (ongeveer "+str(d)+" per "+eenheid+")";
+    piet.send(channel, r)
+  except:
+    traceback.print_exc();
+
 try:
 	lastnicklog;
 except:
@@ -68,6 +111,11 @@ def do_react(channel, nick, pietnick, line):
 	urlmatch=re.search("((https?://|www\.)[^ \t,]*)", line);
 	if (urlmatch):
 		get_url_title(channel, urlmatch.group(0));
+		ready=True;
+
+	paginamatch=re.search("([0-9]{2,3})[ ]*pagina", line);
+	if (paginamatch):
+		check_pagina(channel, nick, paginamatch.group(1));
 		ready=True;
 
 	nicklogset = False;
