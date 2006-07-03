@@ -20,6 +20,7 @@ nick = "";#string.strip(sys.stdin.readline());
 auth = -5;#int(string.strip(sys.stdin.readline()));
 channel = "";#string.strip(sys.stdin.readline());
 d={};
+meer_data={};
 
 try:
 	nicks;
@@ -216,7 +217,7 @@ def hex2dec(params):
 		except:
 			traceback.print_exc();
 			return "doe nou niet alsof dat hexadecimaal is.. dat is't niet";
-		result="0x"+params+" wordt door sommigen aangeduidt als "+str(val);
+		result="0x"+params+" wordt door sommigen aangeduid als "+str(val);
 		if (val>=2**7 and val<=2**8):
 			result+=", en soms ook als -"+str(2**8-val);
 		elif (val>=2**15 and val<=2**16):
@@ -2112,6 +2113,13 @@ def reloadding(params):
 			return "tjip, een nieuwe lib!";
 	return "die module ken ik niet"
 
+
+def meer(params):
+	a=meer_data[nick];
+	if a and len(a)>0:
+		return string.join(a, '\n');
+	return "nah"
+
 tweakersthreads=0;
 tweakersstop=0;
 def tweakers_newsthread(channel):
@@ -2290,6 +2298,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
 		"uptime":            (200, uptime, "uptime, verteld tijd sinds eerste python command"),
 		"zoek":              (1000, zoek, "zoek vrouw, zoekt willekeurige vrouw in overijsel"),
 		"hex":               (101, hex2dec, "hex <nummer>, reken van/naar hex"),
+		"meer":              (200, meer, "meer, geef nog's wat meer output van vorig commando"),
     "test": (100, mytest, "ding"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
@@ -2332,10 +2341,13 @@ def parse(param_org, first, magzeg):
 		else:
 			r=functie[1](params);
 
-	r2=string.split(r, '\n');
-	if (len(r2)>15):
+	meer_data[nick]=[]
+	maxlines=10;
+	r2=[i for i in string.split(r, '\n') if len(string.strip(i))>0];
+	if (len(r2)>maxlines):
 		l=str(len(r2));
-		r=string.join(r2[:15], '\n')+"\n"+nick+": de rest verzin je zelf maar, 15 van de "+l+" regels vind ik zat\n";
+		meer_data[nick]=r2[maxlines:];
+		r=string.join(r2[:maxlines], '\n')+"\n"+nick+": de rest verzin je zelf maar, "+str(maxlines)+" van de "+l+" regels vind ik zat\n";
 	return r;
 
 prev_command="niets";
