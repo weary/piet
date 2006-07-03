@@ -11,7 +11,7 @@ import Distance;
 import BeautifulSoup;
 from pistes import cmd_pistes;
 import pietlib;
-
+from bash import bash;
 
 todofile = "todo.txt";
 logfile = "log.txt";
@@ -2102,6 +2102,10 @@ def reloadding(params):
 			import pistes;
 			reload(pistes);
 			return "och, wie weet is't gelukt";
+		elif params[0]=="bash":
+			from bash import bash;
+			reload(bash);
+			return "kheb vast gereload";
 		elif params[0]=="pietlib":
 			import pietlib;
 			reload(pietlib);
@@ -2231,7 +2235,8 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "doe":               (1200, leeg, "doe <commando>, voer een shell-commando uit"),
     "nieuws":            (100, news, "nieuws, laat de recente nieuwsheaders zien"),
     "temp":              (0,temp, "temp, de temperatuur van sommige plaatsen in de wereld"), 
-    "watis":             (1001, watis, "watis <iets>, geeft veel bla over <iets>"),
+    "watis":             (1000, watis, "watis <iets>, geeft veel bla over <iets>"),
+    "dict":             (1000, watis, ""),
     "kop dicht":         (1000, leeg, "kop dicht, hou op met spammen"),
 		"auth iedereen":     (1200, auth_iedereen, "auth iedereen, geef iedereen authorisatie 1000 (inclusief jezelf)"),
     "auth":              (-6, change_auth, "auth [<niveau> <nick> [<paswoord>]], geef een authenticatieniveau"),
@@ -2267,6 +2272,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "mep":               (100, mep, ""),
     "geef":              (100, geef, ""),
 		"pistes":            (100, cmd_pistes, "pistes, doet iets met skipistes"),
+		"bash":								(100, bash, "Geef bash quote <nummer> terug of een random bashquote bij gebrek aan nummer"),
 		"sentence":          (100, random_sentence, "sentence, geef een willekeurige engelse zin"),
     "dum":               (0, dum, ""),
     "wiki":		 (500, wiki, "wiki <woord> Freeware encyclopedie"),

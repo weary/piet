@@ -13,9 +13,9 @@ import string,os
 
 def bash(quote=0):
 	if(quote):
-		cmd = "lynx -dump http://www.bash.org/?" + str(quote);
+		cmd = "lynx -dump --width 1000 http://www.bash.org/?" + str(quote);
 	else:
-		cmd = "lynx -dump http://www.bash.org/?random";
+		cmd = "lynx -dump --width 1000 http://www.bash.org/?random";
 	
 	inp,outp,stderr = os.popen3(cmd);
 	result = outp.read();
