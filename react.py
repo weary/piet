@@ -68,7 +68,10 @@ def check_pagina(channel, nick, paginas):
     dpag=paginas-int(first[1]);
     dtijd=nu-int(first[0]);
     d=float(dpag)/dtijd;
-    d=d*(24*60*60); eenheid="dag";
+    d=d*60; eenheid="minuut";
+    if abs(d)<0.5:
+        d=d*(24*60);
+        eenheid="dag";
     if abs(d)<0.5:
         d=d*7;
         eenheid="week";
@@ -106,6 +109,18 @@ def do_react(channel, nick, pietnick, line):
 	inf.close();
 
 	ready=False;
+
+	if (lastnicklog[nick]==line):
+		r=random.choice([
+				"ja, zeg het vooral nog's",
+				"spannend hoor, zo'n herhaling",
+				"gave opmerking, zeg",
+				"blij dat je dat nog's zegt",
+				line,
+				"ah, ja, dat. verstond je niet de 1e keer",
+				"s/"+line+"//"]);
+		piet.send(channel, r+"\n");
+		ready=True;
 
 	# check for url's in the input
 	urlmatch=re.search("((https?://|www\.)[^ \t,]*)", line);
