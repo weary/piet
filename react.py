@@ -110,7 +110,7 @@ def do_react(channel, nick, pietnick, line):
 
 	ready=False;
 
-	if (lastnicklog[nick]==line):
+	if lastnicklog.has_key(nick) and lastnicklog[nick]==line:
 		r=random.choice([
 				"ja, zeg het vooral nog's",
 				"spannend hoor, zo'n herhaling",
