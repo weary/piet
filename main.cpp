@@ -52,54 +52,43 @@ void printsockaddr(const sockaddr *buf, unsigned int size)
 }
 
 
-int connect_to_server()
-{
-	std::string server=g_config.get_server();
-	std::string service=g_config.get_service();
-  int sok=socket(PF_INET, SOCK_STREAM, 0);
-  printf("Got socket %d, looking up host \"%s\" for service \"%s\"\n",
-			sok,
-			server.c_str(),
-			service.c_str());
-  addrinfo *ainfo=NULL;
-  {
-    int result=getaddrinfo(server.c_str(), service.c_str(), NULL, &ainfo);
-    if (result!=0)
-    {
-      printf("Could not find host!\n%s", gai_strerror(result));
-      throw;
-    }
-  }
 
-  { // try to connect to the addrinfo-thingy's
-    addrinfo *ai=ainfo;
-    int result=-1;
-    while ((result!=0) && (ai!=NULL))
-    {
-      //u_short *portaddr=(u_short *)&(((sockaddr *)ai->ai_addr)->sa_data);
-      //portaddr[0]=htons(5500);
-      printsockaddr(ai->ai_addr, ai->ai_addrlen);
-      result=connect(sok, ai->ai_addr, ai->ai_addrlen);
-      if (result!=0)
-      {
-        printf("connection failed (%s)", strerror(errno));
-        if (ai->ai_next)
-        {
-          printf(", advancing to next address");
-          ai=ai->ai_next;
-        }
-        printf("\n");
-      }
-    }
-    freeaddrinfo(ainfo);
-    if (result!=0)
-      throw;
-    else
-      printf("Ok, connection established\n");
-  }
-  return(sok);
+
+int connect_to_server(const std::string &addr, int port)
+{
+	struct hostent *h = gethostbyname(addr.c_str());
+	if (!h)
+	{
+		printf("could not find host \"%s\"\n", addr.c_str());
+		throw;
+	}
+
+	printf("connecting to %d.%d.%d.%d:%d\n",
+			h->h_addr[3], h->h_addr[2], h->h_addr[1], h->h_addr[0], port);
+
+	int sok = socket(AF_INET, SOCK_STREAM, 0);
+	if (sok == -1)
+	{
+		printf("failed to create socket\n");
+		throw;
+	}
+
+	struct sockaddr_in sin;
+	memset(&sin, 0, sizeof(sin));
+	sin.sin_family = AF_INET;
+	memcpy(&sin.sin_addr, h->h_addr, 4);
+	sin.sin_port = htons((unsigned short)port);
+	int result=connect(sok, (sockaddr *)&sin, sizeof(sin));
+	if (result!=0)
+	{
+		printf("connection failed (%s)", strerror(errno));
+		throw;
+	}
+
+	return sok;
 }
-  
+
+
 static std::string receive(int sok)
 {
 	char buf[65536];
@@ -134,22 +123,7 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		//lua_inst.reset(new clua);
-#if 0
-		//auth_map[std::string("piet")]=-10;
-		auth_map[std::string("weary")]=1200;
-		auth_map[std::string("Semyon")]=1000;
-		auth_map[std::string("Socrates")]=1000;
-		auth_map[std::string("Slaine")]=1000;
-		auth_map[std::string("Groentje")]=1000;
-		auth_map[std::string("Neighbour")]=1000;
-		auth_map[std::string("neb")]=1000;
-		auth_map[std::string("chm")]=1000;
-		auth_map[g_config.get_nick()]=150; // <-- om te zorgen dat ie zichzelf het auth systeem niet uitlegt
-		auth_map[std::string("Bouncer")]=-1;
-#endif
-
-		int sok=connect_to_server();
+		int sok=connect_to_server(g_config.get_server(), g_config.get_port());
 
 		create_send_thread(sok);
 
@@ -164,8 +138,8 @@ int main(int argc, char *argv[])
 			int n=poll(polls, 1, 1000/*ms*/);
 			if (n<0 && errno==EINTR)
 			{
-				send(":%s PRIVMSG %s :Aaaargh Ik ga dood! help help!\n",
-						g_config.get_nick().c_str(), g_config.get_channel().c_str());
+				/*send(":%s PRIVMSG %s :Aaaargh Ik ga dood! help help!\n",
+						g_config.get_nick().c_str(), g_config.get_channel().c_str());*/
 				continue;
 			}
 			else if (n<0)
