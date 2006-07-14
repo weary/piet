@@ -474,8 +474,6 @@ def zeg(params):
 		kanaal=split[-1];
 		split=split[:-2];
 	
-	piet.send(channel,"kanaal="+kanaal+", channel="+channel+", tegen="+tegen);
-	piet.send(channel,repr(kanaal==channel)+", "+repr(tegen==""));
 	if kanaal==channel and tegen=="":
 		return params;
 	if kanaal!=channel and tegen!="":
