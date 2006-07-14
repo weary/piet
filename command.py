@@ -449,28 +449,60 @@ def weer(woord):
 	return "'"+woord+"' ken ik niet hoor, hier is het nederlandse weer:\n"+nlweer("");
 
 
-def zeg(params):
-	global nicks;
-	split=re.match("(.*) tegen (\S+)", params);
-	if (split!=None):
-		txt=split.group(1);
-		nick=split.group(2);
-	else:
-		split=re.match("tegen (\S+) (.*)", params);
-		if (split!=None):
-			txt=split.group(2);
-			nick=split.group(1);
-		else:
-			return params;
+try:
+	zeghisttijd;
+	zeghistnicks;
+except:
+	zeghisttijd=0;
+	zeghistnicks=[];
 
-	if (nicks.has_key(nick)):
-		return nick+", ehm, "+txt;
-	elif (auth>100):
-		txt=txt.replace("'", "''");
-		piet.db("INSERT INTO notes VALUES('"+nick+"','"+txt+"')");
-		return "ik zie helemaal geen "+nick+". misschien later";
-	else:
-		return "doe het lekker zelf ofzo";
+def zeg(params):
+	global nicks,zeghisttijd,zeghistnicks;
+	tegen="";
+	kanaal=channel;
+	split=string.split(params, " ");
+	if len(split)>=3 and split[0]=="tegen":
+		tegen=split[1];
+		split=split[2:];
+	if len(split)>=3 and split[-2]=="tegen":
+		tegen=split[-1];
+		split=split[:-2];
+	if len(split)>=3 and split[0]=="op":
+		kanaal=split[1];
+		split=split[2:];
+	if len(split)>=3 and split[-2]=="op":
+		kanaal=split[-1];
+		split=split[:-2];
+	
+	piet.send(channel,"kanaal="+kanaal+", channel="+channel+", tegen="+tegen);
+	piet.send(channel,repr(kanaal==channel)+", "+repr(tegen==""));
+	if kanaal==channel and tegen=="":
+		return params;
+	if kanaal!=channel and tegen!="":
+		return "tegen en op tegelijk? dit wordt te ingewikkeld voor mij hoor.."
+	
+	txt=string.join(split, " ");
+		
+	if tegen!="":
+		if (nicks.has_key(tegen)):
+			return tegen+", ehm, "+txt;
+		elif (auth>100):
+			txt=txt.replace("'", "''");
+			piet.db("INSERT INTO notes VALUES('"+tegen+"','"+txt+"')");
+			return "ik zie helemaal geen "+tegen+". misschien later";
+		else:
+			return "doe het lekker zelf ofzo";
+	
+	piet.send(kanaal, txt);
+	now=time.time();
+	zeghisttijd=now;
+	zeghistnicks.append(nick);
+	time.sleep(3*60);
+	if zeghisttijd==now:
+		n=unique(zeghistnicks);
+		zeghistnicks=[];
+		piet.send(kanaal, "zo, dat heb ik even goed gezegd, niet dan "+pietlib.make_list(n)+"?");
+	return "";
 
 def rot_nr(cmd):
 	n,y=string.split(cmd, " ", 1);
@@ -2217,7 +2249,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "rijm":              (100, rijm, "rijm <woord>, zoek rijmwoorden op"),
     "vertaal":           (100, vertaal, "vertaal <brontaal> <doeltaal> <regel>, vertaalt <regel> van de taal <brontaal> naar de taal <doeltaal>"),
     "weer":              (100, weer, "weer, zoek het weer op"),
-    "zeg":               (0, zeg, "zeg <text> [tegen <naam>], ga napraten"),
+    "zeg":               (0, zeg, "zeg <text> [tegen <naam>|op <channel>], ga napraten"),
 		"rot":             (0, rot_nr, "rot<nr> <text>, versleutel <text> met het rot<nr> algorithme"),
     "ping":              (100, ping, "ping, zeg pong"),
     "remind":            (300, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
