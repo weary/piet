@@ -43,6 +43,13 @@ def db_set(table, key, value):
 		piet.db("REPLACE INTO "+table+" values('"+str(key)+"', '"+str(value)+"')");
 		return;
 
+def datum(params):
+	tz=pietlib.tijdzone_nick(nick);
+	os.environ['TZ']=tz;
+	time.tzset();
+	result=time.strftime("Het is nu %d-%m-%Y (in de tijdzone "+tz.lower()+")");
+	pietlib.timezone_reset();
+	return result;
 
 def error_handler(type, value, tb):
 	global channel;
@@ -2283,6 +2290,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "ping":              (100, ping, "ping <host>, ping een computer"),
     "dvorak2qwerty":     (0, dvorak2qwerty, "dvorak2qwerty <text>, maak iets dat op een qwerty-tb in dvorak is getikt leesbaar"),
     "d2q":               (0, dvorak2qwerty, ""),
+		"datum":             (100, datum, "geef de datum van vandaag"),
     "dat":               (100, last, "dat [x], herhaal wat er x regels terug gezegd werd"),
     "leet":              (0, leet, "leet <text>, convert to 1337"),
     "unleet":            (0, unleet, "unleet <text>, unconvert to 1337"),
