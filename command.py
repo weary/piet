@@ -47,7 +47,7 @@ def datum(params):
 	tz=pietlib.tijdzone_nick(nick);
 	os.environ['TZ']=tz;
 	time.tzset();
-	result=time.strftime("Het is nu %d-%m-%Y (in de tijdzone "+tz.lower()+")");
+	result=time.strftime("Het is nu %d-%m-%Y (in de tijdzone "+tz.lower()+")", time.localtime());
 	pietlib.timezone_reset();
 	return result;
 
@@ -1588,6 +1588,17 @@ def wiki(regel):
   return string.strip(toreturn);
 
 def tijd(regel):
+	if len(regel)>0:
+		try:
+			tz=find_timezone(regel, 0);
+			os.environ['TZ']=tz;
+			time.tzset();
+			t=time.strftime("%H:%M", time.localtime());
+			pietlib.timezone_reset();
+			return "in "+tz+" is het "+t;
+		except:
+			return "kies eens een andere tijdzone ofzo, wat een onzin"
+
 	inp=piet.db('SELECT name,timezone FROM auth');
 	if (inp==None or len(inp)<=1): # no users
 		return time.strftime("%H:%M", time.localtime());
@@ -1611,7 +1622,7 @@ def tijd(regel):
 		result=result+", en in "+tz+" is het "+t;
 	return result+"\n";
 
-def find_timezone(param):
+def find_timezone(param, verbose):
   path='/usr/share/zoneinfo/';
   try:
     if (stat.S_ISREG(os.stat(path+param).st_mode)):
@@ -1632,12 +1643,12 @@ def find_timezone(param):
     for i in files:
       fullmatch.insert(999, root+i);
   if len(fullmatch)>0:
-    if len(fullmatch)>0:
+    if len(fullmatch)>0 and verbose:
       piet.send(channel,"hmm, ik kan kiezen uit "+pietlib.make_list(fullmatch));
     fullmatch.sort(lambda x,y: cmp(len(x),len(y)));
     return fullmatch[0];
   if len(submatch)>0:
-    if len(submatch)>0:
+    if len(submatch)>0 and verbose:
       piet.send(channel,"hmm, ik kan kiezen uit "+pietlib.make_list(submatch));
     submatch.sort(lambda x,y: cmp(len(x),len(y)));
     return submatch[0];
@@ -1660,7 +1671,7 @@ def tijdzone(regel):
 		return a[0]+" huppelt rond in "+tz+"\n";
 	elif(len(a)==2):
 		try:
-			tijdzone=find_timezone(a[1]);
+			tijdzone=find_timezone(a[1], 1);
 		except:
 			traceback.print_exc();
 			return "sorry, ik doe alleen tijdzones van de planeet aarde\n";
