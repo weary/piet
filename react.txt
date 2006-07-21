@@ -386,6 +386,7 @@ kluts#1.0#ik weet niet wat een kluts is hoor, een of andere stuk auto ofzo?
 piet heeft altijd gelijk#1.0#maar natuurlijk!
 piet heeft gelijk#1.0#tuurlijk heb ik gelijk, twijfelt niemand aan
 piet heeft geen gelijk#1.0#echt wel!
+koffiebaan#1.0#achja, koffiebaan, bloedbaan, 't is maar hoe je 't noemt
 
 
 
