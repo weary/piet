@@ -257,9 +257,25 @@ def hex2dec(params):
 		return str(val)+" is dus "+hex(2**64+val);
 	else:
 		return str(val)+" is wel heel klein, "+hex(val);
-	
-		
-	
+
+def weekend(params):
+	tz=pietlib.tijdzone_nick(nick);
+	os.environ['TZ']=tz;
+	time.tzset();
+	tijd=time.gmtime();
+	wday=(tijd.tm_wday + (tijd.tm_wday==4 and tijd.tm_hour>=17) ) % 7;
+	l={
+	0: ["ja, maandag, 't weekend weer overleefd", "grr, een maandag"],
+	1: ["pff, dat duurt nog lang, pas dinsdag", "dinsdag, alweer 1 dag gehad, nog veel te gaan"],
+	2: ["woensdag, op de helft", "woensdag, 2 down, 3 to go"],
+	3: ["donderdag, komt in de buurt", "pff, vandaag nog, en die hele vrijdag nog"],
+	4: ["vrijdag! bijna!", "vandaag nog ff doorkomen en we zijn er!"],
+	5: ["jaaah! weekend!"],
+	6: ["jaaah! de hele dag nog weekend!"]
+	}[wday];
+	pietlib.timezone_reset();
+	return random.choice(l);
+
 def uptime(params):
 	ut=time.time()-boottime;
 	minutes,seconds=int(ut/60),int(ut%60);
@@ -2323,6 +2339,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "context":            (100, context, "context <text>, geeft de context waarin iets gezegd is"),
     "wees stil":         (1000, leeg, "wees stil, laat piet z'n kop houden met loze dingen"),
     "stil?":             (1000, leeg, "stil?, probeert piet zich stil te houden?"),
+    "weekend?":          (100, weekend, ""),
     "praat maar":        (1000, leeg, "praat maar, tegenovergestelde van \"wees stil\""),
     #"lees lua":          (1000, leeg, "lees lua, herlees het lua script"),
     "kies":              (100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
