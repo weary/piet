@@ -174,8 +174,13 @@ def change_auth(params):
 			traceback.print_exc();
 			return "ik heb geen idee, zoek het lekker zelf uit";
 
-	newauth=int(par[0]);
-	parnick=par[1];
+	newauth=0; parnick="";
+	try:
+		newauth=int(par[0]);
+		parnick=par[1];
+	except:
+		newauth=int(par[1]);
+		parnick=par[0];
 	if (newauth>1500): newauth=1500;
 	if (newauth<-1500): newauth=-1500;
 
@@ -1595,7 +1600,7 @@ def tijd(regel):
 			time.tzset();
 			t=time.strftime("%H:%M", time.localtime());
 			pietlib.timezone_reset();
-			return "in "+tz+" is het "+t;
+			return "in "+tz.lower()+" is het "+t;
 		except:
 			return "kies eens een andere tijdzone ofzo, wat een onzin"
 
@@ -1619,7 +1624,7 @@ def tijd(regel):
 
 	result="bij mij is het "+result;
 	for t,tz in tzcalc.iteritems():
-		result=result+", en in "+tz+" is het "+t;
+		result=result+", en in "+tz.lower()+" is het "+t;
 	return result+"\n";
 
 def find_timezone(param, verbose):
