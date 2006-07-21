@@ -1445,11 +1445,13 @@ def tempwereld(regel):
       City="Hilversum";
     elif (City=="ny" or City=="new_york"):
       City="New York";
+    elif (City=="arnhem"):
+      City="Arnhem";
     elif (City=="p'burgh" or City=="pennsylvania" or City=="pittsburgh"):
        City="Pittsburgh";
     url="";
 
-    cityurlmap=[("Enschede","?ID=IOVERIJS5","CET"),("Loppersum","?ID=IGRONING8","CET"),("New York","?ID=KNYNEWYO17","EST"),("Groningen","?ID=IGRONING9","CET"),("Leeuwarden","?ID=IFRIESLA16","CET"),("Sydney","?ID=INSWWEST1","AEST"),("Pittsburgh","?ID=KPAPITTS8","EDT"),("Hilversum","?ID=IHILVERS3","CET"),("Rotterdam","?ID=IZHROTTE2","CET"),("Amsterdam","?ID=INOORDHO1","CET"),("Cairns","?ID=IQUEENSL32","AEST"),("Johannesburg","?ID=IGAUTENG8","SAST"),("Den Haag","?ID=IZUIDHOL11","CET")];
+    cityurlmap=[("Enschede","?ID=IOVERIJS5","CET"),("Loppersum","?ID=IGRONING8","CET"),("New York","?ID=KNYNEWYO17","EST"),("Groningen","?ID=IGRONING9","CET"),("Leeuwarden","?ID=IFRIESLA16","CET"),("Sydney","?ID=INSWWEST1","AEST"),("Pittsburgh","?ID=KPAPITTS8","EDT"),("Hilversum","?ID=IHILVERS3","CET"),("Rotterdam","?ID=IZHROTTE2","CET"),("Amsterdam","?ID=INOORDHO1","CET"),("Cairns","?ID=IQUEENSL32","AEST"),("Johannesburg","?ID=IGAUTENG8","SAST"),("Den Haag","?ID=IZUIDHOL11","CET"),("Arnhem","?ID=IGELDERL20","CET")];
     for (name,x,t) in cityurlmap:
       if name==City:
         url=x;
@@ -1515,7 +1517,7 @@ def tempwereld(regel):
 
 def tempnl(params):
 	plaats=string.lower(params);
-	if (plaats=="h'sum") or (plaats=="hilversum"):
+	if (plaats=="h'sum") or (plaats=="hilversum") or (plaats=="arnhem"):
 		plaats="de bilt";
 	elif (plaats=="r'dam"):
 		plaats="rotterdam";
