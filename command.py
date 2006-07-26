@@ -2245,6 +2245,58 @@ def tweakers(regel):
 		return "aan of uit, hoe moeilijk kan het nou helemaal wezen?\n";
 	return "uh, ok\n";
 
+def filemeldingen(params):
+  result=pietlib.get_url("http://www.trafficnet.nl/traffic.asp?region=lijst")
+  if params=="":
+    i1=string.find(result,"textplain")
+    i1=string.find(result,">",i1)+1
+    i2=string.find(result,"<",i1)
+    answer=string.replace(result[i1:i2],"&nbsp;"," ")+"\n"
+    i1=string.find(result,"textplain",i2)
+    i1=string.find(result,">",i1)+1
+    i2=string.find(result,"<",i1)
+    answer+=string.replace(string.strip(result[i1:i2]),"&nbsp;"," ")+"\n"
+    wegenlijst=""
+    i1=string.find(result,"wegNrA",i1)
+    if string.find(result,"<strong>",i1)<0:
+      i1=-1
+    while i1>0:
+      i1=string.find(result,">",i1)+1
+      i2=string.find(result,"<",i1)
+      wegenlijst+=result[i1:i2]+" "
+      i1=string.find(result,"wegNrA",i1)
+      if string.find(result,"<strong>",i1)<0:
+        i1=-1
+    if wegenlijst=="":
+      return string.strip(answer)
+    return answer+"Files op: "+wegenlijst
+  i1=string.find(result,"wegNrA")
+  if string.find(result,"<strong>",i1)<0:
+    i1=-1
+  params=string.split(string.lower(params))
+  answer=""
+  while i1>0:
+    i1=string.find(result,">",i1)+1
+    i2=string.find(result,"<",i1)
+    if string.lower(result[i1:i2]) in params:
+      answer+=result[i1:i2]+": "
+      s1=string.find(result,"<strong>",i1)+8
+      s2=string.find(result,"<",s1)
+      answer+=result[s1:s2]
+      s1=string.find(result,">",s2)+1
+      s1=string.find(result,">",s1)+1
+      s2=string.find(result,"</",s1)
+      desc=result[s1:s2]
+      for item in string.split(desc,"\n"):
+        answer+=string.strip(string.replace(string.replace(string.strip(item),"&nbsp;"," "),"<br>"," "))+" "
+      answer+="\n"
+    i1=string.find(result,"wegNrA",i1)
+    if string.find(result,"<strong>",i1)<0:
+      i1=-1
+  answer=string.replace(answer,"  "," ")
+  answer=string.replace(answer,"  "," ")
+  return answer
+
 def versie(regel):
   regel=string.lower(string.strip(regel));
   if (regel=="centericq" or regel=="cicq"):
@@ -2332,6 +2384,8 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
     "bugrep":		 (1, todo, ""),
     "geordi":		 (0, geordi, ""),
     "geoip":             (100, geoip, "geoip <ip>, zoekt positie op aarde van ip"),
+    "file":              (100, filemeldingen, "file <weg>, zoekt fileinformatie op van die weg"),
+    "files":              (100, filemeldingen, ""),
     "je heet nu":        (500, jeheetnu, "je heet nu <nick>, geef nieuwe nick"),
     "renick":            (200, randomnaam, "renick, verzint een willekeurige nick"),
     "opme":              (500, opme, "opme, geef @"),
