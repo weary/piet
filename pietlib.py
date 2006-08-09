@@ -76,7 +76,9 @@ def format_tijdsduur(secs, items=2):
 
 	return make_list(tijd);
 
-dateregex="(\d{1,2})[-/ ](\d{1,2}|"+string.join(calc.monthmap.keys(),'|')+")[-/ ](\d{4})";
+dateregex=\
+"(\d{1,2})[-/ ](\d{1,2}|"+string.join(calc.monthmap.keys(),'|')+")[-/ ](\d{4})"+\
+"(vandaag|morgen|overmorgen)";
 
 # convert tijd-string naar secs t.o.v epoch
 # als er geen datum gegeven is, en de tijd<nu is, dan wordt er 24 uur bij opgeteld
@@ -87,15 +89,32 @@ def parse_tijd(tijd, tijdzone):
 	have_date=False;
 	if (datesplit!=None):
 		have_date=True;
-		try:
-			day=int(datesplit.group(1));
-			year=int(datesplit.group(3));
-			month=int(datesplit.group(2));
-		except:
+		if datesplit.group(1):
 			try:
-				month=calc.monthmap[datesplit.group(2).lower()];
+				day=int(datesplit.group(1));
+				year=int(datesplit.group(3));
+				month=int(datesplit.group(2));
 			except:
-				have_date=False;
+				try:
+					month=calc.monthmap[datesplit.group(2).lower()];
+				except:
+					have_date=False;
+		elif datesplit.group(4):
+			os.environ['TZ']=tijdzone;
+			time.tzset();
+			t=time.time();
+			if datesplit.group(4)=="vandaag":
+				datum=time.strftime("%d-%m-%Y ", time.localtime(t));
+				datumformat="%d-%m-%Y ";
+			elif datesplit.group(4)=="morgen":
+				datum=time.strftime("%d-%m-%Y ", time.localtime(t+24*60*60));
+				datumformat="%d-%m-%Y ";
+			elif datesplit.group(4)=="overmorgen":
+				datum=time.strftime("%d-%m-%Y ", time.localtime(t+2*24*60*60));
+				datumformat="%d-%m-%Y ";
+		else:
+			raise("regex and if-statements don't agree");
+
 		if (have_date):
 			datumformat="%d-%m-%Y ";
 			datum=str(day)+"-"+str(month)+"-"+str(year)+" ";
