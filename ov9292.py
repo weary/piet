@@ -42,7 +42,14 @@ def do_fetch(action, actionpath, q):
     raw=pietlib.get_url(url);
     return parse_ov9292(raw, actionpath);
 
-def do_station(station, action, actionpath, q):
+def niet_herkent(channel, what, choice, choices):
+  choices.remove(choice);
+  str=what+" niet herkent, ik pak "+choice;
+  if len(choices)>0:
+    str=str+" (en niet "+pietlib.make_list(choices, "of")+")";
+  piet.send(channel,str);
+
+def do_station(station, action, actionpath, q, channel):
     # choose "station" (q["typ"]=1 - station, q["typ"]=3 - adres)
     q["typ"]=1;
     action,actionpath,q,form=do_fetch(action, actionpath, q);
@@ -51,12 +58,11 @@ def do_station(station, action, actionpath, q):
     if form.find("Kies treinstation")>=0: # misspelled station, select one
         choices=findselectbox(form);
         q["v1"]=choices[0][1];
-        print("station niet herkent, ik pak "+choices[0][0]+" (en niet "+
-        string.join([i for i,j in choices][1:], ", ")+")");
+	niet_herkent(channel, "station "+station, choices[0][0], [i for i,j in choices]);
         action,actionpath,q,form=do_fetch(action, actionpath, q);
     return action,actionpath,q,form;
 
-def do_plaats(adres, action, actionpath, q):
+def do_plaats(adres, action, actionpath, q, channel):
     match=re.match("([^0-9,]*)([ ]+[0-9]+)?[ ]*,(.*)", adres);
     if not(match):
         raise "kon adres \""+adres+"\" niet parsen";
@@ -75,8 +81,7 @@ def do_plaats(adres, action, actionpath, q):
     if form.find("Kies plaats")>=0: # misspelled city
         choices=findselectbox(form);
         q["v1"]=choices[0][1];
-        print("plaats niet herkent, ik pak "+choices[0][0]+" (en niet "+
-        string.join([i for i,j in choices][1:], ", ")+")");
+	niet_herkent(channel, "plaats "+plaats, choices[0][0], [i for i,j in choices]);
         action,actionpath,q,form=do_fetch(action, actionpath, q);
     
     q["v1"]=straat;
@@ -89,14 +94,13 @@ def do_plaats(adres, action, actionpath, q):
     if form.find("Kies straat")>=0: # misspelled street
         choices=findselectbox(form);
         q["v1"]=choices[0][1];
-        print("straat niet herkent, ik pak "+choices[0][0]+" (en niet "+
-        string.join([i for i,j in choices][1:], ", ")+")");
+	niet_herkent(channel, "straat "+straat, choices[0][0], [i for i,j in choices]);
         action,actionpath,q,form=do_fetch(action, actionpath, q);
         
     return action,actionpath,q,form;
 
 def ov9292(param,nick,channel):
-    par=re.match("[ ]*(optie|keuze)?[ ]*([abcABC123])[ ]*", param)
+    par=re.match("[ ]*(optie|keuze)?[ ]*([abcABC123])[ ]*$", param)
     if par:
         # probeer oude resultaten op te halen
         nr=par.group(2);
@@ -118,7 +122,7 @@ def ov9292(param,nick,channel):
     tz=pietlib.tijdzone_nick(nick);
     regex=\
     '(["]([^"]*)["]|([^"][^ ]*))[ ]+(["]([^"]*)["]|([^"][^ ]*))[ ]*'+\
-    '( vertrek| aankomst)?[ ]*(.*)';
+    '(vertrek|aankomst)?[ ]*(.*)';
     par=re.match(regex, param);
     if not(par):
         return 'ik snap d\'r geen hout van, parameters moeten zijn: '\
@@ -126,7 +130,7 @@ def ov9292(param,nick,channel):
     van=par.group(2) or par.group(3);
     naar=par.group(5) or par.group(6);
     vertrek='D';
-    if par.group(7) and par.group(7)==" aankomst":
+    if par.group(7) and par.group(7).strip()=="aankomst":
         vertrek='A';
     tijd=time.time();
     tijdstr=par.group(8).strip();
@@ -144,14 +148,14 @@ def ov9292(param,nick,channel):
     action,actionpath,q,form=do_fetch(action, actionpath, q);
 
     if van.find(',')>=0:
-        action,actionpath,q,form=do_plaats(van, action, actionpath, q);
+        action,actionpath,q,form=do_plaats(van, action, actionpath, q, channel);
     else:
-        action,actionpath,q,form=do_station(van, action, actionpath, q);
+        action,actionpath,q,form=do_station(van, action, actionpath, q, channel);
 
     if naar.find(',')>=0:
-        action,actionpath,q,form=do_plaats(naar, action, actionpath, q);
+        action,actionpath,q,form=do_plaats(naar, action, actionpath, q, channel);
     else:
-        action,actionpath,q,form=do_station(naar, action, actionpath, q);
+        action,actionpath,q,form=do_station(naar, action, actionpath, q, channel);
     
     # tijd/datum
     os.environ['TZ']="Europe/Amsterdam";

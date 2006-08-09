@@ -26,7 +26,7 @@ def get_url_soup(url, agent=defaultagent):
 localtimezone="Europe/Amsterdam";
 
 # maak lijst gescheiden door ,'s, behalve tussen laatste 2 items, waar "en" komt
-def make_list(p):
+def make_list(p, sep="en"):
 	p=list(p);
 	if len(p)==0:
 		return "";
@@ -35,7 +35,7 @@ def make_list(p):
 	
 	prefix=p[:-1];
 	postfix=p[-1];
-	return string.join(prefix, ", ")+" en "+postfix;
+	return string.join(prefix, ", ")+" "+sep+" "+postfix;
 
 # maak een nederlandse zin van secs. secs moet een tijdsduur weergeven, niet een
 # absolute tijd, zie format_localtijd voor absolute tijd, items geeft de precisie
