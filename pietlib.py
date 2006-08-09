@@ -77,7 +77,7 @@ def format_tijdsduur(secs, items=2):
 	return make_list(tijd);
 
 dateregex=\
-"(\d{1,2})[-/ ](\d{1,2}|"+string.join(calc.monthmap.keys(),'|')+")[-/ ](\d{4})"+\
+"(\d{1,2})[-/ ](\d{1,2}|"+string.join(calc.monthmap.keys(),'|')+")[-/ ](\d{4})|"+\
 "(vandaag|morgen|overmorgen)";
 
 # convert tijd-string naar secs t.o.v epoch
@@ -99,6 +99,11 @@ def parse_tijd(tijd, tijdzone):
 					month=calc.monthmap[datesplit.group(2).lower()];
 				except:
 					have_date=False;
+		
+			if (have_date):
+				datumformat="%d-%m-%Y ";
+				datum=str(day)+"-"+str(month)+"-"+str(year)+" ";
+
 		elif datesplit.group(4):
 			os.environ['TZ']=tijdzone;
 			time.tzset();
@@ -116,8 +121,6 @@ def parse_tijd(tijd, tijdzone):
 			raise("regex and if-statements don't agree");
 
 		if (have_date):
-			datumformat="%d-%m-%Y ";
-			datum=str(day)+"-"+str(month)+"-"+str(year)+" ";
 			tijd=string.strip(tijd[datesplit.end():]);
 
 	try:
