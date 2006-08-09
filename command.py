@@ -11,6 +11,7 @@ import Distance;
 import BeautifulSoup;
 from pistes import cmd_pistes;
 import pietlib;
+import ov9292;
 from bash import bash;
 
 todofile = "todo.txt";
@@ -2157,6 +2158,9 @@ def opme(params):
 	piet.names(channel);
 	return "ik zal eens kijken hoe het er hier voor staat en zo nodig actie ondernemen\n";
 
+def ov9292_wrapper(params):
+	return ov9292.ov9292(params,nick,channel);
+
 def reloadding(params):
 	params=string.split(params," ")
 	if (len(params)<1) or (len(params[0])==0):
@@ -2182,6 +2186,10 @@ def reloadding(params):
 			import pietlib;
 			reload(pietlib);
 			return "tjip, een nieuwe lib!";
+		elif params[0]=="ov9292":
+			import ov9292;
+			reload(ov9292);
+			return "_ov_ernieuw ingelezen!";
 	return "die module ken ik niet"
 
 
@@ -2426,6 +2434,7 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
 		"zoek":              (1000, zoek, "zoek vrouw, zoekt willekeurige vrouw in overijsel"),
 		"hex":               (101, hex2dec, "hex <nummer>, reken van/naar hex"),
 		"meer":              (200, meer, "meer, geef nog's wat meer output van vorig commando"),
+		"ov":                (200, ov9292_wrapper, "ov \"<van>\" \"<naar>\" vertrek|aankomst datum tijd"),
     "test": (100, mytest, "ding"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
