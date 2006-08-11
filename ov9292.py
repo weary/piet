@@ -44,7 +44,7 @@ def do_fetch(action, actionpath, q):
 
 def niet_herkent(channel, what, choice, choices):
   choices.remove(choice);
-  str=what+" niet herkent, ik pak "+choice;
+  str=what+" niet herkend, ik pak "+choice;
   if len(choices)>0:
     str=str+" (en niet "+pietlib.make_list(choices, "of")+")";
   piet.send(channel,str);
@@ -58,7 +58,7 @@ def do_station(station, action, actionpath, q, channel):
     if form.find("Kies treinstation")>=0: # misspelled station, select one
         choices=findselectbox(form);
         q["v1"]=choices[0][1];
-	niet_herkent(channel, "station "+station, choices[0][0], [i for i,j in choices]);
+        niet_herkent(channel, "station "+station, choices[0][0], [i for i,j in choices]);
         action,actionpath,q,form=do_fetch(action, actionpath, q);
     return action,actionpath,q,form;
 
@@ -81,7 +81,7 @@ def do_plaats(adres, action, actionpath, q, channel):
     if form.find("Kies plaats")>=0: # misspelled city
         choices=findselectbox(form);
         q["v1"]=choices[0][1];
-	niet_herkent(channel, "plaats "+plaats, choices[0][0], [i for i,j in choices]);
+        niet_herkent(channel, "plaats "+plaats, choices[0][0], [i for i,j in choices]);
         action,actionpath,q,form=do_fetch(action, actionpath, q);
     
     q["v1"]=straat;
@@ -94,12 +94,13 @@ def do_plaats(adres, action, actionpath, q, channel):
     if form.find("Kies straat")>=0: # misspelled street
         choices=findselectbox(form);
         q["v1"]=choices[0][1];
-	niet_herkent(channel, "straat "+straat, choices[0][0], [i for i,j in choices]);
+        niet_herkent(channel, "straat "+straat, choices[0][0], [i for i,j in choices]);
         action,actionpath,q,form=do_fetch(action, actionpath, q);
         
     return action,actionpath,q,form;
 
 def ov9292(param,nick,channel):
+    print("ov start");
     par=re.match("[ ]*(optie|keuze)?[ ]*([abcABC123])[ ]*$", param)
     if par:
         # probeer oude resultaten op te halen
@@ -117,7 +118,8 @@ def ov9292(param,nick,channel):
         if nr>=len(results):
             return "d'r is vast een resultaat zoekgeraakt ofzo, kan nr "+str(nr+1)+" niet vinden";
         return results[nr];            
-    
+   
+    print("ov zoektocht");
     # nieuwe zoekopdracht
     tz=pietlib.tijdzone_nick(nick);
     regex=\
@@ -139,24 +141,30 @@ def ov9292(param,nick,channel):
             tijd=pietlib.parse_tijd(tijdstr,tz);
         except:
             return 'De datum+tijd '+tijdstr+' snap ik niet, sorry';
-    
+   
+    print("ov van \""+van+"\" naar \""+naar+"\" om "+str(tijd));
 
     # get frontpage
+    print("ov 1");
     action,actionpath,q,form=do_fetch("", "", {});
 
+    print("ov 2");
     # get from-radiobuttons
     action,actionpath,q,form=do_fetch(action, actionpath, q);
 
+    print("ov 3");
     if van.find(',')>=0:
         action,actionpath,q,form=do_plaats(van, action, actionpath, q, channel);
     else:
         action,actionpath,q,form=do_station(van, action, actionpath, q, channel);
 
+    print("ov 4");
     if naar.find(',')>=0:
         action,actionpath,q,form=do_plaats(naar, action, actionpath, q, channel);
     else:
         action,actionpath,q,form=do_station(naar, action, actionpath, q, channel);
     
+    print("ov 5");
     # tijd/datum
     os.environ['TZ']="Europe/Amsterdam";
     time.tzset();
@@ -177,6 +185,9 @@ def ov9292(param,nick,channel):
     "<tr><td [^>]*><a (href)=\"([^>]*)\">[^>]*><[/]td><[/]tr>"+\
     "";
     results=re.findall(regex, form, re.DOTALL|re.IGNORECASE);
+    print("ov 6 (done, fetching individual results)");
+    if len(results)==0:
+      piet.send(channel, "9292mobiel site is weer stuk, blijkbaar. ik heb een leeg lijstje gekregen.");
 
     r=[];
     for i in results:
@@ -190,7 +201,9 @@ def ov9292(param,nick,channel):
         "<span class='kopn'>([^<]*)<[/]span>"\
         "</td></tr><tr><td class='kopn'>([^<]*)</td></tr>", raw, re.DOTALL|re.IGNORECASE);
         r.append(string.join([string.join(i) for i in res], '\n'));
+        print("ov got an individual result");
     ovresults[nick]=r;
+    print("ov done\n");
     return "";
 
 
