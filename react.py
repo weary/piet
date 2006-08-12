@@ -13,9 +13,17 @@ def get_url_title(channel, url):
 		input=pietlib.get_url(url);
 	except:
 		piet.send(channel, "nou, dat lijkt misschien wel wat op een url, maar 't bestaat niet hoor\n");
+		traceback.print_exc();
+		return;
+	
+	tinyurl="dat ding";
+	if len(url)>80:
+		apiurl = "http://tinyurl.com/api-create.php?url=";
+		tinyurl = urllib.urlopen(apiurl + url).read();
+
 	try:
 		soup=BeautifulSoup.BeautifulSoup(input);
-		piet.send(channel, "de titel van dat ding is: "+soup.html.title.string+"\n");
+		piet.send(channel, "de titel van "+tinyurl+" is: "+soup.html.title.string+"\n");
 	except:
 		traceback.print_exc();
 
