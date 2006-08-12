@@ -550,7 +550,9 @@ def unique(l):
 def conf(s):
 	return s.encode('latin1', 'replace');
 
-def afk(woord):
+def afk(params):
+	params=string.split(params, ' ', 1);
+	woord=params.pop(0);
 	result1=afk_source1(woord);
 	result2=afk_source2(woord);
 	result3=afk_source3(woord);
@@ -558,14 +560,17 @@ def afk(woord):
 	result=result1;
 	rest=[];
 
-	if (len(result)>8):
-		rest=result2+result3;
-	else:
-		result=unique(result1+result2);
+	if len(params)==0:
 		if (len(result)>8):
-			rest=result3;
+			rest=result2+result3;
 		else:
-			result=unique(result1+result2+result3);
+			result=unique(result1+result2);
+			if (len(result)>8):
+				rest=result3;
+			else:
+				result=unique(result1+result2+result3);
+	else:
+		result=unique(result1+result2+result3);
 
 	s="";
 	if len(result)==0:
