@@ -98,7 +98,8 @@ try:
 except:
 	lastnicklog = {};
 	
-def do_react(channel, nick, pietnick, line):
+def do_react(channel, nick, pietnick, auth_, line):
+	auth=int(auth_);
 	reactfile = "react.txt"
 	loosfile = "loos.txt"
 	logfile = "log.txt"
@@ -133,7 +134,8 @@ def do_react(channel, nick, pietnick, line):
 	# check for url's in the input
 	urlmatch=re.search("((https?://|www\.)[^ \t,]*)", line);
 	if (urlmatch):
-		get_url_title(channel, urlmatch.group(0));
+		if (auth>=1000):
+			get_url_title(channel, urlmatch.group(0));
 		ready=True;
 
 	paginamatch=re.search("([0-9]{2,3})[ ]*pagina", line);

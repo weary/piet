@@ -257,8 +257,8 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
   } // end personal
   else if ((sendqueue_size()==0)&&(silent_mode==false))
 	{
-		python_cmd cmd(channel, "do_react", 4);
-		cmd << channel << nick << g_config.get_nick() << msg;
+		python_cmd cmd(channel, "do_react", 5);
+		cmd << channel << nick << g_config.get_nick() << auth << msg;
 		python_handler::instance().read_and_exec(channel, "react.py", cmd);
 	}
 }
