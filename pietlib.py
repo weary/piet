@@ -11,11 +11,11 @@ def get_url(url, postdata={}, agent=defaultagent):
 	oldopener=urllib._urlopener;
 	urllib._urlopener = pieturlopener();
 	if (len(postdata)==0):
-		a=urllib.urlopen(url).read();
+		a=urllib.urlopen(url).read(100000);
 	else:
 		if (type(postdata)==dict):
 			postdata=urllib.urlencode(postdata);
-		a=urllib.urlopen(url,postdata).read();
+		a=urllib.urlopen(url,postdata).read(100000);
 	urllib._urlopener = oldopener;
 	return a;
 
