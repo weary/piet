@@ -134,8 +134,7 @@ def do_react(channel, nick, pietnick, auth_, line):
 	# check for url's in the input
 	urlmatch=re.search("((https?://|www\.)[^ \t,]*)", line);
 	if (urlmatch):
-		if (auth>=1000):
-			get_url_title(channel, urlmatch.group(0));
+		get_url_title(channel, urlmatch.group(0));
 		ready=True;
 
 	paginamatch=re.search("([0-9]{2,3})[ ]*pagina", line);
