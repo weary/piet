@@ -12,6 +12,7 @@ import BeautifulSoup;
 from pistes import cmd_pistes;
 import pietlib;
 import ov9292;
+import kookbalans;
 from bash import bash;
 
 todofile = "todo.txt";
@@ -97,6 +98,8 @@ def emote(action, nicks):
 	toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht", \
 						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",\
 						 "nauwelijks", "bijna, maar toch maar niet", "vol overgave"];
+	if action=="aai":
+		action="aait";
 	if action[-1] in "aeoui":
 		action=action+action[-1];
 	if action[-1]!='t':
@@ -2195,6 +2198,10 @@ def reloadding(params):
 			import ov9292;
 			reload(ov9292);
 			return "_ov_ernieuw ingelezen!";
+		elif params[0]=="kook" or params[0]=="kookbalans":
+			import kookbalans;
+			reload(kookbalans);
+			return "ok, gedaan";
 	return "die module ken ik niet"
 
 
@@ -2257,6 +2264,14 @@ def tweakers(regel):
 	else:
 		return "aan of uit, hoe moeilijk kan het nou helemaal wezen?\n";
 	return "uh, ok\n";
+
+def kookbalans_kookbalans(cmd):
+	return kookbalans.cmd_kookbalans(channel,nick,auth,cmd)
+def kookbalans_gekookt(cmd):
+	return kookbalans.cmd_gekookt(channel,nick,auth,cmd)
+def kookbalans_undo(cmd):
+	return kookbalans.cmd_undo(channel,nick,auth,cmd)
+
 
 def filemeldingen(params):
   result=pietlib.get_url("http://www.trafficnet.nl/traffic.asp?region=lijst")
@@ -2441,6 +2456,9 @@ d={ "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <wo
 		"meer":              (200, meer, "meer, geef nog's wat meer output van vorig commando"),
 		"ov":                (200, ov9292_wrapper, "ov \"<van>\" \"<naar>\" vertrek|aankomst datum tijd"),
     "test": (100, mytest, "ding"),
+		"kookbalans": (100, kookbalans_kookbalans, "geeft een saldolijst"),
+		"gekookt": (100, kookbalans_gekookt, "boekt een kookactie"),
+		"kookundo": (100, kookbalans_undo, "boekt een inverse kookactie van de laatste kookactie"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
 #param_org: string containing command+parameters
