@@ -2228,6 +2228,57 @@ def reloadding(params):
       return "ok, gedaan";
   return "die module ken ik niet"
 
+def filemeldingen(params):
+  result=get_url("http://www.trafficnet.nl/traffic.asp?region=lijst")
+  if params=="":
+    i1=string.find(result,"textplain")
+    i1=string.find(result,">",i1)+1
+    i2=string.find(result,"<",i1)
+    answer=string.replace(result[i1:i2],"&nbsp;"," ")+"\n"
+    i1=string.find(result,"textplain",i2)
+    i1=string.find(result,">",i1)+1
+    i2=string.find(result,"<",i1)
+    answer+=string.replace(string.strip(result[i1:i2]),"&nbsp;"," ")+"\n"
+    wegenlijst=""
+    i1=string.find(result,"wegNrA",i1)
+    if string.find(result,"<strong>",i1)<0:
+      i1=-1
+    while i1>0:
+      i1=string.find(result,">",i1)+1
+      i2=string.find(result,"<",i1)
+      wegenlijst+=result[i1:i2]+" "
+      i1=string.find(result,"wegNrA",i1)
+      if string.find(result,"<strong>",i1)<0:
+        i1=-1
+    if wegenlijst=="":
+      return string.strip(answer)
+    return answer+"Files op: "+wegenlijst
+  i1=string.find(result,"wegNrA")
+  if string.find(result,"<strong>",i1)<0:
+    i1=-1
+  params=string.split(string.lower(params))
+  answer=""
+  while i1>0:
+    i1=string.find(result,">",i1)+1
+    i2=string.find(result,"<",i1)
+    if string.lower(result[i1:i2]) in params:
+      answer+=result[i1:i2]+": "
+      s1=string.find(result,"<strong>",i1)+8
+      s2=string.find(result,"<",s1)
+      answer+=result[s1:s2]
+      s1=string.find(result,">",s2)+1
+      s1=string.find(result,">",s1)+1
+      s2=string.find(result,"</",s1)
+      desc=result[s1:s2]
+      for item in string.split(desc,"\n"):
+        answer+=string.strip(string.replace(string.replace(string.strip(item),"&nbsp;"," "),"<br>"," "))+" "
+    i1=string.find(result,"wegNrA",i1)
+    if string.find(result,"<strong>",i1)<0:
+      i1=-1
+  answer=string.replace(answer,"  "," ")
+  answer=string.replace(answer,"  "," ")
+  return answer
+
 
 def meer(params):
   a=meer_data[nick];
@@ -2402,6 +2453,8 @@ functions = {
     "versie":            (100, versie, "versie <x> zoekt laatste versie op van software dinges"),
     "version":           (100, versie, ""),
     "mep":               (100, mep, ""),
+    "file":              (100, filemeldingen, "file <weg> zoekt de laatste fileinformatie"),
+    "files":             (100, filemeldingen, ""),
     "geef":              (100, geef, ""),
     "pistes":            (100, pistes.cmd_pistes, "pistes, doet iets met skipistes"),
     "bash":              (100, bash.bash, "Geef bash quote <nummer> terug of een random bashquote bij gebrek aan nummer"),
