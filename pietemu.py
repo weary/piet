@@ -23,7 +23,7 @@ def send(channel, msg):
         elif len(m)>0:
             print channel+": "+m;
 
-def names():
+def names(a):
     print "niet geimplementeerd";
 
 internalnick="piet";
@@ -34,7 +34,7 @@ def nick(newnick=""):
         internalnick=newnick;
     return oldnick;
 
-def thread():
+def thread(a,b,c):
     print "niet geimplementeerd";
 
 def op(channel, names):

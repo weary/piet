@@ -1,12 +1,11 @@
-import urllib,cgi,re,string,time,os;
-import pietlib,piet;
+import urllib, re, time, os, sys;
+sys.path.append(".");
+import pietlib, piet;
 
 ov9292url="http://www.9292mobiel.nl/";
 
-try:
-    ovresults; # data structure to store old results
-except:
-    ovresults={};
+if not(vars().has_key("ovresults")):
+    ovresults={}; # data structure to store old results
     
 
 def parse_ov9292(raw,path):
@@ -44,10 +43,10 @@ def do_fetch(action, actionpath, q):
 
 def niet_herkent(channel, what, choice, choices):
   choices.remove(choice);
-  str=what+" niet herkend, ik pak "+choice;
+  msg=what+" niet herkend, ik pak "+choice;
   if len(choices)>0:
-    str=str+" (en niet "+pietlib.make_list(choices, "of")+")";
-  piet.send(channel,str);
+    msg=msg+" (en niet "+pietlib.make_list(choices, "of")+")";
+  piet.send(channel,msg);
 
 def do_station(station, action, actionpath, q, channel):
     # choose "station" (q["typ"]=1 - station, q["typ"]=3 - adres)
@@ -200,7 +199,7 @@ def ov9292(param,nick,channel):
         "<tr><td><span class='kop'>([^<]*)<[/]span>"+\
         "<span class='kopn'>([^<]*)<[/]span>"\
         "</td></tr><tr><td class='kopn'>([^<]*)</td></tr>", raw, re.DOTALL|re.IGNORECASE);
-        r.append(string.join([string.join(i) for i in res], '\n'));
+        r.append('\n'.join([' '.join(i) for i in res]));
         print("ov got an individual result");
     ovresults[nick]=r;
     print("ov done\n");

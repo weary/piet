@@ -1,14 +1,12 @@
 #!/usr/bin/python
 
-import sys,string,random,re,os,time;
-import piet;
+import sys,random,re,time;
 sys.path.append(".");
-from pietlib import format_tijdsduur,localtimezone;
+import piet;
+import pietlib;
 
-try:
-	nicks;
-except:
-	nicks={};
+if not(vars().has_key("nicks")):
+  nicks={};
 
 def doe_gemiddelde_offlinetijd(channel_, nick_, tu_):
 	print("doe_gemiddelde_offlinetijd("+channel_+", "+nick_+", "+str(tu_)+")\n");
@@ -19,8 +17,8 @@ def doe_gemiddelde_offlinetijd(channel_, nick_, tu_):
 	# INSERT INTO offline SELECT "#^Ra^Re_mensen", "weary", tijd FROM t;
 	# DROP TABLE t
 
-	chan=string.lower(string.replace(channel_, '"', '""'));
-	nick=string.lower(string.replace(nick_, '"', '""'));
+	chan=channel_.replace('"', '""').lower();
+	nick=nick_.replace('"', '""').lower();
 	tijd=str(tu_);
 	query='INSERT INTO offline VALUES("'+chan+'", "'+nick+'", '+tijd+')';
 	piet.db(query);
@@ -43,11 +41,11 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
 	#		channel string, nick string, tijd int, reason string,
 	#		primary key (channel,nick));
 
-	chan=string.lower(string.replace(channel_, '"', '""'));
-	nick=string.lower(string.replace(nick_, '"', '""'));
+	chan=channel_.replace('"', '""').lower();
+	nick=nick_.replace('"', '""').lower();
 	if (command_ in ["PART", "QUIT", "KICK"]):
 		tijd=str(int(time.time()+0.5));
-		reason=string.replace(msg_[5:], '"', '""');
+		reason=msg_[5:].replace('"', '""');
 		query='REPLACE INTO logout VALUES("'+chan+'", "'+nick+'", '+tijd+', "'+reason+'")';
 		piet.db(query);
 	elif (command_ in ["JOIN"]):
@@ -56,9 +54,8 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
 			tijd=piet.db('SELECT tijd FROM logout '+where)[1][0];
 			piet.db('DELETE FROM logout '+where);
 			tu=int(time.time()+0.5)-int(tijd);
-			tu=tu;
 			if (tu>0):
-				result=format_tijdsduur(tu, 2);
+				result=pietlib.format_tijdsduur(tu, 2);
 
 				titel=random.choice(["heer", "meester", "prins", "gast", "joker", "orgelspeler", "held", "bedwinger", "plaag"]);
 				titel=titel+" "+random.choice(["des duisternis", "van het licht", "des ubers", "des modders", "des oordeels", "van de knaagdieren", "overste", "heerser", "ongezien", "enzo", "extraordinaire", "(gevallen)", "in rust"]);
@@ -66,7 +63,7 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
 				reply="ACTION presenteert: "+nick+", "+titel+", weer terug na "+result;
 				try:
 					gemiddeld=doe_gemiddelde_offlinetijd(channel_, nick_, tu);
-					reply+=", gemiddeld "+format_tijdsduur(gemiddeld, 2)+" nu";
+					reply+=", gemiddeld "+pietlib.format_tijdsduur(gemiddeld, 2)+" nu";
 				except:
 					reply+=", geen gemiddelde";
 				piet.send(channel_, reply+".\n");
@@ -85,16 +82,16 @@ def check_netsplit(nick_, channel_, command_, msg_):
 	NETSPLIT_TIMEOUT=3600; # seconds
 	if (command_ in ["QUIT"]):
 		if quitmsg_is_split(msg_):
-			chan=string.lower(string.replace(channel_, '"', '""'));
-			nick=string.lower(string.replace(nick_, '"', '""'));
-			servers=string.replace(msg_[6:], '"', '""');
+			chan=channel_.replace('"', '""').lower();
+			nick=nick_.replace('"', '""').lower();
+			servers=msg_[6:].replace('"', '""');
 			tijd=str(int(time.time()+0.5)+NETSPLIT_TIMEOUT);
 			query='REPLACE INTO netsplit VALUES("'+chan+'", "'+nick+'", "'+servers+'", '+tijd+')';
 			piet.db(query);
 			return True;
 	elif (command_ in ["JOIN"]):
-		chan=string.lower(string.replace(channel_, '"', '""'));
-		nick=string.lower(string.replace(nick_, '"', '""'));
+		chan=channel_.replace('"', '""').lower();
+		nick=nick_.replace('"', '""').lower();
 		tijd=int(time.time()+0.5);
 		where='WHERE channel="'+chan+'" AND nick="'+nick+'" AND timeout>'+str(tijd);
 		query='SELECT servers FROM netsplit '+where;
@@ -124,12 +121,12 @@ def nickchange(nick_, auth_, channel_, newnick):
 		try:
 			otherauth=piet.db("SELECT name,auth,timezone FROM auth where name=\""+newnick+"\"")[1];
 		except:
-			otherauth=[newnick, -5, localtimezone];
+			otherauth=[newnick, -5, pietlib.LOCALTIMEZONE];
 
 		try:
 			auth=piet.db("SELECT name,auth,timezone FROM auth where name=\""+nick_+"\"")[1];
 		except:
-			auth=[nick_, -5, localtimezone];
+			auth=[nick_, -5, pietlib.LOCALTIMEZONE];
 
 		print("nickswap: "+repr(auth)+" en "+repr(otherauth)+"\n");
 		piet.db("REPLACE INTO auth VALUES(\""+auth[0]+"\", "+str(otherauth[1])+", \""+otherauth[2]+"\")");
@@ -147,17 +144,17 @@ def nickchange(nick_, auth_, channel_, newnick):
 
 def checkmessages(channel_):
 	global nicks;
-	where="WHERE lower(nick) IN ("+string.join(['"'+string.lower(x)+'"' for x in nicks], ',')+")";
+	where="WHERE lower(nick) IN ("+','.join(['"'+x.lower()+'"' for x in nicks])+")";
 	msgs=piet.db("SELECT nick,msg FROM notes "+where);
 	if (msgs!=None and len(msgs)>=2):
 		piet.db("DELETE FROM notes "+where);
 		msgs=[n+": "+m for n,m in msgs[1:]];
-		piet.send(channel_, string.join(msgs, '\n'));
+		piet.send(channel_, '\n'.join(msgs));
 
 def check_names(nick_, channel_, msg_):
 	global nicks;
 	print("check_names("+nick_+", "+channel_+", "+msg_+")\n");
-	msg_nicks=string.split(msg_[string.find(msg_, ':')+1:], ' ');
+	msg_nicks=msg_[msg_.find(':')+1:].split(' ');
 	nicks={};
 	for x in msg_nicks:
 		if (x[0]=='@'):
@@ -169,7 +166,7 @@ def check_names(nick_, channel_, msg_):
 		noop=[x for (x,o) in nicks.iteritems() if not(o)];
 		if (bool(noop)):
 			qry="SELECT name FROM auth WHERE auth>=500 AND name IN ("+ \
-					 string.join(['"'+x+'"' for x in noop], ',')+")";
+					 ','.join(['"'+x+'"' for x in noop])+")";
 			dbres=piet.db(qry);
 			if (dbres!=None and len(dbres)>=2):
 				print("dbres="+repr(dbres)+"\n");
@@ -189,9 +186,7 @@ def check_names(nick_, channel_, msg_):
 			piet.send(channel_, myop+": "+msg+"\n");
 	checkmessages(channel_);
 
-try:
-	names_delayed_waiting;
-except:
+if not(vars().has_key("names_delayed_waiting")):
 	names_delayed_waiting=0;
 
 def check_names_delayed(channel_):
@@ -206,7 +201,7 @@ def check_names_delayed(channel_):
 def do_server(nick_, auth_, channel_, msg_):
 	global nicks;
 	print("do_server("+nick_+", "+str(auth_)+", "+channel_+", "+msg_+")\n");
-	command=string.upper(string.split(msg_, ' ')[0]);
+	command=msg_.split(' ')[0].upper();
 	netsplit=False;
 	if command in ["JOIN", "PART", "QUIT", "KICK"]:
 		if auth_>0:
@@ -222,7 +217,7 @@ def do_server(nick_, auth_, channel_, msg_):
 		except:
 			piet.send(channel_, "voor jullie informatie: het schijnt dat er hier een "+nick_+" was, maar ik heb 'm niet gezien\n");
 	if command in ["KICK"] and auth_>0:
-		kicknick=string.split(msg_, ' ')[2];
+		kicknick=msg_.split(' ')[2];
 		piet.send(channel_, "en waag het niet om weer te komen, jij vuile "+kicknick+"!\n");
 		try:
 			del nicks[nick_];
@@ -235,7 +230,7 @@ def do_server(nick_, auth_, channel_, msg_):
 	if command in ["353"]:
 		check_names(nick_, channel_, msg_);
 	if command in ["MODE"] and auth_>0:
-		if ((string.find(msg_, ' +o')>=0) or (string.find(msg_, ' -o')>=0)):
+		if ((msg_.find(' +o')>=0) or (msg_.find(' -o')>=0)):
 			check_names_delayed(channel_);
 		else:
 			if not(netsplit):
