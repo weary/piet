@@ -83,7 +83,7 @@ def onbekend_commando(param):
   groeten=["hoi", "goeiemorgen", "goedemorgen", "mogge", "hallo", "middag"];
 
   split=string.split(param);
-  if (len(split)>=2) and all(x in nicks for x in split[1:]):
+  if len(split)>=2 and all(x in nicks for x in split[1:]):
     return emote(split[0],split[1:]);
 
   if (len(param)==0):
@@ -562,7 +562,10 @@ def conf(s):
   return s.encode('latin1', 'replace');
 
 def afk(params):
-  params=string.split(params, ' ', 1);
+  params=params.strip();
+  if not(params):
+    return "dacht 't niet";
+  params=params.split(' ', 1);
   woord=params.pop(0);
   result1=afk_source1(woord);
   result2=afk_source2(woord);
@@ -571,28 +574,23 @@ def afk(params):
   result=result1;
   rest=[];
 
-  if len(params)==0:
-    if (len(result)>8):
-      rest=result2+result3;
-    else:
-      result=unique(result1+result2);
-      if (len(result)>8):
-        rest=result3;
-      else:
-        result=unique(result1+result2+result3);
+  if (len(result)>8):
+    rest=result2+result3;
   else:
-    result=unique(result1+result2+result3);
+    result=unique(result1+result2);
+    if (len(result)>8):
+      rest=result3;
+    else:
+      result=unique(result1+result2+result3);
 
   s="";
   if len(result)==0:
     s="niks gevonden!\n";
   else:
-    if len(result)<12:
-      s=string.join(result, '\n');
-      if len(rest)>0:
-        s=s+'\n'+pietlib.make_list(rest);
-    else:
-      s=pietlib.make_list(result); # ignore rest, we already have a lot
+    s=pietlib.make_list(result);
+    if len(rest)>0:
+      s+="\nik weet nog %d verklaringen voor \"%s\" maar die vertel ik niet." %\
+        (len(rest), woord);
   
   return s;
 
@@ -998,9 +996,12 @@ def nmblookup(regel):
     return(result);
 
 def context(regel):
-  cmd="cat log.txt | grep -B2 -A2 \""+regel+"\"";
+  cmd="grep -B2 -A2 \""+regel+"\" log.txt";
   inp = os.popen(cmd);
   result=inp.read();
+  result=string.split(result, "\n--\n");
+  result.reverse();
+  result=string.join(result, "\n--\n");
   return(result);
 
 def watis(regel):
@@ -1139,8 +1140,8 @@ def geordi(params):
   return line;
 
 def jeheetnu(newnick):
-  while len(newnick)<4:
-    newnick = newnick+"-";
+  while (len(newnick)<3):
+    newnick=newnick+"-";
   return "NICK "+newnick;
 
 def randomnaam(params):
@@ -2228,57 +2229,6 @@ def reloadding(params):
       return "ok, gedaan";
   return "die module ken ik niet"
 
-def filemeldingen(params):
-  result=get_url("http://www.trafficnet.nl/traffic.asp?region=lijst")
-  if params=="":
-    i1=string.find(result,"textplain")
-    i1=string.find(result,">",i1)+1
-    i2=string.find(result,"<",i1)
-    answer=string.replace(result[i1:i2],"&nbsp;"," ")+"\n"
-    i1=string.find(result,"textplain",i2)
-    i1=string.find(result,">",i1)+1
-    i2=string.find(result,"<",i1)
-    answer+=string.replace(string.strip(result[i1:i2]),"&nbsp;"," ")+"\n"
-    wegenlijst=""
-    i1=string.find(result,"wegNrA",i1)
-    if string.find(result,"<strong>",i1)<0:
-      i1=-1
-    while i1>0:
-      i1=string.find(result,">",i1)+1
-      i2=string.find(result,"<",i1)
-      wegenlijst+=result[i1:i2]+" "
-      i1=string.find(result,"wegNrA",i1)
-      if string.find(result,"<strong>",i1)<0:
-        i1=-1
-    if wegenlijst=="":
-      return string.strip(answer)
-    return answer+"Files op: "+wegenlijst
-  i1=string.find(result,"wegNrA")
-  if string.find(result,"<strong>",i1)<0:
-    i1=-1
-  params=string.split(string.lower(params))
-  answer=""
-  while i1>0:
-    i1=string.find(result,">",i1)+1
-    i2=string.find(result,"<",i1)
-    if string.lower(result[i1:i2]) in params:
-      answer+=result[i1:i2]+": "
-      s1=string.find(result,"<strong>",i1)+8
-      s2=string.find(result,"<",s1)
-      answer+=result[s1:s2]
-      s1=string.find(result,">",s2)+1
-      s1=string.find(result,">",s1)+1
-      s2=string.find(result,"</",s1)
-      desc=result[s1:s2]
-      for item in string.split(desc,"\n"):
-        answer+=string.strip(string.replace(string.replace(string.strip(item),"&nbsp;"," "),"<br>"," "))+" "
-    i1=string.find(result,"wegNrA",i1)
-    if string.find(result,"<strong>",i1)<0:
-      i1=-1
-  answer=string.replace(answer,"  "," ")
-  answer=string.replace(answer,"  "," ")
-  return answer
-
 
 def meer(params):
   a=meer_data[nick];
@@ -2344,40 +2294,50 @@ def filemeldingen(params):
       i1=-1
   answer=string.replace(answer,"  "," ")
   answer=string.replace(answer,"  "," ")
+  if answer=="":
+    return "Alles lijkt daar fijn te zijn"
   return answer
 
 def versie(regel):
-  regel=string.lower(string.strip(regel));
-  if (regel=="centericq" or regel=="cicq"):
-    inp,outp,stderr=os.popen3("wget -O - -q http://www.centericq.de/");
-    result=outp.read()
-    result=string.lower(result)
-    outp.close()
-    inp.close()
-    stderr.close()
-    version=re.search("centericq [0-9]+.[0-9]+.[0-9]+", result)
-    if (version!=None):
-      x=version.start()+10
-      y=version.end()
-      return "Laatste Centericq versie "+result[x:y]
+  regel=regel.lower().strip();
+  if regel in ("centericq", "cicq"):
+    result=pietlib.get_url("http://www.centericq.de/").lower();
+    version=re.search("centericq ([0-9]+.[0-9]+.[0-9]+)", result)
+    if version:
+      return "Laatste Centericq versie "+version.group(1)
     return "Kan het versie nummer van Centericq niet vinden"
-  if (regel[:5]=="linux"):
-    inp,outp,stderr=os.popen3("wget -O - -q http://kernel.org/kdist/rss.xml")
-    result=outp.read()
-    result=string.lower(result)
-    outp.close()
-    inp.close()
-    stderr.close()
-    version=re.search("[0-9]+.[0-9]+.[0-9]+(.[0-9]+)?: stable", result)
-    if (version!=None):
-      version=result[version.start():version.end()]
-      x=string.find(version,":")
-      return "Laatste linux kernel versie "+version[:x]
+  if regel[:5]=="linux":
+    result=pietlib.get_url("http://kernel.org/kdist/rss.xml").lower();
+    version=re.search("([0-9]+.[0-9]+.[0-9]+(.[0-9]+)?): stable", result)
+    if version:
+      return "Laatste linux kernel versie "+version.group(1)
     return "Kan het laatste versie nummer van de linux kernel niet vinden"
   if len(regel)==0:
-    return "ik ben nu versie %d.%d, maar dat kan straks wel anders wezen" % \
-      (random.randint(0,9),random.randint(0,9));
+    return "ik ben nu versie %d.%d, maar dat kan straks wel anders wezen" % (
+      random.randint(0,9),random.randint(0,9));
   return regel+" ken ik niet"
+
+def verveel(regel):
+  l = ("verbergen", "kijken", "verbieden", "huiswerk maken", "luisteren",
+  "werken", "delen", "Kloppen op", "storen", "teruggeven", "vragen", "geven",
+  "bezweren", "verzinnen", "slecht zijn", "slagen", "zin hebben",
+  "van mening veranderen", "laten vallen", "deelnemen aan", "koken", 
+  "de afwas doen", "lezen", "bezoeken", "knutselen", "bouwen", "tekenen",
+  "maken", "zich inschrijven", "bewaren", "printen", "kopi\xebren",
+  "op het web surfen", "verbonden zijn", "ontvangen", "sturen", "praten",
+  "besturen", "vliegen", "nodig hebben", "voorstellen", "opletten",
+  "lenen aan", "straf hebben", "mopperen", "waarschuwen", "klaar zijn",
+  "denken aan", "een zwak hebben voor", "meten", "dragen", "verlaten",
+  "lijken op", "bang zijn voor", "gelijk hebben", "worden",
+  "een geintje maken", "spotten met", "tegen zijn", "optellen", "onthouden",
+  "(op)zoeken", "volgen", "kiezen", "vergeten", "ruzie maken", "straffen",
+  "schrijven", "inhalen", "wegsturen", "te laat zijn", "eisen", "bestaan",
+  "verzocht worden om", "beginnen", "opnieuw beginnen", "stellen",
+  "aankruisen", "het examen halen", "uitslapen", "kletsen", "zich orienteren",
+  "informatie verzamelen", "sparen", "besteden", "betalen", "winnen",
+  "verliezen", "stelen", "rijden");
+  return "anders ga je %s" % random.choice(l);
+
 
 
 functions = {
@@ -2468,6 +2428,7 @@ functions = {
     "hoever":            (100, Distance.Distance, "hoever <van> <naar>"),
     "afstand":           (100, Distance.Distance, ""),
     "distance":          (100, Distance.Distance, ""),
+    "verveel":           (100, verveel, "geeft een voorstel voor een activiteit"),
     "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
     "reload":            (1000, reloadding, "reload <module> reload iets voor piet"),
     "uptime":            (200, uptime, "uptime, verteld tijd sinds eerste python command"),

@@ -100,7 +100,7 @@ def do_plaats(adres, action, actionpath, q, channel):
 
 def ov9292(param,nick,channel):
     print("ov start");
-    par=re.match("[ ]*(optie|keuze)?[ ]*([abcABC123])[ ]*$", param)
+    par=re.match("[ ]*(optie|keuze)?[ ]*([abcdefABCDEF123456])[ ]*$", param)
     if par:
         # probeer oude resultaten op te halen
         nr=par.group(2);
@@ -133,7 +133,7 @@ def ov9292(param,nick,channel):
     vertrek='D';
     if par.group(7) and par.group(7).strip()=="aankomst":
         vertrek='A';
-    tijd=time.time();
+    tijd=time.time()+10*60; # geen tijd opgegeven -> over 10 minuten
     tijdstr=par.group(8).strip();
     if len(tijdstr)>0:
         try:
