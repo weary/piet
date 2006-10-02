@@ -84,7 +84,6 @@ hmm, dat moet ik maar's onthouden
 wat een gepruts, misschien toch maar weer met je handen tikken?
 yay!
 ACTION eyeballt
-is neb nu alweer aan't klussen?
 ACTION staart loos voor zich uit
 ACTION eet uit je hand
 nu ook in't groen!
@@ -97,8 +96,6 @@ nog meer?
 heb je echt niks beters te zeggen?
 loos
 ACTION doet blij mee
-nee
-ja
 zou het regenen?
 stop het anders in een table ofzo
 ACTION checkt zijn t-states...
@@ -110,105 +107,7 @@ ACTION lagt wat
 helphelp! de wereld vergaat! (mogelijk)
 dat is ook niet erg aardig..
 ACTION negeert alle utf8-karakters
-
-aha, daar komt de kat uit de zak.
-beter laat dan vroeg.
-daar krijg je stierballen van.
-dan sta je mooi voor Jan met de korte lul.
-dat helpt geen nut.
-dat introduceert me niks.
-dat is dood een goed mens.
-dat is er met de paplepel ingeslagen.
-dat is geen vraag op mijn antwoord.
-dat is niet tegen Dobermannsoren gezegd.
-dat is vechten tegen de bierkraan.
-dat legt geen doden aan de zeik.
-dat mag de prut niet drekken.
-dat slaat nergens over.
-de aandeelhouder wint.
-de bakken komen met regen naar beneden.
-de beste stuurlui staan aan de wallen.
-de overvallers begonnen zomaar in het wilde westen te schieten.
-dit steekt er met kop en schotel bovenuit.
-eerst de kat uit de boom zeiken.
-er moet kaas op de plank komen.
-er waren 3 doden, waarvan 2 ernstig.
-executeert u mij.
-geef mijn portie maar aan Flipper.
-hartelijk geteleviseerd.
-het escaleert helemaal uit de klauwen.
-het is binnen buiten dan warmer.
-het is het één of het twee.
-het is niet alles koek en ei wat er blinkt.
-het kost een placenta, maar dan heb je ook iets.
-het maakt mij niet erg.
-het was zo stil, je kon een muis horen vallen.
-hij heeft een aardje naar zijn gaatje.
-hij heeft er geen boter, kaas en eieren van gegeten.
-hij heeft z'n arm in een nutella.
-hij kijkt alsof hij vuur ziet branden.
-hij kreeg een staande ovulatie.
-hij was opslag halfdood.
-iemand blij maken met een dooie mug.
-iemand dood maken met een blije mus.
-ik ben er erg door gevaccineerd.
-ik ben er helemaal infuus van.
-ik ben mooi met de aap uit de mouw gelogeerd.
-ik ben niet bijgelovig, want dat brengt ongeluk.
-ik erger me kostelijk.
-ik heb een leuke jas op de kip getokt.
-ik heb met jou nog een varkentje te schillen.
-ik heb wel Nederlands gehebt, het heb alleen niet zo gehielpt.
-ik kan dit niet door de beugel tolereren.
-ik moet niet teveel rijden; ik moet nog drinken.
-ik spreek vloeibaar Nederlands.
-ik sta helemaal triplex.
-ik voelde me een beetje disney worden.
-ik word hier zo moederloos van.
-ik word met scheve schaatsen aangekeken.
-ik zal je eens een poepie van eigen deeg laten ruiken.
-ik zie de lul al hangen.
-ik zou niet naast zijn schoenen willen lopen.
-je bent nog niet zo'n kleine stommerik.
-je brengt me helemaal van mijn abrikoos.
-je denkt toch zeker niet dat je bang voor me bent?
-je hebt er geen hout van gegeten.
-je imiteert me mateloos.
-je kon een speld in een hooiberg horen vallen.
-je moet een gegeven paard niet in de bek zeiken.
-je moet geen wakkere honden slapend maken.
-je moet je niet de kaas voor de voeten weg laten maaien.
-je moet niet dronken dat ik denken ben.
-je nekt uit je lul.
-je ziet hier veel gapen en scheiten.
-kut maar krachtig.
-laten we geen oude vissen uit de sloot halen.
-laten we met een schone luier beginnen.
-met de kippen naar bed gaan.
-met de stok op de kippen gaan.
-misschien ben ik wel heel intelligent, ik weet alleen niet wat dat betekent.
-moet je zeggen wie het hoort.
-nou, dat doe je niet verdienstelijk.
-nu gaat er een lampje bij me rinkelen.
-och dat geeft toch niets uit.
-och, daar kraait geen hond naar.
-och, het is ook al net zo lang als het kort is.
-ons bedrijf gaat fusiëren.
-oost west, lest best.
-op het scherpst van de schede.
-pak je borst maar vast.
-qua geld kost dat financieel niet duur.
-sorry, neemt u mij niet dadelijk.
-'t Is al weer vroeg laat.
-'t Is een goed jaar voor de tijd van het weer.
-vanavond gaan we de bloempotjes buiten zetten.
-we gaan er met de volle 50% tegenaan.
-we gaan er met verkrachte eenden tegenaan.
-we hoeven niet opnieuw het ei uit te vinden.
-we moeten maar eens polsstokhoogte nemen.
-we moeten nu de koe bij de uiers vatten.
-wie laat begint, mag vroeg weer naar huis.
-wie niet sterk zijn, moet slim is.
-ze heeft een postanale depressie.
-zo oud als de weg naar Metusalem.
 ACTION checkt zijn t-states...
+ACTION voert wat random python commands uit
+Segmentation Fault: Core dumped.
+
