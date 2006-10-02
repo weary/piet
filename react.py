@@ -97,33 +97,6 @@ def check_pagina(channel, nick, paginas):
 if not(vars().has_key("lastnicklog")):
 	lastnicklog = {};
 
-def geordi():
-  A=random.choice((
-        "perform a level E diagnostic on", "run a level E diagnostic on",
-        "reroute the B C D to", "redirect the B C D to", "divert the B C D to",
-        "bypass", "amplify", "modify", "polarize", "reconfigure", "extend",
-        "rebuild", "vary", "analyze", "adjust", "recalibrate"));
-  A="we need to "+A+" the B C D!";
-  while A.find("B")>=0:
-    B=random.choice((
-          "field", "tachyon", "baryon", "lepton", "e-m", "phase", "pulse",
-          "sub-space", "spectral", "antimatter", "plasma", "bandwidth",
-          "particle"));
-    A=A.replace("B", B, 1);
-  while A.find("C")>=0:
-    C=random.choice(("dispersion", "induction", "frequency", "resonance"));
-    A=A.replace("C", C, 1);
-  while A.find("D")>=0:
-    D=random.choice((
-          "conduit", "discriminator", "modulator", "transducer", "wave-guide",
-          "coils", "matrix", "sensors", "invertor"));
-    A=A.replace("D", D, 1);
-  while A.find("E")>=0:
-    E=random.choice(("one", "two", "three", "four", "five"));
-    A=A.replace("E", E, 1);
-  line="Captain, "+A;
-  return line;
-	
 def do_react(channel, nick, pietnick, auth_, line):
 	reactfile = "react.txt"
 	loosfile = "loos.txt"
@@ -213,10 +186,10 @@ def do_react(channel, nick, pietnick, auth_, line):
 	if (not(ready)):
 		r=random.random();
 		if (r<=0.06):
-			if (random.random()<0.08):
+			if globals().has_key("geordi") and (random.random()<0.08):
 				n=random.randint(1,4000);
 				time.sleep(n);
-				result="Captain, "+geordi();
+				result=geordi("bla");
 			else:
 				inf = open(loosfile);
 				lines = inf.read().split('\n');

@@ -63,8 +63,11 @@ int connect_to_server(const std::string &addr, int port)
 		throw;
 	}
 
-	printf("connecting to %d.%d.%d.%d:%d\n",
-			h->h_addr[3], h->h_addr[2], h->h_addr[1], h->h_addr[0], port);
+	printf("connecting to %u.%u.%u.%u:%u\n",
+			((unsigned char *)(h->h_addr))[0],
+			((unsigned char *)(h->h_addr))[1],
+			((unsigned char *)(h->h_addr))[2],
+			((unsigned char *)(h->h_addr))[3], port);
 
 	int sok = socket(AF_INET, SOCK_STREAM, 0);
 	if (sok == -1)

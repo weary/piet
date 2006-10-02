@@ -37,7 +37,7 @@ def make_list(items, sep="en"):
   
   prefix = items[:-1];
   postfix = items[-1];
-  return prefix.join(", ")+" "+sep+" "+postfix;
+  return ", ".join(prefix)+" "+sep+" "+postfix;
 
 # maak een nederlandse zin van secs. secs moet een tijdsduur weergeven, niet
 # een absolute tijd, zie format_localtijd voor absolute tijd, items geeft de

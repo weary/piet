@@ -2440,6 +2440,8 @@ functions = {
     "kookbalans":        (100, kookbalans_kookbalans, "geeft een saldolijst"),
     "gekookt":           (100, kookbalans_gekookt, "boekt een kookactie"),
     "kookundo":          (100, kookbalans_undo, "boekt een inverse kookactie van de laatste kookactie"),
+    "vrouwbalans": (100, lambda x: "er zijn hier precies 0 vrouwen", "geeft het aantal vrouwen op het kanaal"),
+    "manbalans": (100, lambda x: "er zijn precies 0 mannen, en %d jongens hier" % len(nicks), "geeft het aantal vrouwen op het kanaal"),
     "onbekend_commando": (0, onbekend_commando, "")};
 
 #param_org: string containing command+parameters
