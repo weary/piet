@@ -1862,36 +1862,23 @@ def ns(regel):
   vanStation="";
   if (len(params)==1) and (regel=="?"):
     # haal storing site op, kijk of er storing op het ns net zijn"
-    inp,outp,stderr = os.popen3("lynx -source www.ns.nl/pages/index.html")
-    result=outp.read()
-    inp.close()
-    outp.close()
-    stderr.close()
-    i1=string.find(result,"toringen")
-    i1=string.rfind(result[:i1],"href")
-    i1=string.find(result,"\"",i1)+1
-    i2=string.find(result,"\"",i1)
-    if (i1<0 or i2<0):
-      return "Error in NS site"
-    url=result[i1:i2]
-    url=string.replace(url,"&amp;","&")
-    inp,outp,stderr = os.popen3("lynx -dump \"http://www.ns.nl"+url+"\"")
-    result=outp.read()
-    inp.close()
-    outp.close()
-    stderr.close()
-    i1=string.find(result,"Storingen")+10
-    i1=string.find(result,"Storingen",i1)+10
-    i2=string.find(result,"Naar boven",i1)
-    i2=string.rfind(result[:i2],"[")
-    lines=string.split(result[i1:i2],'\n')
-    result=""
-    for line in lines:
-      result+=string.strip(line)
-      if (len(line)>0 and (line[len(line)-1]==".")):
-        result+="\n"
-      else:
-        result+=" "
+    result=pietlib.get_url("http://mobiel.ns.nl/storingen.html")
+    start=string.find(result,"<img")
+    start=string.find(result,">",start)+1
+    stop=string.find(result,"<img",start)
+    result=result[start:stop]
+    result=string.replace(result,"\n","")
+    result=string.replace(result,"<strong>","\n")
+    start=string.find(result,"<")
+    while start>=0:
+      stop=string.find(result,">",start)+1
+      result=result[:start]+" "+result[stop:]
+      start=string.find(result,"<")
+    while string.find(result,"  ")>=0:
+      result=string.replace(result,"  "," ")
+    result=string.replace(result,". ",".\n")
+    result=string.replace(result,"\n ","\n")
+
     return string.strip(result)
   if (len(params)<1) or (len(params[0])==0):
     return "mis vertrek plaats";
