@@ -327,26 +327,32 @@ def kies(params):
 
 
 def vandale(woord):
-  url='http://www.vandale.nl/opzoeken/woordenboek/?zoekwoord=';
-  comm="lynx -dump -width 600 %s%s" % (url,woord)+\
-        """ | grep -A 5000 maximaal\ 20\ woorden
-            | grep -B 5000 verfijnd\ zoeken
-            | grep -v maximaal\ 20\ woorden
-            | grep -v verfijnd\ zoeken
-            | grep -v gif]""";
-  inp = os.popen(comm);
-  result=inp.read();
-  if (re.search("Unable to connect", result)!=None):
-    return "vandale stuk, echt\n";
-  else:
-    result=result.split('\n');
-    result=[re.sub("\267", ".", i.strip()) for i in result];
-    result=["  "+re.sub("\264", "\'", i) for i in result if (i!="")];
-    result='\n'.join(result);
-    if (len(result)>0):
-      return result+"\n";
-    else:
-      return "helaas niet gevonden\n";
+  result=pietlib.get_url("http://www.vandale.nl/opzoeken/woordenboek/?zoekwoord="+woord)
+  start=string.find(result,"<BIG")
+  stop=string.rfind(result,"</BIG")
+  stop=string.find(result,"</tr",stop)
+  result=result[start:stop]
+  result=string.replace(result,"\n","")
+  result=string.replace(result,"\t","")
+  result=string.replace(result,"\r","")
+  result=string.replace(result,"<BIG>","\n")
+  result=string.replace(result,"</BIG>","\n")
+  result=string.replace(result,"<DD>","\n")
+  result=string.replace(result,"&#183;",".")
+  result=string.replace(result,"&#126;","~")
+  start=string.find(result,"<")
+  while start>=0:
+    stop=string.find(result,">",start)+1
+    result=result[:start]+" "+result[stop:]
+    start=string.find(result,"<")
+  while string.find(result,"  ")>=0:
+    result=string.replace(result,"  "," ")
+  result=string.strip(result)
+  if result=="":
+    return "Helaas niet gevonden"
+  result=string.replace(result,"\n ","\n")
+  result=string.replace(result,"\n("," (")
+  return result
 
 def rijm(woord):
   try:
