@@ -1490,7 +1490,21 @@ def tempwereld(regel):
       City="Pittsburgh";
     url="";
 
-    cityurlmap=[("Enschede","?ID=IOVERIJS5","CET"),("Loppersum","?ID=IGRONING8","CET"),("New York","?ID=KNYNEWYO17","EST"),("Groningen","?ID=IGRONING9","CET"),("Leeuwarden","?ID=IFRIESLA16","CET"),("Sydney","?ID=INSWWEST1","AEST"),("Pittsburgh","?ID=KPAPITTS8","EDT"),("Hilversum","?ID=IHILVERS3","CET"),("Rotterdam","?ID=IZHROTTE2","CET"),("Amsterdam","?ID=INOORDHO1","CET"),("Cairns","?ID=IQUEENSL32","AEST"),("Johannesburg","?ID=IGAUTENG8","SAST"),("Den Haag","?ID=IZUIDHOL11","CET"),("Arnhem","?ID=IGELDERL20","CET")];
+    cityurlmap=[
+      ("Enschede","?ID=IOVERIJS5","CET"),
+      ("Loppersum","?ID=IGRONING8","CET"),
+      ("New York","?ID=KNYNEWYO17","EST"),
+      ("Groningen","?ID=IGRONING9","CET"),
+      ("Leeuwarden","?ID=IFRIESLA16","CET"),
+      ("Sydney","?ID=INSWCHAT1","AEST"),
+      ("Pittsburgh","?ID=KPAPITTS8","EDT"),
+      ("Hilversum","?ID=IHILVERS3","CET"),
+      ("Rotterdam","?ID=IZHROTTE2","CET"),
+      ("Amsterdam","?ID=INOORDHO1","CET"),
+      ("Cairns","?ID=IQUEENSL32","AEST"),
+      ("Johannesburg","?ID=IGAUTENG8","SAST"),
+      ("Den Haag","?ID=IZUIDHOL11","CET"),
+      ("Arnhem","?ID=IGELDERL20","CET")];
     for (name,x,t) in cityurlmap:
       if name==City:
         url=x;
