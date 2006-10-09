@@ -1294,11 +1294,12 @@ def remind(regel):
   # add identity mappings for units to aliasses
   relnames=string.join(units.keys()+unitaliasses.keys(), '|');
   relformat="((\d+\s*(%s)\s*)+)\W" % relnames;
-  absformat="(("+pietlib.DATEREGEX+"\s+)?\d+:\d+[:\d+]\s*)";
+  absformat="(("+pietlib.DATEREGEX+"\s)?\s*\d+:\d+(:\d+)?\s*)";
   # do split, abs before rel, want 1m en 1maart lijken op elkaar
-  split=re.match("\s*("+absformat+"|"+relformat+")", regel);
+  fullregex="\s*("+absformat+"|"+relformat+")"
+  split=re.match(fullregex, regel);
   if (split==None):
-    return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van";
+    return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van"
   now=int(round(time.time()));
   tijd=string.strip(split.group(0));
   result = string.strip(regel[split.end():]);

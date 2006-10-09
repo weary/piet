@@ -87,11 +87,12 @@ DATEREGEX = \
 # opgeteld
 def parse_tijd(tijd, tijdzone):
   def parse_abs_tijd(datesplit):
+    have_date = True # might prove otherwise
+    day = int(datesplit.group(1));
+    year = int(datesplit.group(3));
     try:
-      day = int(datesplit.group(1));
-      year = int(datesplit.group(3));
       month = int(datesplit.group(2));
-    except TypeError:
+    except ValueError:
       try:
         month = calc.monthmap[datesplit.group(2).lower()];
       except KeyError:
