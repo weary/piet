@@ -447,22 +447,14 @@ def nlweer(woord):
     return SydWeer("");
   if (string.lower(nick)[:6]=="semyon") and (string.lower(woord)!="nl"):
     return SydWeer("");
-  #cmd = "lynx -dump http://teletekst.nos.nl/cgi-bin/tt/nos/page/t/703";
-  cmd = "lynx -dump http://www.weer.nl/indexnew.phtml"
-  inp,outp,stderr = os.popen3(cmd);
-  result=outp.read();
-  inp.close();
-  outp.close();
-  stderr.close();
-  i=string.find(result,"]weerkaart")+11;
-  j=string.find(result,"[",i);
-  lines=string.split(string.strip(result[i:j]),'\n');
-  result="";
-  for line in lines:
-    result+=line.strip()+" ";  
-    if len(line)<2:
-      result+='\n';
-  return result.strip();
+  a=pietlib.get_url("http://www.weathernews.nl");
+  i=a.find('<div class="weertekst" style="height: 240px">');
+  i2=a.find('</h2>',i);
+  a=a[i:i2].split("<br>");
+  a=[i for i in a if len(i.strip())>0];
+  weer=re.sub("<[^>]*>", "", a[0]).strip();
+  opgesteld=a[-1];
+  return "%s\n%s" % (weer, opgesteld);
 
 def itaweer(woord):
   if (woord=="it"):
