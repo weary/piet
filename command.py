@@ -1759,8 +1759,9 @@ def tijdzone(regel):
       piet.db('REPLACE INTO auth(name,timezone) VALUES("%s","%s")' %
           (a[0], tijdzone));
     else:
-      piet.db('REPLACE INTO auth(name,auth,timezone) VALUES("%s",%d,%d)' %
-          (a[0], oldauth[1][0], tijdzone));
+      oldauth = int(oldauth[1][0]);
+      piet.db('REPLACE INTO auth(name,auth,timezone) VALUES("%s",%d,"%s")' %
+          (a[0], oldauth, tijdzone));
 
     if tijdzone==a[1]:
       return \
