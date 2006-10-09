@@ -885,12 +885,20 @@ def todo(params):
     return "misschien, misschien niet";
 
 def commando_url(params):
-  cmd="sed -n '/http\|www/{s/.*\(http\|www\)/\\1/;T;s/[[:blank:]].*//;p}' log.txt"
-  inp = os.popen(cmd);
-  result = string.split(inp.read(), '\n');
-  inp.close();
-  result = random.choice(result);
-  return result;
+  #cmd="sed -n '/http\|www/{s/.*\(http\|www\)/\\1/;T;s/[[:blank:]].*//;p}' log.txt"
+  #inp = os.popen(cmd);
+  #result = string.split(inp.read(), '\n');
+  #inp.close();
+  #result = random.choice(result);
+  #return result;
+  html = pietlib.get_url("http://del.icio.us")
+
+  urls = re.findall(
+      '<h4><a href="([^"]*)" rel="nofollow"><img [^>]*>([^<]*)</a>', 
+      html, re.MULTILINE | re.IGNORECASE)
+  url = random.choice(urls)
+  return "%s: %s" % (url[1].strip(), url[0])
+
 
 def simon(params):
   cmd="w -h simon"
