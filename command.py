@@ -1755,7 +1755,7 @@ def tijdzone(regel):
       return "sorry, ik doe alleen tijdzones van de planeet aarde\n";
 
     oldauth=piet.db('SELECT auth FROM auth WHERE name="'+a[0]+'"');
-    if (oldauth==None or len(oldauth)<2):
+    if not(oldauth) or len(oldauth)<2: # no result or only header
       piet.db('REPLACE INTO auth(name,timezone) VALUES("%s","%s")' %
           (a[0], tijdzone));
     else:
