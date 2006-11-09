@@ -106,9 +106,9 @@ def do_react(channel, nick, pietnick, auth_, line):
 	line = line.replace(pietnick, "piet");
 
 	# ok, alles in een file
-	inf = open(reactfile);
-	lines = '\n'.split(inf.read());
-	inf.close();
+	inf = open(reactfile)
+	lines = inf.read().split('\n')
+	inf.close()
 
 	# laatste regel even in een logfile
 	inf = open(logfile, "a+");
@@ -160,7 +160,7 @@ def do_react(channel, nick, pietnick, auth_, line):
 	random.seed();
 	i=0;
 	result="";
-	while (i<len(lines)) and (not(ready)):
+	while (i<len(lines)) and not(ready):
 		try:
 			excludethis=False;
 			if (lines[i].count('#')==2):
@@ -184,7 +184,7 @@ def do_react(channel, nick, pietnick, auth_, line):
 			result="";
 		i=i+1;
 
-	if (not(ready)):
+	if not(ready):
 		r=random.random();
 		if (r<=0.06):
 			if globals().has_key("geordi") and (random.random()<0.08):
