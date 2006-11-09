@@ -535,6 +535,8 @@ def zeg(params):
   return "";
 
 def rot_nr(cmd):
+  if not (cmd[:1]>"0" and cmd[:1] <= "9"):
+    return onbekend_commando("rot"+cmd)
   n,y=string.split(cmd, " ", 1);
   n=int(n)%26;
   y=string.strip(parse(y, False, True));
