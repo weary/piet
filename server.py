@@ -143,8 +143,9 @@ def nickchange(nick_, auth_, channel_, newnick):
     elif (auth_<otherauth and auth_>0):
       piet.send(channel_, "authenticatie "+str(auth_)+" nu naar "+newnick+" overgezet, niet nickchangen om hogere auth te krijgen\n");
   
-  nicks[newnick]=nicks[nick_];
-  del nicks[nick_];
+  if nicks.has_key(nick_):
+    nicks[newnick]=nicks[nick_];
+    del nicks[nick_];
   check_names_delayed(channel_);
 
 def checkmessages(channel_):
