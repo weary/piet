@@ -1003,6 +1003,28 @@ def nmblookup(regel):
               string.join(lines, ' ');
     return(result);
 
+def wat_is(regel):
+  regel = regel.strip();
+  if regel[-1]=='?':
+    regel = regel[:-1].strip();
+  ln=regel+" is ";
+  cmd = 'grep "%s" log.txt' % ln;
+  inp = os.popen(cmd);
+  result = inp.read().split('\n');
+  if len(result)==0 or (len(result)==1 and len(result[0])==0):
+    return "%s is helemaal niks, eigenlijk" % regel;
+  result = random.choice(result);
+  pos = result.find(ln);
+  if pos>=0:
+    result = result[pos+len(ln):];
+  pos = result.find('.');
+  if pos>0:
+    result = result[:pos];
+  if len(result) != 0:
+    return "volgens mij is %s %s" % (regel, result);
+  return "wat is wat ook weer.."
+
+
 def context(regel):
   cmd="grep -B2 -A2 \""+regel+"\" log.txt";
   inp = os.popen(cmd);
@@ -1441,7 +1463,7 @@ def dum(params):
     return "die dum dum";
   if (r<=0.5):
     print "piet: verklaar dum"
-    return verklaar("dum");
+    return "piet: verklaar dum\n"+verklaar("dum");
   return "dat jij je verveelt is ok, maar dan hoef je mij nog niet er mee te vermoeien";
 
 def docommand(cmd):
@@ -1474,8 +1496,8 @@ def tempwereld(regel):
       City="Amsterdam";
     elif (City=="l'sum" or City=="loppersum"):
       City="Loppersum";
-    elif (City=="g'ing" or City=="groningen" or  City=="grunnen" or City=="g'ningen"):
-      City="Groningen";
+    elif (City=="y'burg" or City=="v'burg" or  City=="voorburg" or City=="ypenburg"):
+      City="Ypenburg";
     elif (City=="l'rden" or City=="leeuwarden" or City=="reduzuum" or City=="r'zum"):
       City="Leeuwarden";
     elif (City=="nsw" or City=="sydney"):
@@ -1493,12 +1515,13 @@ def tempwereld(regel):
     url="";
 
     cityurlmap=[
+      ("Ypenburg","?ID=IZUIDHOL11","CET"),
       ("Enschede","?ID=IOVERIJS5","CET"),
       ("Loppersum","?ID=IGRONING8","CET"),
       ("New York","?ID=KNYNEWYO17","EST"),
       ("Groningen","?ID=IGRONING9","CET"),
       ("Leeuwarden","?ID=IFRIESLA16","CET"),
-      ("Sydney","?ID=INSWCHAT1","AEST"),
+      ("Sydney","?ID=INSWEAST3","AEST"),
       ("Pittsburgh","?ID=KPAPITTS8","EDT"),
       ("Hilversum","?ID=IHILVERS3","CET"),
       ("Rotterdam","?ID=IZHROTTE2","CET"),
@@ -2348,7 +2371,6 @@ def verveel(regel):
   "informatie verzamelen", "sparen", "besteden", "betalen", "winnen",
   "verliezen", "stelen", "rijden");
   return "anders ga je %s" % random.choice(l);
-
 
 
 functions = {
