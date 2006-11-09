@@ -18,7 +18,7 @@ def get_url_title(channel, url):
 		return;
 	
 	tinyurl="dat ding";
-	if len(url)>80:
+	if len(url)>60:
 		apiurl = "http://tinyurl.com/api-create.php?url=";
 		tinyurl = urllib.urlopen(apiurl + url).read();
 
@@ -31,7 +31,7 @@ def get_url_title(channel, url):
 def do_search_replace(channel, nick, regmatchobj, lastchat):
 	try:
 		matchstring = regmatchobj.group();
-		matchresult = '/'.split(matchstring);
+		matchresult = matchstring.split('/');
 
 		fromstring = matchresult[1];
 		tostring = matchresult[2];
@@ -46,8 +46,9 @@ def do_search_replace(channel, nick, regmatchobj, lastchat):
 		else:
 			return False;
 	except:
+		traceback.print_exc();
 		return False;
-		
+
 
 #create table paginas(tijd integer, nick text, paginas integer)
 def check_pagina(channel, nick, paginas):
@@ -140,18 +141,18 @@ def do_react(channel, nick, pietnick, auth_, line):
 		ready=True;
 
 	nicklogset = False;
-	if(not(ready)):
+	if not(ready):
 		try:
 			srmatch = re.match("^(s[/][A-Za-z0-9 ]+[/][A-Za-z0-9 ]*[/]?)$", line);
-			if(srmatch):
+			if srmatch:
 				sr_result = do_search_replace(channel, nick, srmatch, lastnicklog[nick]);
-				if(sr_result):
+				if sr_result:
 					lastnicklog[nick] = sr_result;
 					nicklogset = True;
 					ready=True;
 		except:
 			# Not gonna happen
-			pass;
+			traceback.print_exc();
 
 	if not(nicklogset):
 		lastnicklog[nick] = line;
