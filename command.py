@@ -683,14 +683,20 @@ def random_sentence(params):
 
 def command_help(param):
   try:
-    return functions[param][2]+"\n";
+    return functions[param][3]+"\n"
   except:
-    r=[b for b in functions if (functions[b][2]!="") and (functions[b][0]<=auth)];
-    r.sort();
-    return string.join(r, ', ')+"\n";
+    categories = dict([ (tup[0], 0) for (_, tup) in functions.iteritems() ]).keys()
+    for cat in categories:
+      r = [ fun for (fun, tup) in functions.iteritems() if tup[0] == cat and tup[3] ]
+      if r:
+        r.sort()
+        cmds = len(r)
+        r = ', '.join(r)
+        piet.send(channel, "%s(%d commands): %s\n" % (cat, cmds, r))
+    return ""
 
 def alias(params):
-  r=[b for b in functions if (functions[b][2]=="") and (functions[b][0]<=auth)];
+  r=[b for b in functions if (functions[b][3]=="") and (functions[b][1]<=auth)];
   r.sort();
   return string.join(r, ', ')+"\n";
 
@@ -2374,108 +2380,125 @@ def verveel(regel):
 
 
 functions = {
-    "anagram":           (100, anagram, "bedenk een anagram, gebruik anagram <woorden> of anagram en <woorden> om engels te forceren."),
-    "verklaar":          (100, verklaar, "Zoekt op het internet wat <regel> is"),
-    "dw":                (100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
-    "dwho":              (100, discwho, "dwho, kijk wie van Taido, Irk, Weary of Szwarts op discworld zijn"),
-    "galgje":            (150, galgje, "spel een spelletje galgje, begin met galgje start en daarna galgje raad <letter>"),
-    "vandale":           (100, vandale, "vandale <woord>, zoek woord op in woordenboek"),
-    "urban":             (100, urban, "urban <woord>, zoek woord op in urbandictionary (warning: explicit content)"),
-    "rijm":              (100, rijm, "rijm <woord>, zoek rijmwoorden op"),
-    "vertaal":           (100, vertaal, "vertaal <brontaal> <doeltaal> <regel>, vertaalt <regel> van de taal <brontaal> naar de taal <doeltaal>"),
-    "weer":              (100, weer, "weer, zoek het weer op"),
-    "zeg":               (0, zeg, "zeg <text> [tegen <naam>|op <channel>], ga napraten"),
-    "rot":               (0, rot_nr, "rot<nr> <text>, versleutel <text> met het rot<nr> algorithme"),
-    "ping":              (100, ping, "ping, zeg pong"),
-    "remind":            (300, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
-    "nmblookup":         (500, nmblookup, "nmblookup <host>, zoek op campusnet naar een ip"),
-    "PING":              (100, ping, ""),
-    "hallo?":            (100, ping, ""),
-    "afk":               (100, afk, "afk <afk>, zoek een afkorting op"),
-    "spel":              (0, spell_nl, "spel <woord/zin>, spellcheck een woord/zin in het nederlands"),
-    "spell":             (0, spell_en, "spell <woord/zin>, spellcheck een woord/zin in het engels"),
-    "zauber":            (0, spell_de, "zauber <woord/zin>, spellcheck een woord/zin in het duits"),
-    "buchstabieren":     (0, spell_de, ""),
-    "schreiben":         (0, spell_de, ""),
-    "schreib":           (0, spell_de, ""),
-    "changelog":         (1000, changelog, "changelog, show the recent changes to piet"),
-    "help":              (0, command_help, ""),
-    "calc":              (0, lambda x: calc.supercalc(x), ""),
-    "reken":             (0, lambda x: calc.supercalc(x), "reken uit <expressie> rekent iets uit via de internal piet-processer\nvoor help doe reken help"),
-    "alias":             (1000, alias, ""),
-    "stop":              (1000, leeg, "stop [<reden>], ga van irc"),
-    "ga weg":            (1000, leeg, "ga weg [van <kanaal>], /leave <kanaal>"),
-    "kom bij":           (1000, leeg, "kom bij <kanaal>, /join <kanaal>"),
-    "doe":               (1200, leeg, "doe <commando>, voer een shell-commando uit"),
-    "temp":              (0,temp, "temp, de temperatuur van sommige plaatsen in de wereld"), 
-    "watis":             (1000, watis, "watis <iets>, geeft veel bla over <iets>"),
-    "dict":             (1000, watis, ""),
-    "kop dicht":         (1000, leeg, "kop dicht, hou op met spammen"),
-    "auth iedereen":     (1200, auth_iedereen, "auth iedereen, geef iedereen authorisatie 1000 (inclusief jezelf)"),
-    "auth":              (-6, change_auth, "auth [<niveau> <nick> [<paswoord>]], geef een authenticatieniveau"),
-    "spreuk":            (0, spreuk, "spreuk, geef een leuke(?) spreuk"),
-    "oneliner":          (0, spreuk, ""),
-    "ping":              (100, ping, "ping <host>, ping een computer"),
-    "dvorak2qwerty":     (0, dvorak2qwerty, "dvorak2qwerty <text>, maak iets dat op een qwerty-tb in dvorak is getikt leesbaar"),
-    "d2q":               (0, dvorak2qwerty, ""),
-    "datum":             (100, datum, "geef de datum van vandaag"),
-    "dat":               (100, last, "dat [x], herhaal wat er x regels terug gezegd werd"),
-    "leet":              (0, leet, "leet <text>, convert to 1337"),
-    "unleet":            (0, unleet, "unleet <text>, unconvert to 1337"),
-    "todo":              (1, todo, "todo <text>, voeg wat toe aan de todo list"),
-    "bugrep":            (1, todo, ""),
-    "geordi":            (0, geordi, ""),
-    "geoip":             (100, geoip, "geoip <ip>, zoekt positie op aarde van ip"),
-    "file":              (100, filemeldingen, "file <weg>, zoekt fileinformatie op van die weg"),
-    "files":             (100, filemeldingen, ""),
-    "je heet nu":        (500, jeheetnu, "je heet nu <nick>, geef nieuwe nick"),
-    "renick":            (200, randomnaam, "renick, verzint een willekeurige nick"),
-    "opme":              (500, opme, "opme, geef @"),
-    "koffie?":           (121, leeg, "koffie?, vraag of ie koffie wil"),
-    "simon?":            (100, simon, "simon?, kijkt of simon op sorcsoft ingelogd is"),
-    "citaat":            (100, citaat, "citaat, geeft een random regel text die ooit gezegd is"),
-    "context":           (100, context, "context <text>, geeft de context waarin iets gezegd is"),
-    "wees stil":         (1000, leeg, "wees stil, laat piet z'n kop houden met loze dingen"),
-    "stil?":             (1000, leeg, "stil?, probeert piet zich stil te houden?"),
-    "weekend?":          (100, weekend, ""),
-    "praat maar":        (1000, leeg, "praat maar, tegenovergestelde van \"wees stil\""),
-    "kies":              (100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
-    "tv":                (100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
-    "trigram":           (1000, trigram, "praat nonsens"),
-    "url":               (100, commando_url, "geef willekeurige oude url"),
-    "versie":            (100, versie, "versie <x> zoekt laatste versie op van software dinges"),
-    "version":           (100, versie, ""),
-    "mep":               (100, mep, ""),
-    "file":              (100, filemeldingen, "file <weg> zoekt de laatste fileinformatie"),
-    "files":             (100, filemeldingen, ""),
-    "geef":              (100, geef, ""),
-    "pistes":            (100, pistes.cmd_pistes, "pistes, doet iets met skipistes"),
-    "bash":              (100, bash.bash, "Geef bash quote <nummer> terug of een random bashquote bij gebrek aan nummer"),
-    "sentence":          (100, random_sentence, "sentence, geef een willekeurige engelse zin"),
-    "dum":               (0, dum, ""),
-    "wiki":              (500, wiki, "wiki <woord> Freeware encyclopedie"),
-    "tel":               (1000, tel, "geef weary's mobielnr"),
-    "tijd":              (0, commando_tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
-    "tijdzone":          (1000, tijdzone, "tijdzone [naam [tijdzone]], verander tijdzones van mensen. zie /usr/share/zoneinfo."),
-    "ns":                (100, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
-    "hoever":            (100, lambda x: Distance.Distance(x), "hoever <van> <naar>"),
-    "afstand":           (100, lambda x: Distance.Distance(x), ""),
-    "distance":          (100, lambda x: Distance.Distance(x), ""),
-    "verveel":           (100, verveel, "geeft een voorstel voor een activiteit"),
-    "quote":             (1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
-    "reload":            (1000, reloadding, "reload <module> reload iets voor piet"),
-    "uptime":            (200, uptime, "uptime, verteld tijd sinds eerste python command"),
-    "zoek":              (1000, zoek, "zoek vrouw, zoekt willekeurige vrouw in overijsel"),
-    "hex":               (101, hex2dec, "hex <nummer>, reken van/naar hex"),
-    "meer":              (200, meer, "meer, geef nog's wat meer output van vorig commando"),
-    "ov":                (200, ov9292_wrapper, "ov \"<van>\" \"<naar>\" vertrek|aankomst datum tijd"),
-    "test":              (100, mytest, "ding"),
-    "kookbalans":        (100, kookbalans_kookbalans, "geeft een saldolijst"),
-    "gekookt":           (100, kookbalans_gekookt, "boekt een kookactie"),
-    "kookundo":          (100, kookbalans_undo, "boekt een inverse kookactie van de laatste kookactie"),
-    "vrouwbalans": (100, lambda x: "er zijn hier precies 0 vrouwen", "geeft het aantal vrouwen op het kanaal"),
-    "manbalans": (100, lambda x: "er zijn precies 0 mannen, en %d jongens hier" % len(nicks), "geeft het aantal vrouwen op het kanaal"),
-    "onbekend_commando": (0, onbekend_commando, "")};
+# loos
+    "anagram":           ("loos", 100, anagram, "bedenk een anagram, gebruik anagram <woorden> of anagram en <woorden> om engels te forceren."),
+    "galgje":            ("loos", 150, galgje, "spel een spelletje galgje, begin met galgje start en daarna galgje raad <letter>"),
+    "ping":              ("loos", 100, ping, "ping, zeg pong"),
+    "PING":              ("loos", 100, ping, ""),
+    "hallo?":            ("loos", 100, ping, ""),
+    "spreuk":            ("loos", 0, spreuk, "spreuk, geef een leuke(?) spreuk"),
+    "oneliner":          ("loos", 0, spreuk, ""),
+    "dvorak2qwerty":     ("loos", 0, dvorak2qwerty, "dvorak2qwerty <text>, maak iets dat op een qwerty-tb in dvorak is getikt leesbaar"),
+    "d2q":               ("loos", 0, dvorak2qwerty, ""),
+    "leet":              ("loos", 0, leet, "leet <text>, convert to 1337"),
+    "unleet":            ("loos", 0, unleet, "unleet <text>, unconvert to 1337"),
+    "geordi":            ("loos", 0, geordi, ""),
+    "citaat":            ("loos", 100, citaat, "citaat, geeft een random regel text die ooit gezegd is"),
+    "pistes":            ("loos", 100, pistes.cmd_pistes, "pistes, doet iets met skipistes"),
+    "weekend?":          ("loos", 100, weekend, ""),
+    "url":               ("loos", 100, commando_url, "geef willekeurige oude url"),
+    "tv":                ("loos", 100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
+    "trigram":           ("loos", 1000, trigram, "praat nonsens"),
+    "bash":              ("loos", 100, bash.bash, "Geef bash quote <nummer> terug of een random bashquote bij gebrek aan nummer"),
+    "sentence":          ("loos", 100, random_sentence, "sentence, geef een willekeurige engelse zin"),
+    "dum":               ("loos", 0, dum, ""),
+    "verveel":           ("loos", 100, verveel, "geeft een voorstel voor een activiteit"),
+    "quote":             ("loos", 1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
+
+# dicts
+    "verklaar":          ("dicts", 100, verklaar, "Zoekt op het internet wat <regel> is"),
+    "vandale":           ("dicts", 100, vandale, "vandale <woord>, zoek woord op in woordenboek"),
+    "urban":             ("dicts", 100, urban, "urban <woord>, zoek woord op in urbandictionary (warning: explicit content)"),
+    "rijm":              ("dicts", 100, rijm, "rijm <woord>, zoek rijmwoorden op"),
+    "vertaal":           ("dicts", 100, vertaal, "vertaal <brontaal> <doeltaal> <regel>, vertaalt <regel> van de taal <brontaal> naar de taal <doeltaal>"),
+    "afk":               ("dicts", 100, afk, "afk <afk>, zoek een afkorting op"),
+    "spel":              ("dicts", 0, spell_nl, "spel <woord/zin>, spellcheck een woord/zin in het nederlands"),
+    "spell":             ("dicts", 0, spell_en, "spell <woord/zin>, spellcheck een woord/zin in het engels"),
+    "zauber":            ("dicts", 0, spell_de, "zauber <woord/zin>, spellcheck een woord/zin in het duits"),
+    "buchstabieren":     ("dicts", 0, spell_de, ""),
+    "schreiben":         ("dicts", 0, spell_de, ""),
+    "schreib":           ("dicts", 0, spell_de, ""),
+    "watis":             ("dicts", 1000, watis, "watis <iets>, geeft veel bla over <iets>"),
+    "wat is ":           ("dicts", 300, wat_is, "wat is <iets>, vertel wat <iets> is"),
+    "dict":              ("dicts", 1000, watis, ""),
+    "wiki":              ("dicts", 500, wiki, "wiki <woord> Freeware encyclopedie"),
+    "tel":               ("dicts", 1000, tel, "zoek een tel.nr."),
+
+# misc
+    "weer":              ("misc", 100, weer, "weer, zoek het weer op"),
+    "zeg":               ("misc", 0, zeg, "zeg <text> [tegen <naam>|op <channel>], ga napraten"),
+    "rot":               ("misc", 0, rot_nr, "rot<nr> <text>, versleutel <text> met het rot<nr> algorithme"),
+    "dat":               ("misc", 100, last, "dat [x], herhaal wat er x regels terug gezegd werd"),
+    "file":              ("misc", 100, filemeldingen, "file <weg>, zoekt fileinformatie op van die weg"),
+    "files":             ("misc", 100, filemeldingen, ""),
+    "simon?":            ("misc", 100, simon, "simon?, kijkt of simon op sorcsoft ingelogd is"),
+    "context":           ("misc", 100, context, "context <text>, geeft de context waarin iets gezegd is"),
+    "kies":              ("misc", 100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
+    "kookbalans":        ("misc", 100, kookbalans_kookbalans, "geeft een saldolijst"),
+    "gekookt":           ("misc", 100, kookbalans_gekookt, "boekt een kookactie"),
+    "kookundo":          ("misc", 100, kookbalans_undo, "boekt een inverse kookactie van de laatste kookactie"),
+    "vrouwbalans":       ("misc", 100, lambda x: "er zijn hier precies 0 vrouwen", "geeft het aantal vrouwen op het kanaal"),
+    "manbalans":         ("misc", 100, lambda x: "er zijn precies 0 mannen, en %d jongens hier" % len(nicks), "geeft het aantal vrouwen op het kanaal"),
+    "dw":                ("misc", 100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
+    "dwho":              ("misc", 100, discwho, "dwho, kijk wie van Taido, Irk, Weary of Szwarts op discworld zijn"),
+
+# system
+    "nmblookup":         ("system", 500, nmblookup, "nmblookup <host>, zoek op campusnet naar een ip"),
+    "ping":              ("system", 100, ping, "ping <host>, ping een computer"),
+    "geoip":             ("system", 100, geoip, "geoip <ip>, zoekt positie op aarde van ip"),
+    "hex":               ("system", 101, hex2dec, "hex <nummer>, reken van/naar hex"),
+
+# handig
+    "remind":            ("handig", 300, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
+    "reken":             ("handig", 0, lambda x: calc.supercalc(x), "reken uit <expressie> rekent iets uit via de internal piet-processer\nvoor help doe reken help"),
+    "calc":              ("handig", 0, lambda x: calc.supercalc(x), ""),
+    "temp":              ("handig", 0,temp, "temp, de temperatuur van sommige plaatsen in de wereld"), 
+    "datum":             ("handig", 100, datum, "geef de datum van vandaag"),
+    "tijd":              ("handig", 0, commando_tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
+
+# piet
+    "changelog":         ("piet", 1000, changelog, "changelog, show the recent changes to piet"),
+    "help":              ("piet", 0, command_help, ""),
+    "alias":             ("piet", 1000, alias, ""),
+    "stop":              ("piet", 1000, leeg, "stop [<reden>], ga van irc"),
+    "ga weg":            ("piet", 1000, leeg, "ga weg [van <kanaal>], /leave <kanaal>"),
+    "kom bij":           ("piet", 1000, leeg, "kom bij <kanaal>, /join <kanaal>"),
+    "kop dicht":         ("piet", 1000, leeg, "kop dicht, hou op met spammen"),
+    "auth":              ("piet", -6, change_auth, "auth [<niveau> <nick> [<paswoord>]], geef een authenticatieniveau"),
+    "auth iedereen":     ("piet", 1200, auth_iedereen, "auth iedereen, geef iedereen authorisatie 1000 (inclusief jezelf)"),
+    "je heet nu":        ("piet", 500, jeheetnu, "je heet nu <nick>, geef nieuwe nick"),
+    "renick":            ("piet", 200, randomnaam, "renick, verzint een willekeurige nick"),
+    "opme":              ("piet", 500, opme, "opme, geef @"),
+    "koffie?":           ("piet", 121, leeg, "koffie?, vraag of ie koffie wil"),
+    "wees stil":         ("piet", 1000, leeg, "wees stil, laat piet z'n kop houden met loze dingen"),
+    "stil?":             ("piet", 1000, leeg, "stil?, probeert piet zich stil te houden?"),
+    "praat maar":        ("piet", 1000, leeg, "praat maar, tegenovergestelde van \"wees stil\""),
+    "todo":              ("piet", 1, todo, "todo <text>, voeg wat toe aan de todo list"),
+    "bugrep":            ("piet", 1, todo, ""),
+    "versie":            ("piet", 100, versie, "versie <x> zoekt laatste versie op van software dinges"),
+    "version":           ("piet", 100, versie, ""),
+    "mep":               ("piet", 100, mep, ""),
+    "geef":              ("piet", 100, geef, ""),
+    "tijdzone":          ("piet", 1000, tijdzone, "tijdzone [naam [tijdzone]], verander tijdzones van mensen. zie /usr/share/zoneinfo."),
+    "reload":            ("piet", 1000, reloadding, "reload <module> reload iets voor piet"),
+    "uptime":            ("piet", 200, uptime, "uptime, verteld tijd sinds eerste python command"),
+    "meer":              ("piet", 200, meer, "meer, geef nog's wat meer output van vorig commando"),
+    "test":              ("piet", 100, mytest, "ding"),
+
+# geografie / reizen
+    "ns":                ("reizen", 100, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
+    "hoever":            ("reizen", 100, lambda x: Distance.Distance(x), "hoever <van> <naar>"),
+    "afstand":           ("reizen", 100, lambda x: Distance.Distance(x), ""),
+    "distance":          ("reizen", 100, lambda x: Distance.Distance(x), ""),
+    "ov":                ("reizen", 200, ov9292_wrapper, "ov \"<van>\" \"<naar>\" vertrek|aankomst datum tijd"),
+
+# stuk
+    "doe":               ("stuk", 1200, leeg, "doe <commando>, voer een shell-commando uit"),
+    "zoek":              ("stuk", 1000, zoek, "zoek vrouw, zoekt willekeurige vrouw in overijsel"),
+
+# intern
+    "onbekend_commando": ("intern", 0, onbekend_commando, "")
+};
 
 #param_org: string containing command+parameters
 #first: True for outer call, False for recursions
@@ -2493,6 +2516,10 @@ def parse(param_org, first, magzeg):
       command=x;
       params=string.strip(param_org[len(command):]);
 
+  if params[:2]=="t ":
+    params="ik %s helemaal niet, en al zeker niet voor jou" % command
+    command="zeg"
+
   if (command==""):
     if (first):
       command="onbekend_commando";
@@ -2502,7 +2529,7 @@ def parse(param_org, first, magzeg):
   print (command, params, int(auth));
   
   functie=functions[command];
-  if (int(auth)<functie[0]):
+  if (int(auth)<functie[1]):
     if (first):
       functie=functions["onbekend_commando"];
     else:
@@ -2510,11 +2537,11 @@ def parse(param_org, first, magzeg):
       params=param_org;
   
   r="";
-  if (int(auth)>=functie[0]):
+  if (int(auth)>=functie[1]):
     if (functie==functions["zeg"]) and not(magzeg):
       r=params;
     else:
-      r=functie[1](params);
+      r=functie[2](params);
 
   meer_data[nick]=[]
   maxlines=10;
