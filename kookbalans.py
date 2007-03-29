@@ -177,6 +177,7 @@ def kookmelding(kokert, eters, kosten, commentaar):
     commentaar = [ commentaar ]
 
   grammatica = {
+    "%alt%"             : [ "%kok% -> %obj_eters% (%np_eten%)" ],
     "%s%"               : [ "%pp_value% %s_kookt_voor_inv%",
                             "%pp_value% %s_kookt_inv% %pp_eters%",
                             "%pp_eters% %s_kookt_inv% %pp_value%",
@@ -262,7 +263,7 @@ def kookmelding(kokert, eters, kosten, commentaar):
     "%obj_eters%"       : [ pietlib.make_list(eters_obj) ]
   }
 
-  melding = "%s%"
+  melding = "%alt%"
 
   while "%" in melding:
     melding_subst = melding
@@ -281,6 +282,8 @@ def mutatie(afzender, kokert, eters, kosten, commentaar):
   try:
     for eter in eters:
       result = piet.db("SELECT COUNT(*) FROM auth WHERE name = '%s'" % eter.replace("'","''"))
+      if int(result[1][0]) == 0:
+        result = piet.db("SELECT COUNT(*) FROM kookbalans_balans WHERE nick = '%s'" % eter.replace("'","''"))
       if int(result[1][0]) == 0:
         return "%s ken ik niet" % eter
 
