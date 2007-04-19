@@ -16,6 +16,8 @@ import piet
 import pietlib
 import random
 import traceback
+import re
+from time import strftime
 
 
 def cmd_kookbalans(channel, nick, auth, params):
@@ -50,12 +52,16 @@ def cmd_gekookt(channel, nick, auth, params):
   if params == "":
     return print_kookgeschiedenis(channel,5)
 
+  syntax = "gekookt [door <k>] voor (<e1>) gerecht <g> op <yyyy-mm-dd>"
+  kookdagre = "^(19|20)?(\d{2})-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])$"
+
   stopwoorden = [ "", "credits", "gulden", "euro", "florijnen", "florijn", "dildos", "vuile", "zwarte", "witte", "witgewassen", "is", "en" ]
 
   keys_kokert = [ "door" ]
   keys_eters = [ "voor" ]
   keys_kosten = [ "tegen", "kost", "kosten", "prijs" ]
-  keys_voedsel = [ "namelijk" ]
+  keys_voedsel = [ "gerecht" ]
+  keys_kookdag = [ "op" ]
 
   for teken in ",.;:!?()[]":
     params = params.replace(teken,"")
@@ -66,23 +72,27 @@ def cmd_gekookt(channel, nick, auth, params):
   eters = []
   kosten = float(1)
   voedsel = []
+  kookdag = []
 
   status = None
 
   for woord in cmd:
     if woord in stopwoorden:
       pass
-    elif status == keys_voedsel:
-      voedsel.append(woord)
-
+    
     elif woord in keys_kokert:
       status = keys_kokert
     elif woord in keys_eters:
       status = keys_eters
     elif woord in keys_kosten:
       status = keys_kosten
+    elif woord in keys_kookdag:
+      status = keys_kookdag      
+    elif status == keys_voedsel:
+      voedsel.append(woord)
     elif woord in keys_voedsel:
       status = keys_voedsel
+
 
     elif status == keys_kokert:
       kokert = woord
@@ -92,16 +102,31 @@ def cmd_gekookt(channel, nick, auth, params):
     elif status == keys_kosten:
       kosten = float(woord)
       status = None
+    elif status == keys_kookdag:
+      if re.search(kookdagre, woord):
+        kookdag = woord
+      else:
+        return syntax + " (" + woord + "??)"
+      status = None
 
     else:
-      return "geen idee wat je bedoelt met '%s'" % woord
+      return syntax + " (" + woord  + "??)"
 
   if kokert not in eters:
     eters.append(kokert)
 
+  # argumenten check
+  if len(eters)<2:
+    return "ho ho, van alleen eten wil ik niets weten"
+  if len(voedsel)<1:
+    return "ho ho, ik wil weten wat je hebt gegeten"
+  if len(kookdag)<1:
+    return "ho ho, ik wil weten wanneer je hebt gegeten"
+  
+  kooktimestamp = kookdag + " 00:00:00"
   kosten *= len(eters)
-
-  return mutatie (nick, kokert, eters, kosten, ' '.join(voedsel))
+  
+  return mutatie (nick, kokert, eters, kosten, ' '.join(voedsel), kooktimestamp)
 
 
 def cmd_undo(channel, nick, auth, params):
@@ -120,8 +145,10 @@ def init_tables(channel):
 # volgens sqlite-handleiding moet IF NOT EXISTS werken
 # --> SQL error: near "NOT": syntax error
 #
+# hmm werkt gewoon hoor..
+#
   try:
-    piet.db("CREATE TABLE kookbalans_mutaties (" +
+    piet.db("CREATE TABLE IF NOT EXISTS kookbalans_mutaties (" +
       "tijdstip TIMESTAMP NOT NULL," +
       "muteerder VARCHAR(255) NOT NULL," +
       "koker VARCHAR(255) NOT NULL," +
@@ -129,11 +156,11 @@ def init_tables(channel):
       "kosten FLOAT NOT NULL," +
       "commentaar TEXT NULL)")
 
-    piet.db("CREATE TABLE kookbalans_balans (" +
+    piet.db("CREATE TABLE IF NOT EXISTS kookbalans_balans (" +
       "nick VARCHAR(255) PRIMARY KEY NOT NULL," +
       "saldo FLOAT NOT NULL DEFAULT 0)")
 
-    piet.send(channel, "nieuwe tabellen aangemaakt")
+    # piet.send(channel, "nieuwe tabellen aangemaakt")
   except:
     pass
 
@@ -278,7 +305,7 @@ def kookmelding(kokert, eters, kosten, commentaar):
   return melding
 
 
-def mutatie(afzender, kokert, eters, kosten, commentaar):
+def mutatie(afzender, kokert, eters, kosten, commentaar, kooktimestamp):
   try:
     for eter in eters:
       result = piet.db("SELECT COUNT(*) FROM auth WHERE name = '%s'" % eter.replace("'","''"))
@@ -290,11 +317,14 @@ def mutatie(afzender, kokert, eters, kosten, commentaar):
   except:
     return format_exception("probleem met de database")
 
-  q_log = "INSERT INTO kookbalans_mutaties(tijdstip,muteerder,koker,eters,kosten,commentaar) VALUES (datetime('now'), '%s', '%s', ' %s ', %f, '%s')"
+  # q_log = "INSERT INTO kookbalans_mutaties(tijdstip,muteerder,koker,eters,kosten,commentaar) VALUES (datetime('now'), '%s', '%s', ' %s ', %f, '%s')"
+  q_log = "INSERT INTO kookbalans_mutaties(tijdstip,muteerder,koker,eters,kosten,commentaar) VALUES ('%s', '%s', '%s', ' %s ', %f, '%s')"
+  
   try:
     piet.db("BEGIN")
 
-    piet.db(q_log % (afzender.replace("'","''"),
+    piet.db(q_log % (kooktimestamp.replace("'","''"),
+      afzender.replace("'","''"),
       kokert.replace("'","''"),
       ' '.join(eters).replace("'","''"),
       kosten,
@@ -338,8 +368,9 @@ def mutatie_inverteren(afzender):
   kokert = q_results[1][0]
   eters = q_results[1][1].strip().split(" ")
   kosten = float(q_results[1][2])
-
-  return mutatie(afzender, kokert, eters, -kosten)
+  kooktimestamp = strftime("%Y-%m-%d %H:%M:%S")
+  
+  return mutatie(afzender, kokert, eters, -kosten, "undo", kooktimestamp)
 
 
 def balans_bijwerken(kokert, eters, kosten):
