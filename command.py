@@ -2584,6 +2584,10 @@ def verveel(regel):
   "verliezen", "stelen", "rijden");
   return "anders ga je %s" % random.choice(l);
 
+def test_encoding(regel):
+		piet.send(channel, "utf8: "+chr(0xc3)+chr(0x88))
+		piet.send(channel, "iso8859: "+chr(200))
+		return "E met backtick erop"
 
 functions = {
 # loos
@@ -2656,6 +2660,7 @@ functions = {
     "ping":              ("system", 100, ping, "ping <host>, ping een computer"),
     "geoip":             ("system", 100, geoip, "geoip <ip>, zoekt positie op aarde van ip"),
     "hex":               ("system", 101, hex2dec, "hex <nummer>, reken van/naar hex"),
+		"encoding":          ("loos", 1000, test_encoding, "print iso8859 en utf8 karakter"),
 
 # handig
     "remind":            ("handig", 300, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
