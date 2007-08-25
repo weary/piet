@@ -5,8 +5,10 @@ sys.path.append(".");
 import piet;
 import pietlib;
 
-if not(vars().has_key("nicks")):
+if not("nicks" in vars()):
   nicks={};
+if not("topic" in vars()):
+  topic=[]
 
 def doe_gemiddelde_offlinetijd(channel_, nick_, tu_):
   print("doe_gemiddelde_offlinetijd("+channel_+", "+nick_+", "+str(tu_)+")\n");
@@ -205,7 +207,7 @@ def check_names_delayed(channel_):
   piet.names(channel_);
 
 def do_server(nick_, auth_, channel_, msg_):
-  global nicks;
+  global nicks,topic;
   print("do_server("+nick_+", "+str(auth_)+", "+channel_+", "+msg_+")\n");
   command=msg_.split(' ')[0].upper();
   netsplit=False;
@@ -235,6 +237,17 @@ def do_server(nick_, auth_, channel_, msg_):
     piet.send(channel_, "bah, die nick is even niet beschikbaar\n");
   if command in ["353"]:
     check_names(nick_, channel_, msg_);
+  if command in ["TOPIC"]:
+    nu = time.time()
+    newtopic = msg_.split(' ', 1)[1]
+    if newtopic.find(':')>=0:
+      newtopic = newtopic[newtopic.find(':')+1:]
+    if topic:
+      delay = nu-topic[-1][0]
+      if delay>3*60*60 and topic[-1][1]!=newtopic:
+        piet.send(channel_, "\002oude\002 topic van \002%s\002 geleden: %s" % (pietlib.format_tijdsduur(delay,1), topic[-1][1]));
+    topic.append((nu, newtopic))
+    print "topic lijst bevat nu:", repr(topic)
   if command in ["MODE"] and auth_>0:
     if ((msg_.find(' +o')>=0) or (msg_.find(' -o')>=0)):
       check_names_delayed(channel_);

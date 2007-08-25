@@ -33,8 +33,12 @@ channel = "";#string.strip(sys.stdin.readline());
 functions={};
 meer_data={};
 
-if not(vars().has_key("nicks")):
-  nicks={};
+
+
+if not("nicks" in vars()):
+  nicks = {};
+if not("topic" in vars()):
+  topic = []
 
 def db_get(table, keycol, key, valuecol):
   try:
@@ -1843,6 +1847,33 @@ def tv_nuenstraks(params):
       r=r+line+"\n";
   return r;
 
+def topic_cmds(params):
+	global topic
+	cmd = params.split(' ', 1)[0].lower()
+
+	if not(topic):
+		raise pietlib.piet_exception("ik weet niks van 't topic, vraag het "+
+				random.choice([ i for i in nicks.keys() if i!=piet.nick()] or ["sinterklaas"])+
+				" eens")
+
+	if cmd in ["history", "geschiedenis", "his"]:
+		nu = time.time()
+		lines = [ "%s geleden, %s" % (pietlib.format_tijdsduur(nu-t), line) for (t,line) in reversed(topic) ]
+		return '\n'.join(lines)
+	elif cmd in ["set", "reset"]:
+		return "TOPIC "+topic[-1][1]
+	elif cmd in ["pop"]:
+		if len(topic)==1:
+			raise pietlib.piet_exception("ik weet de vorige topic niet")
+		topic.pop()
+		(oldtijd, oldtopic) = topic[-1]
+		tz = pietlib.tijdzone_nick(nick)
+		return "ok, ik zet de topic van "+pietlib.format_localtijd(oldtijd, tz
+				)+" terug\nTOPIC "+topic[-1][1]
+	else:
+		return "ja? wat moet ik met de topic? 'reset'ten? wil je de 'geschiedenis' zien? of zal ik een topic van de stapel 'pop'en?"
+
+
 def trigram_grow_back(cur):
   last3wordsmatch=re.search("(([\w/\\'`]+[\s,]+){0,1}[\w/\\'`]+)$", cur);
   last3words = cur[last3wordsmatch.start():last3wordsmatch.end()];
@@ -2432,6 +2463,7 @@ functions = {
     "file":              ("misc", 100, filemeldingen, "file <weg>, zoekt fileinformatie op van die weg"),
     "files":             ("misc", 100, filemeldingen, ""),
     "simon?":            ("misc", 100, simon, "simon?, kijkt of simon op sorcsoft ingelogd is"),
+		"topic":             ("misc", 100, topic_cmds, "topic <cmd>, doe dingen met de topic"),
     "context":           ("misc", 100, context, "context <text>, geeft de context waarin iets gezegd is"),
     "kies":              ("misc", 100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
     "kookbalans":        ("misc", 100, kookbalans_kookbalans, "geeft een saldolijst"),
