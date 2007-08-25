@@ -2630,6 +2630,7 @@ functions = {
     "schreib":           ("dicts", 0, spell_de, ""),
     "watis":             ("dicts", 1000, watis, "watis <iets>, geeft veel bla over <iets>"),
     "wat is ":           ("dicts", 300, wat_is, "wat is <iets>, vertel wat <iets> is"),
+    "wat zijn ":         ("dicts", 300, wat_is, ""),
     "dict":              ("dicts", 1000, watis, ""),
     "wiki":              ("dicts", 500, wiki, "wiki <woord> Freeware encyclopedie"),
     "tel":               ("dicts", 1000, tel, "zoek een tel.nr."),
@@ -2650,7 +2651,7 @@ functions = {
     "gekookt":           ("misc", 100, kookbalans_gekookt, "boekt een kookactie"),
     "kookundo":          ("misc", 100, kookbalans_undo, "boekt een inverse kookactie van de laatste kookactie"),
     "vrouwbalans":       ("misc", 100, lambda x: "er zijn hier precies 0 vrouwen", "geeft het aantal vrouwen op het kanaal"),
-    "manbalans":         ("misc", 100, lambda x: "er zijn precies 0 mannen, en %d jongens hier" % len(nicks), "geeft het aantal vrouwen op het kanaal"),
+    "manbalans":         ("misc", 100, lambda x: "er zijn precies 0 mannen, en %d jongens hier" % len(nicks), "geeft het aantal mannen op het kanaal"),
     "dw":                ("misc", 100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
     "dwho":              ("misc", 100, discwho, "dwho, kijk wie van Taido, Irk, Weary of Szwarts op discworld zijn"),
     "gps":		 ("misc", 100, gps.gps_coord, "gps <adres> Zoekt GPS coordinaten op van adres"),
@@ -2664,6 +2665,7 @@ functions = {
 
 # handig
     "remind":            ("handig", 300, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
+    "was":               ("handig", 300, lambda x: remind("%s %s: je was is weer's klaar" % (x, nick)), ""),
     "reken":             ("handig", 0, lambda x: calc.supercalc(x), "reken uit <expressie> rekent iets uit via de internal piet-processer\nvoor help doe reken help"),
     "calc":              ("handig", 0, lambda x: calc.supercalc(x), ""),
     "temp":              ("handig", 0,temp, "temp, de temperatuur van sommige plaatsen in de wereld"), 
@@ -2758,6 +2760,8 @@ def parse(param_org, first, magzeg):
     else:
       r=functie[2](params);
 
+  if functie[0] == "stuk":
+    piet.send(channel, "pas op, deze functie werkt niet helemaal zoals bedoeld")
   meer_data[nick]=[]
   maxlines=10;
   r2=[i for i in string.split(r, '\n') if len(string.strip(i))>0];
@@ -2765,7 +2769,7 @@ def parse(param_org, first, magzeg):
     l=str(len(r2));
     meer_data[nick]=r2[maxlines:];
     r=string.join(r2[:maxlines], '\n')+\
-      ("\n%s: de rest verzin je zelf maar, %d van de %d regels vind ik zat\n" %
+      ('\n%s: %d van de %d regels vind ik zat, maar "meer" geeft meer\n' %
       (nick, int(maxlines), int(l)));
   return r;
 
@@ -2787,6 +2791,10 @@ def do_command(nick_, auth_, channel_, msg_):
   prev_command=msg_;
   print "channel is now ", channel;
   print "executing", nick, auth, channel, msg_;
-  result=parse(msg_, True, True);
-  piet.send(channel_, result);
+  try:
+    result=parse(msg_, True, True);
+    piet.send(channel_, result);
+  except pietlib.piet_exception, e:
+    piet.send(channel_, str(e))
+
 
