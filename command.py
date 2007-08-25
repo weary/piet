@@ -1505,8 +1505,18 @@ def docommand(cmd):
 
 def tempwereld(regel):
   regel=string.lower(regel)
+  regel=string.replace(regel,"\"new york\"","new_york");
+  regel=string.replace(regel,"'new york'","new_york");
   regel=string.replace(regel,"new york","new_york");
+  regel=string.replace(regel,"\"den haag\"","den_haag");
+  regel=string.replace(regel,"'den haag'","den_haag");
   regel=string.replace(regel,"den haag","den_haag");
+  regel=string.replace(regel,"\"zhong guo\"","hong_kong");
+  regel=string.replace(regel,"'zhong guo'","hong_kong");
+  regel=string.replace(regel,"zhong guo","hong_kong");
+  regel=string.replace(regel,"\"hong kong\"","hong_kong");
+  regel=string.replace(regel,"'hong kong'","hong_kong");
+  regel=string.replace(regel,"hong kong","hong_kong");
   params=string.split(regel, ' ');
   if (len(params)<1) or (len(params[0])==0):
     params=string.split("enschede sydney",' ');
@@ -1523,6 +1533,8 @@ def tempwereld(regel):
       City="Johannesburg";
     elif (City=="a'dam" or City=="amsterdam"):
       City="Amsterdam";
+    elif (City=="h'kong" or City=="hong_kong") or (City=="z'guo"):
+      City="Hong Kong";
     elif (City=="l'sum" or City=="loppersum"):
       City="Loppersum";
     elif (City=="y'burg" or City=="v'burg" or  City=="voorburg" or City=="ypenburg"):
@@ -1544,13 +1556,14 @@ def tempwereld(regel):
     url="";
 
     cityurlmap=[
+      ("Hong Kong","?ID=I90580993","HKT"),
       ("Ypenburg","?ID=IZUIDHOL11","CET"),
       ("Enschede","?ID=IOVERIJS5","CET"),
       ("Loppersum","?ID=IGRONING8","CET"),
       ("New York","?ID=KNYNEWYO17","EST"),
       ("Groningen","?ID=IGRONING9","CET"),
       ("Leeuwarden","?ID=IFRIESLA16","CET"),
-      ("Sydney","?ID=INSWEAST3","AEST"),
+      ("Sydney","?ID=INSWCHAT1","AEST"),
       ("Pittsburgh","?ID=KPAPITTS8","EDT"),
       ("Hilversum","?ID=IHILVERS3","CET"),
       ("Rotterdam","?ID=IZHROTTE2","CET"),
@@ -1718,6 +1731,124 @@ def wiki(regel):
   for line in string.split(result,'\n'):
     toreturn += string.strip(line)+'\n';
   return string.strip(toreturn);
+
+
+def temp2(regel):
+	print repr(regel)
+	regel = regel.strip()
+	if not(regel):
+		regel="voorburg rotterdam arnhem enschede sydney"
+		#raise pietlib.piet_exception("het is lekker knus en warm hier in m'n computerkast")
+	splitpos=regel.find(' ')
+	if regel[:8].lower()=="den haag":
+		splitpos=8
+	if splitpos>0:
+		reqcity,rest = regel[:splitpos], regel[splitpos+1:]
+	else:
+		reqcity,rest = regel, ""
+	recurse_result=""
+	print repr((reqcity, rest, splitpos, regel))
+	if rest:
+		recurse_result = temp2(rest)
+
+	aliases = {
+		"h'sum": "hilversum",
+		"sydney": "sydney,au",
+		"e'de": "enschede",
+		"d'haag": "den haag",
+		"r'dam": "rotterdam",
+		"den_haag": "den haag",
+		"vb": "voorburg",
+		"vburg": "voorburg",
+		"reduzum": "roordahuizum"}
+	if reqcity in aliases:
+		reqcity = aliases[reqcity]
+	if reqcity.find(',')<0:
+		reqcity = reqcity+",nl"
+	reqcity = reqcity.replace("_", " ")
+
+	form = { 'submit': 'GO', 'u': '1', 'partner': 'accuweather' }
+	form['loccode']=reqcity
+	a = pietlib.get_url('http://www.accuweather.com/world-index-forecast.asp?'+ urllib.urlencode(form))
+
+	current_temp = (re.findall('<div id="quicklook_current_temps">([^<]*)', a) or [""])[0].replace('&deg;', " graden ")
+	current_feeltemp = (re.findall('<div id="quicklook_current_rfval">([^<]*)', a) or [""])[0].replace('&deg;', " graden ")
+	current_weather = (re.findall('<div id="quicklook_current_wxtext">([^<]*)', a) or [""])[0].replace('&deg;', " graden ")
+	t = (re.findall('<a id="quicklook_curr_head"[^>]*>.* ([0-9]+:[0-9]+.*)</a>', a) or [""])[0]
+	t2 = re.match('([0-9]+):([0-9]+)([AP])M', t)
+	if t2:
+		h,m,c = t2.groups()
+		if c=='P' and int(h)<12:
+			h=int(h)+12
+		if c=='A' and int(h)==12:
+			h=int(h)-12
+		t = "%d:%s" % (int(h),m)
+	wind = (re.findall('Winds: ([\w]+).*at ([\w/]+)', a) or [("", "")])[0]
+	city,country = (re.findall('<a [^>]*class="cityTitle"[^>]*>([^,]+), ([\w]+)', a) or [("", "")])[0]
+	hum = (re.findall('Humidity: ([0-9]+)%', a) or [""])[0]
+	if not(city):
+		return reqcity+" ken ik niet, misschien een landcode erbij?\n"+recurse_result
+
+	retries=2
+	succes=None
+	while not(succes) and retries>0:
+		succes=1
+		retries = retries -1
+
+		current_weather = current_weather.lower()
+		current_weather = (current_weather
+				.replace("partly", "gedeeltelijk")
+				.replace("mostly", "vooral")
+				.replace("cloudy", "bewolkt")
+				.replace("rainshower", "buien")
+				.replace("rain", "regen")
+				.replace("sunny", "zonnig")
+				.replace("snow", "sneeuw")
+				.replace("thunderstorm", "onweer mogelijk met regen")
+				.replace("thundershower", "kort onweer met zware regen"))
+
+		timezone = None
+		if country=="Netherlands":
+			timezone = 'Europe/Amsterdam'
+		elif country=="Australia":
+			timezone = 'Australia/Sydney'
+
+		print "tijd op pagina voor %s was %s" % (city, t)
+		t2 = re.match('^([0-9]+):([0-9]+)$', t)
+		if timezone and t2: # convert the time on page to relative time for the user
+			os.environ['TZ'] = timezone;
+			time.tzset();
+			ts = time.localtime()
+			pietlib.timezone_reset()
+			h_diff = ts.tm_hour - int(t2.group(1))
+			if h_diff<0: h_diff=h_diff+24
+			m_diff = ts.tm_min - int(t2.group(2))
+			if m_diff<0:
+				m_diff=m_diff+60
+				h_diff=h_diff-1
+			dur = (h_diff * 60 + m_diff) * 60.0
+			print (h_diff, m_diff, dur)
+			if dur>=14340 and dur==14400:
+				piet.send(channel, "prutssite is europa nog even aan het zoeken, ik probeer zo weer")
+				time.sleep(10)
+				succes=None
+			if dur<-5*60:
+				t=', '+t+'\x02(lokale tijd, toekomst!)\x02'
+			elif dur<0:
+				t=", over "+pietlib.format_tijdsduur(dur, 1)
+			elif dur<5*60:
+				t=""#pietlib.format_tijdsduur(dur, 1) +" geleden"
+			else:
+				t=', \x02'+pietlib.format_tijdsduur(dur, 2) +" geleden\x02"
+		else:
+			t=", om "+t+'(lokale tijd)'
+
+	line = "%s%s, %s, wind uit %s, %s, %s%% vochtigheid, %s" % (
+			city, t, current_temp, wind[0], wind[1], hum, current_weather)
+	return line+"\n"+recurse_result
+
+
+
 
 def commando_tijd(regel):
   if len(regel)>0:
@@ -2508,6 +2639,7 @@ functions = {
     "reken":             ("handig", 0, lambda x: calc.supercalc(x), "reken uit <expressie> rekent iets uit via de internal piet-processer\nvoor help doe reken help"),
     "calc":              ("handig", 0, lambda x: calc.supercalc(x), ""),
     "temp":              ("handig", 0,temp, "temp, de temperatuur van sommige plaatsen in de wereld"), 
+    "temp2":             ("handig", 0,temp2, "temp, nog een poging om een temperatuur-commando te maken"), 
     "datum":             ("handig", 100, datum, "geef de datum van vandaag"),
     "tijd":              ("handig", 0, commando_tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
 
