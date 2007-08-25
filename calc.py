@@ -418,7 +418,12 @@ def det(value,unit,dim):
   return (newvalue,newunit)
 
 def calcM(param):
-  functions=[("ceil",math.ceil),("abs",math.fabs),("floor",math.floor),("exp",math.exp),("log",math.log),("log10",math.log10),("sqrt",math.sqrt),("acos",math.acos),("asin",math.asin),("atan",math.atan),("cos",math.cos),("sin",math.sin),("tan",math.tan),("cosh",math.cosh),("sinh",math.sinh),("tan",math.tanh)]
+  functions=[
+  ("ceil", math.ceil), ("abs", math.fabs), ("floor", math.floor),
+  ("exp", math.exp), ("log", math.log), ("log10", math.log10),
+  ("sqrt", math.sqrt), ("acos", math.acos), ("asin", math.asin),
+  ("atan", math.atan), ("cos", math.cos), ("sin", math.sin), ("tan", math.tan),
+  ("cosh", math.cosh), ("sinh", math.sinh), ("tan", math.tanh)]
   for (funcname,func) in functions:
     funcname+='('
     if param[:len(funcname)]==funcname:
@@ -600,7 +605,7 @@ def calcM(param):
   #date and time format
   date=0
   digits=re.compile('[0-9]+\-?'+months+'\-?[0-9]+')
-  digitscheck= digits.match(param)
+  digitscheck = digits.match(param)
   if digitscheck:
     date=1
     datestring=digitscheck.group()
@@ -791,8 +796,14 @@ def calcM(param):
     return(error,(value,0),param[1:],unit,dimx,dimy)
 
   #2 based prefixes
-  prefix=[("kilob",1024),("megab",1048576),("gigab",1073741824),("terrab",1099511627776),("petab",1125899906842624),("exab",1152921504606846976),("zettab",1180591620717411303424),("yottab",1208925819614629174706176)]
-  prefix+=[("millib",1.0/1024),("microb",1.0/1048576),("nanob",1.0/1073741824),("picob",1.0/1099511627776),("femtob",1.0/1125899906842624),("attob",1.0/1152921504606846976),("zeptob",1.0/1180591620717411303424),("yoctob",1.0/1208925819614629174706176)]
+  prefix=[("kilob",1024), ("megab",1048576), ("gigab",1073741824),
+  ("terrab",1099511627776), ("petab",1125899906842624),
+  ("exab",1152921504606846976), ("zettab",1180591620717411303424),
+  ("yottab",1208925819614629174706176), ("millib",1.0/1024),
+  ("microb",1.0/1048576), ("nanob",1.0/1073741824),
+  ("picob",1.0/1099511627776), ("femtob",1.0/1125899906842624),
+  ("attob",1.0/1152921504606846976), ("zeptob",1.0/1180591620717411303424),
+  ("yoctob",1.0/1208925819614629174706176)]
 
   for(thisprefix,power) in prefix:
     if param[:len(thisprefix)]==thisprefix:
@@ -802,7 +813,11 @@ def calcM(param):
 
 
   #prefixes
-  prefix=[("yotta",1e24),("zetta",1e21),("exa",1e18),("peta",1e15),("tera",1e12),("giga",1e9),("mega",1e6),("kilo",1e3),("hecto",1e2),("deca",1e1),("deci",1e-1),("centi",1e-2),("milli",1e-3),("micro",1e-6),("nano",1e-9),("pico",1e-12),("femto",1e-15),("atto",1e-18),("zepto",1e-21),("yocto",1e-24)]
+  prefix=[("yotta",1e24), ("zetta",1e21), ("exa",1e18), ("peta",1e15),
+  ("tera",1e12), ("giga",1e9), ("mega",1e6), ("kilo",1e3), ("hecto",1e2),
+  ("deca",1e1), ("deci",1e-1), ("centi",1e-2), ("milli",1e-3), ("micro",1e-6),
+  ("nano",1e-9), ("pico",1e-12), ("femto",1e-15), ("atto",1e-18),
+  ("zepto",1e-21), ("yocto",1e-24)]
   for(thisprefix,power) in prefix:
     if param[:len(thisprefix)]==thisprefix:
       (error,(value,imag),param,unit,dimx,dimy)=calcM(param[len(thisprefix):])
@@ -819,7 +834,23 @@ def calcM(param):
       return("",(convertrate,0),param[endpos:],siunit,1,1)
 
   #check for money currency
-  money=[("euro","EUR"),("dollar","USD"),("pond","GBP"),("britsepond","GBP"),("britishpound","GBP"),("eur","EUR"),("usd","usd"),("gbp","GBP"),("a$","AUD"),("$a","AUD"),("aud","AUD"),("australischedollar","AUD"),("$c","CAD"),("c$","CAD"),("canadiandollar","CAD"),("canadeesedollar","CAD"),("cad","CAD"),("ukp","GBP"),("yen","JPY"),("jpy","JPY"),("$nz","NZD"),("nz$","NZD"),("newzealanddollar","NZD"),("nieuwzeeuwsedollar","NZD"),("nieuwzeelandsedollar","NZD"),("nzd","NZD"),("chf","CHF"),("zwitsersefrank","CHF"),("switzerlandfranc","CHF"),("swissfranc","CHF"),("franc","CHF"),("$","USD"),("dkk","DKK"),("deensekronen","DKK"),("deensekroon","DKK"),("danishkronor","DKK"),("nok","NOK"),("noorsekronen","NOK"),("noorsekroon","NOK"),("norwegiankronor","NOK"),("noorweegsekronen","NOK"),("noorweegsekroon","NOK"),("sek","SEK"),("zweedsekronen","SEK"),("zweedsekroon","SEK"),("swedishkroner","SEK"),("yuan","CNY"),("cny","CNY")]
+  money=[("euro","EUR"), ("dollar","USD"), ("pond","GBP"),
+  ("britsepond","GBP"), ("britishpound","GBP"), ("eur","EUR"), ("usd","usd"),
+  ("gbp","GBP"), ("a$","AUD"), ("$a","AUD"), ("aud","AUD"),
+  ("cur_bzd","BZD"),
+  ("australischedollar","AUD"), ("$c","CAD"), ("c$","CAD"),
+  ("canadiandollar","CAD"), ("canadeesedollar","CAD"), ("cad","CAD"),
+  ("ukp","GBP"), ("yen","JPY"), ("jpy","JPY"), ("$nz","NZD"), ("nz$","NZD"),
+  ("newzealanddollar","NZD"), ("nieuwzeeuwsedollar","NZD"),
+  ("nieuwzeelandsedollar","NZD"), ("nzd","NZD"), ("chf","CHF"),
+  ("zwitsersefrank","CHF"), ("switzerlandfranc","CHF"), ("swissfranc","CHF"),
+  ("franc","CHF"), ("$","USD"), ("dkk","DKK"), ("deensekronen","DKK"),
+  ("deensekroon","DKK"), ("danishkronor","DKK"), ("nok","NOK"),
+  ("noorsekronen","NOK"), ("noorsekroon","NOK"), ("norwegiankronor","NOK"),
+  ("noorweegsekronen","NOK"), ("noorweegsekroon","NOK"), ("sek","SEK"),
+  ("zweedsekronen","SEK"), ("zweedsekroon","SEK"), ("swedishkroner","SEK"),
+  ("hkd","HKD"), ("hongkongdollar","HKD"), ("cur_hkd","HKD"),
+  ("yuan","CNY"), ("cny","CNY"), ("cedi","GHC"), ("turkselire", "TRL")]
 
   for (currency,name) in money:
     if  param[:len(currency)]==currency:
@@ -835,9 +866,13 @@ def calcM(param):
       outp.close();
       inp.close();
       stderr.close();
-      i1=string.find(result,"Euro = ")+7;
-      i2=string.find(result," ",i1)
-      return("",(1/float(result[i1:i2]),0),param[endpos:],"$^1",1,1)
+      i1=string.find(result,"EUR");
+      i1=string.find(result,"EUR",i1+1);
+      i1=string.find(result,".",i1);
+      i1=string.rfind(result[:i1]," ");
+      i2=string.find(result," ",i1+1)
+      val = float(string.strip(result[i1:i2]))
+      return("",(1/val,0),param[endpos:],"$^1",1,1)
 
   unit=""
 
@@ -887,6 +922,8 @@ def calcM(param):
   return (nametype+" unknown",(1,0),param,unit,1,1)
 
 def supercalc(toparse):
+  if string.find(toparse.lower()," celcius")>0:
+    return "/nick Anders_Celsius; Heet geen Celcius!;/nick piet"
   if toparse[:4]=="help":
     x1=toparse[4:].find(" ")
     if x1<0:
@@ -903,13 +940,20 @@ def supercalc(toparse):
     if toparse=="units":
       return "each expression is allowed to be followed by a unit of physics, most units are supported and are by default calculated back to SI units\nsyntax: <expression> <unit>\nfor example: 10 mile\nunits can be prefixed by the SI prefixes ranging from yotta till yocto in steps of 1e3 and kilo till milli in steps of 10\nfor example: 1 nanometer"
     return "topic not found"
+
+
   if toparse[:4]=="uit ":
     toparse=toparse[4:];
   elif toparse[len(toparse)-4:]==" uit":
     toparse=toparse[:len(toparse)-4];
   toparse=string.lower(string.strip(toparse))
   toparse=string.replace(toparse," aud"," $a")
+  toparse=string.replace(toparse,"$hk"," cur_hkd")
+  toparse=string.replace(toparse,"hk$"," cur_hkd")
+  toparse=string.replace(toparse," gbp"," ukp")
   toparse=string.replace(toparse," a$"," $a")
+  toparse=string.replace(toparse," b$"," cur_bzd")
+  toparse=string.replace(toparse," $b"," cur_bzd")
   toparse=string.replace(toparse," in ","_in_")
   toparse=string.replace(toparse,"i ","i_")
 
@@ -1227,10 +1271,19 @@ units+=[("btuh",2.93071e+2,"g^1*m^2*s^-3"),("btu",2.93071e+2,"g^1*m^2*s^-3"),("b
 # abbreviations
 units+=[("mm",1.0e-3,"m^1"),("dm",1e-1,"m^1"),("cm",1e-2,"m^1"),("km",1e+3,"m^1"),("ft",3.048e-1,"m^1"),("lb",4.5359237e+2,"g^1"),("l",1e-3,"m^3"),("dl",1e-4,"m^3"),("cl",1e-5,"m^3"),("ml",1e-6,"m^3"),("kg",1.0e+3,"g^1"),("cc",1.0e-6,"m^3"),("cl",1.0e-5,"m^3"),("nm",1.0e-9,"m^1"),("s",1.0,"s^1"),("amp",1.0,"a^1"),("min",6.0e+1,"s^1"),("h",3.6e+3,"s^1"),("m",1.0,"m^1"),("el",1.143,"m^1")]
 
+#depcrecated exchange rates:
+units+=[("gulden",0.45378021609,"$^1"),("guldens",0.45378021609,"$^1"),("nlg",0.45378021609,"$^1")]
+
 units.sort(lambda (x1,x2,x3), (y1,y2,y3): cmp(len(y1),len(x1)))
 
-months='(jan|januari|january|feb|februari|february|mar|mrt|maart|march|apr|april|mei|may|jun|juni|june|jul|juli|july|aug|augustus|august|sep|september|oct|okt|oktober|october|nov|november|dec|december)'
-monthmap={"jan":1, "januari":1, "january":1, "feb":2, "februari":2, "february":2, "mar":3, "mrt":3, "maart":3, "march":3, "apr":4, "april":4, "mei":5, "may":5, "jun":6, "juni":6, "june":6, "jul":7, "juli":7, "july":7, "aug":8, "augustus":8, "august":8, "sep":9, "september":9, "oct":10, "okt":10, "oktober":10, "october":10, "nov":11, "november":11, "dec":12, "december":12}
+monthmap={
+  "jan":1, "januari":1, "january":1, "feb":2, "februari":2, "february":2,
+  "mar":3, "mrt":3, "maart":3, "march":3, "apr":4, "april":4,
+  "mei":5, "may":5, "jun":6, "juni":6, "june":6,
+  "jul":7, "juli":7, "july":7, "aug":8, "augustus":8, "august":8,
+  "sep":9, "september":9, "oct":10, "okt":10, "oktober":10, "october":10,
+  "nov":11, "november":11, "dec":12, "december":12}
+months = '(%s)' % ('|'.join(monthmap.keys()))
 selectmonth={1:"Jan", 2:"Feb", 3:"Mar", 4:"Apr", 5:"May", 6:"Jun", 7:"Jul", 8:"Aug", 9:"Sep", 10:"Oct", 11:"Nov", 12:"Dec"}
 daysofweek=["Monday","Tuesday","Wednesday","Thursday","Friday","Saterday","Sunday"]
 daysofweek+=["Maandag","Dinsdag","Woensdag","Donderdag","Vrijdag","Zaterdag","Zondag"]
