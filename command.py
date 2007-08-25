@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys, string, random, re, os, time, crypt, socket;
-import traceback, datetime, stat, telnetlib;
+import sys, string, random, re, os, time, crypt, socket
+import traceback, datetime, stat, telnetlib
 
 import piet;
 sys.path.append(".");
