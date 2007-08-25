@@ -2480,20 +2480,25 @@ def filemeldingen(params):
     i1=string.find(result,">",i1)+1
     i2=string.find(result,"<",i1)
     answer+=string.replace(string.strip(result[i1:i2]),"&nbsp;"," ")+"\n"
-    wegenlijst=""
+    wegenlijst=[]
     i1=string.find(result,"wegNrA",i1)
     if string.find(result,"<strong>",i1)<0:
       i1=-1
     while i1>0:
       i1=string.find(result,">",i1)+1
       i2=string.find(result,"<",i1)
-      wegenlijst+=result[i1:i2]+" "
+      wegenlijst.append(result[i1:i2])
       i1=string.find(result,"wegNrA",i1)
       if string.find(result,"<strong>",i1)<0:
         i1=-1
-    if wegenlijst=="":
+    if not(len(wegenlijst)):
       return string.strip(answer)
-    return answer+"Files op: "+wegenlijst
+    wegenlijst = list(set(wegenlijst))
+    try:
+      wegenlijst.sort(lambda x,y: cmp((x[0],int(x[1:])), (y[0],int(y[1:]))))
+    except:
+      traceback.print_exc();
+    return answer+"Files op: "+(' '.join(wegenlijst))
   i1=string.find(result,"wegNrA")
   if string.find(result,"<strong>",i1)<0:
     i1=-1
