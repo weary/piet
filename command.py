@@ -2547,6 +2547,22 @@ def versie(regel):
       random.randint(0,9),random.randint(0,9));
   return regel+" ken ik niet"
 
+def formeer(regel):
+  seats=0  
+  partijen=[("cda","CDA",41),("pvda","PvdA",33),("vvd","VVD",22),("sp","SP",25),("cu","CU",6),("sgp","SGP",2),("pvdv","PvdV",9),("gw","PvdV",9),("wilders","PvdV",9),("gl","Groen Links",7),("d66","D66",3),("groen","Groen Links",7),("unie","CU",6),("arbeid","PvdA",33),("fortuyn","Fortuyn",0),("lpf","Fortuyn",0),("dieren","PvdD",2)]
+  regel=regel.lower()
+  result=""
+  for (partij,check,zetels) in partijen:
+    while (regel.find(partij)>=0):
+      i=regel.find(partij)
+      regel=regel[:i]+regel[i+3:]
+      seats+=zetels
+      result+=check+"_"
+  if (result[len(result)-1:])=="_":
+    result=result[:len(result)-1:]
+  result=string.replace(result,"_",", ")
+  return str(seats)+" zetels voor "+result
+
 def verveel(regel):
   l = ("verbergen", "kijken", "verbieden", "huiswerk maken", "luisteren",
   "werken", "delen", "Kloppen op", "storen", "teruggeven", "vragen", "geven",
@@ -2615,6 +2631,7 @@ functions = {
     "tel":               ("dicts", 1000, tel, "zoek een tel.nr."),
 
 # misc
+    "formeer":           ("misc", 100, formeer, "formeer <partijen>, som resultaat van 2e kamer verkiezing 2006"),
     "weer":              ("misc", 100, weer, "weer, zoek het weer op"),
     "zeg":               ("misc", 0, zeg, "zeg <text> [tegen <naam>|op <channel>], ga napraten"),
     "rot":               ("misc", 0, rot_nr, "rot<nr> <text>, versleutel <text> met het rot<nr> algorithme"),
