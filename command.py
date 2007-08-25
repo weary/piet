@@ -204,8 +204,11 @@ def change_auth(params):
     newauth=int(par[0]);
     parnick=par[1];
   except:
-    newauth=int(par[1]);
-    parnick=par[0];
+    try:
+      newauth=int(par[1]);
+      parnick=par[0];
+    except:
+      return "anders geef je even een nummer voor de auth die je wilt"
   if (newauth>1500): newauth=1500;
   if (newauth<-1500): newauth=-1500;
 
