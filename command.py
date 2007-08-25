@@ -61,8 +61,13 @@ def datum(params):
   tz=pietlib.tijdzone_nick(nick);
   os.environ['TZ']=tz;
   time.tzset();
-  result=time.strftime("Het is nu %d-%m-%Y (in de tijdzone "+tz.lower()+")",
-      time.localtime());
+  dagen = ("maandag", "dinsdag", "woensdag", "donderdag", "vrijdag",
+      "zaterdag", "zondag")
+  localtime = time.localtime()
+  weekday = dagen[localtime.tm_wday % 7]
+  result = time.strftime("%d-%m-%Y" , localtime)
+  result = "Het is nu %s %s (in de tijdzone %s)" % (weekday, result,
+      tz.lower())
   pietlib.timezone_reset();
   return result;
 
