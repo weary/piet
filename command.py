@@ -1027,12 +1027,19 @@ def wat_is(regel):
   regel = regel.strip();
   if regel[-1]=='?':
     regel = regel[:-1].strip();
-  ln=regel+" is ";
-  cmd = 'grep "%s" log.txt' % ln;
+  ln = regel+" is "
+  ww = "is"
+  cmd = 'grep -i "%s" log.txt' % ln;
   inp = os.popen(cmd);
   result = inp.read().split('\n');
   if len(result)==0 or (len(result)==1 and len(result[0])==0):
-    return "%s is helemaal niks, eigenlijk" % regel;
+    ln = regel+" zijn "
+    ww = "zijn"
+    cmd = 'grep -i "%s" log.txt' % ln
+    inp = os.popen(cmd)
+    result = inp.read().split('\n')
+    if len(result)==0 or (len(result)==1 and len(result[0])==0):
+      return "%s is helemaal niks, eigenlijk" % regel
   result = random.choice(result);
   pos = result.find(ln);
   if pos>=0:
@@ -1041,7 +1048,7 @@ def wat_is(regel):
   if pos>0:
     result = result[:pos];
   if len(result) != 0:
-    return "volgens mij is %s %s" % (regel, result);
+    return "volgens mij %s %s %s" % (ww, regel, result);
   return "wat is wat ook weer.."
 
 
