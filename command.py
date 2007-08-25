@@ -1416,22 +1416,22 @@ piet.thread(channel, "remind_thread", "");
 
 def list_reminds(regel):
   try:
-    qry="SELECT channel,nick,msg,tijd FROM reminds";
+    qry="SELECT channel,nick,msg,tijd FROM reminds"
     if (regel!="all"):
-      qry+=" WHERE nick=\""+nick+"\"";
-    qry+=" ORDER BY tijd";
+      qry+=" WHERE nick=\""+nick+"\""
+    qry+=" ORDER BY tijd"
     try:
-      msgs=piet.db(qry)[1:];
+      msgs=piet.db(qry)[1:]
     except:
-      return "ik herinner je helemaal nergens aan..";
+      return "ik herinner je helemaal nergens aan.."
 
-    now=int(round(time.time()));
-    msg="";
+    now=int(round(time.time()))
+    msg=[]
     for x in msgs:
       if len(x)==4:
-        msg=msg+"over %s, \"%s\"\n" % (
-            pietlib.format_tijdsduur(int(round(float(x[3])))-now), x[2]);
-    piet.send(channel, msg);
+        msg.append('over %s, "%s"' % (
+            pietlib.format_tijdsduur(int(round(float(x[3])))-now), x[2]));
+    return '\n'.join(msg);
 
   except:
     traceback.print_exc();
