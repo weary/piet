@@ -1,10 +1,26 @@
-import os, time, re, urllib, sys;
-sys.path.append(".");
-import BeautifulSoup;
-import piet;
-import calc;
+import os, time, re, urllib, sys
+sys.path.append(".")
+import BeautifulSoup
+import traceback
+import piet
+import calc
 
 DEFAULTAGENT = "wget/1.1";
+
+
+class piet_exception(Exception):
+  """ an exception that will be send to the channel. should be used to signal
+  an error condition with a message for the user """
+  _text = None
+
+  def __init__(self, text_):
+    Exception.__init__(self)
+    self._text = text_
+    traceback.print_exc();
+
+  def __str__(self):
+    return self._text
+
 
 def get_url(url, postdata=None, agent=DEFAULTAGENT):
   class PietUrlOpener(urllib.FancyURLopener):
@@ -12,12 +28,15 @@ def get_url(url, postdata=None, agent=DEFAULTAGENT):
   
   oldopener = urllib._urlopener;
   urllib._urlopener = PietUrlOpener();
-  if not(postdata):
-    tmp = urllib.urlopen(url).read(100000);
-  else:
-    if (type(postdata)==dict):
-      postdata = urllib.urlencode(postdata);
-    tmp = urllib.urlopen(url, postdata).read(100000);
+  try:
+    if not(postdata):
+      tmp = urllib.urlopen(url).read(100000);
+    else:
+      if (type(postdata)==dict):
+        postdata = urllib.urlencode(postdata);
+      tmp = urllib.urlopen(url, postdata).read(100000);
+  except:
+    raise piet_exception("die stomme site reageert niet, andere keer misschien")
   urllib._urlopener = oldopener;
   return tmp;
 
@@ -43,7 +62,7 @@ def make_list(items, sep="en"):
 # een absolute tijd, zie format_localtijd voor absolute tijd, items geeft de
 # precisie
 def format_tijdsduur(secs, items=2):
-  secs = int(round(secs));
+  secs = int(round(float(secs)));
   if (secs == 0):
     return "geen tijd";
   
