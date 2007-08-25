@@ -1975,7 +1975,7 @@ def quote(regel):
     outf=open("quote.txt","w");
     outf.write(lines);
     outf.close();
-    return "toegevoegt: \""+regel+"\"";
+    return 'toegevoegd: "%s"' % regel
   return "Syntax is fout voor quote";
 
 def tv_nuenstraks(params):
