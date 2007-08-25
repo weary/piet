@@ -92,8 +92,10 @@ def onbekend_commando(param):
   groeten=["hoi", "goeiemorgen", "goedemorgen", "mogge", "hallo", "middag"];
 
   split=string.split(param);
-  if len(split)>=2 and all(x in nicks for x in split[1:]):
-    return emote(split[0],split[1:]);
+  if len(split)>=2 and split[1] in nicks:
+    return emote(split[:1],split[1],split[2:]);
+  if len(split)>=3 and split[2] in nicks:
+    return emote(split[:2],split[2],split[3:]);
 
   if (len(param)==0):
     return "ok\n";
@@ -108,21 +110,21 @@ def onbekend_commando(param):
     return "jaja, ik zeur\n";
   return "oh\n";
 
-def emote(action, targetnicks):
-  if len(action)==0 or len(targetnicks)==0:
-    return "ACTION frot";
-  if len(targetnicks)==1 and targetnicks[0]==piet.nick():
-    targetnicks=[nick];
-  toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht", \
-             "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",\
-             "nauwelijks", "bijna, maar toch maar niet", "vol overgave"];
-  if action=="aai":
-    action="aait";
-  if action[-1] in "aeoui":
-    action=action+action[-1];
-  if action[-1]!='t':
-    action=action+"t";
-  return "ACTION "+action+" "+pietlib.make_list(targetnicks)+" "+random.choice(toevoeging);
+def emote(action, nick, remainder):
+	if len(action)==0 or len(remainder)==0:
+		return "ACTION frot"
+	toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht",
+						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",
+						 "nauwelijks", "bijna, maar toch maar niet", "vol overgave"]
+	if action[0]=="aai":
+		action[0]="aait"
+	if action[0][-1] in "aeoui":
+		action[0]=action[0]+action[0][-1]
+	if action[0][-1]!='t':
+		action[0]=action[0]+"t"
+	if len(action)==2:
+		action[1]=action[1]+" "
+	return "ACTION "+action[0]+" "+random.choice(toevoeging)+" "+action[1]+nick+" "+" ".join(remainder)
 
 
 
