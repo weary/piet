@@ -8,7 +8,7 @@ import piet;
 sys.path.append(".");
 import BeautifulSoup;
 import pietlib;
-import calc, Distance, pistes, ov9292, kookbalans, bash;
+import calc, Distance, pistes, ov9292, kookbalans, bash, gps;
 
 # python 2.5 functions
 def all(seq):
@@ -2292,6 +2292,9 @@ def reloadding(params):
     elif params[0]=="pietlib":
       reload(pietlib);
       return "tjip, een nieuwe lib!";
+    elif params[0]=="gps":
+      reload(gps);
+      return "gps module good to go!";
     elif params[0] in ("ov9292", "ov"):
       reload(ov9292);
       return "_ov_ernieuw ingelezen!";
@@ -2473,6 +2476,7 @@ functions = {
     "manbalans":         ("misc", 100, lambda x: "er zijn precies 0 mannen, en %d jongens hier" % len(nicks), "geeft het aantal vrouwen op het kanaal"),
     "dw":                ("misc", 100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
     "dwho":              ("misc", 100, discwho, "dwho, kijk wie van Taido, Irk, Weary of Szwarts op discworld zijn"),
+    "gps":		 ("misc", 100, gps.gps_coord, "gps <adres> Zoekt GPS coordinaten op van adres"),
 
 # system
     "nmblookup":         ("system", 500, nmblookup, "nmblookup <host>, zoek op campusnet naar een ip"),
