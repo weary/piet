@@ -110,4 +110,6 @@ ACTION negeert alle utf8-karakters
 ACTION checkt zijn t-states...
 ACTION voert wat random python commands uit
 Segmentation Fault: Core dumped.
+ACTION past zijn stats wat aan
+eigenlijk is't wel weer's tijd voor een discworld-quote
 
