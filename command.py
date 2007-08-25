@@ -1485,6 +1485,8 @@ def geef(regel):
   return "ACTION deelt "+params[0]+" "+string.join(params[1:],' ')+" uit";
 
 def dum(params):
+  if len(params)>0:
+    return "dum wat?";
   r=random.random();
   if (r<=0.2):
     return "die dum dum";
