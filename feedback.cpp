@@ -83,13 +83,19 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
   const std::string pietnick=g_config.get_nick();
   bool on_channel=(channel!=pietnick);
   bool personal=!on_channel;
-  const boost::regex personal_regex("^("+pietnick+"|piet)[:,>]");
-	boost::match_results<std::string::const_iterator> what;
-  if (boost::regex_search(msg, what, personal_regex, boost::format_sed))
-  {
-    msg.erase(0, what.length());
-    personal=true;
-  }
+	std::string nickseparators = ":,> ";
+	std::string::iterator pos = std::find_first_of(msg.begin(), msg.end(),
+			nickseparators.begin(), nickseparators.end());
+	if (pos != msg.end())
+	{
+		std::string testnick(msg.begin(), pos);
+		if (testnick==pietnick || testnick=="piet")
+		{
+			++pos;
+			msg.erase(msg.begin(), pos);
+			personal = true;
+		}
+	}
 
   printf("DEBUG: nick = \"%s\", channel = \"%s\", on_channel = %s, personal = %s\n", nick.c_str(), channel.c_str(), (on_channel?"TRUE":"FALSE"), (personal?"TRUE":"FALSE"));
   if (!on_channel)
