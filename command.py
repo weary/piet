@@ -2299,17 +2299,18 @@ def mytest(regel):
   return "result: "+repr(piet.db(regel))+"\n";
 
 def tel(regel):
-  naam=string.lower(regel);
-  if (naam=="socrates"):
-    return "socrates' telefoonnummer is 06-51825810";
-  elif (naam=="weary"):
-    return "weary's telefoonnummer is +31 6 5111 5487";
-  elif ((naam=="semyon") or (naam=="simon")):
-    return "simon's telefoonnummer is +61 2 98 03 37 59";
+  if not(regel):
+    result=piet.db("SELECT naam,nummer FROM telefoonnrs")[1:]
+    if not(result):
+      return "geef eens een naam ofzo"
+    result = ["%s: %s" % (i,j) for i,j in result ]
+    return "\n".join(result)
+  result = db_get('telefoonnrs', 'naam', regel, 'nummer')
+  if result:
+    return "ah! die weet ik! "+regel+" is bereikbaar op "+result
   else:
-    params=string.split(regel," ");
-    i=0;
-
+    params=string.split(regel," ")
+    i=0
 #parse naam argument
     naam="";
     if (len(params)<1) or (len(params[0])==0):
