@@ -23,10 +23,19 @@ def get_url_title(channel, url):
 		tinyurl = urllib.urlopen(apiurl + url).read();
 
 	try:
-		soup=BeautifulSoup.BeautifulSoup(url_input);
-		piet.send(channel, "de titel van "+tinyurl+" is: "+soup.html.title.string+"\n");
+		soup = BeautifulSoup.BeautifulSoup(url_input)
+		piet.send(channel, "de titel van "+tinyurl+" is: "+soup.html.title.string+"\n")
+		if url.find('divx.com'):
+			open("/home/weary/tmp/frop.txt", "w").write(url_input)
+			value = dict(soup.input.attrs)['value']
+			value = urllib.unquote(value)
+			value = value.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"')
+			print repr(value)
+			soup2 = BeautifulSoup.BeautifulSoup(value)
+			movieurl = dict(soup2.embed.attrs)['src']
+			piet.send(channel, "maar eigenlijk is dit het filmpje: " + movieurl + "\n")
 	except:
-		traceback.print_exc();
+		traceback.print_exc()
 
 def do_search_replace(channel, nick, regmatchobj, lastchat):
 	try:
