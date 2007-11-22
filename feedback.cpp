@@ -1,11 +1,7 @@
 
-
-//#include <unistd.h>
 #include "python_handler.h"
 #include "bot.h"
 #include "sender.h"
-//#include "lua_if.h"
-#include "passwd.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/predicate.hpp>

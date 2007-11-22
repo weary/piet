@@ -1,6 +1,4 @@
 #include "bot.h"
-//#include "lua_if.h"
-#include "passwd.h"
 #include "sender.h"
 #include "python_handler.h"
 #include "atd.h"
