@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys, string, random, re, os, time, crypt, socket
+import sys, string, random, re, os, time, crypt, socket, urllib
 import traceback, datetime, stat, telnetlib
 
 import piet;
@@ -87,15 +87,14 @@ def parse(param, first, magzeg):
 def leeg(param):
   return "";
 
+
 def onbekend_commando(param):
   param=string.strip(param);
   groeten=["hoi", "goeiemorgen", "goedemorgen", "mogge", "hallo", "middag"];
 
   split=string.split(param);
-  if len(split)>=2 and split[1] in nicks:
-    return emote(split[:1],split[1],split[2:]);
-  if len(split)>=3 and split[2] in nicks:
-    return emote(split[:2],split[2],split[3:]);
+  if len(split)>=2 and any(x in nicks for x in split[1:]):
+    return emote(split[0],split[1:]);
 
   if (len(param)==0):
     return "ok\n";
@@ -108,24 +107,22 @@ def onbekend_commando(param):
     return random.choice(groeten)+"\n";
   elif param in ["stfu"]:
     return "jaja, ik zeur\n";
-  return "oh\n";
+  return random.choice(["goh", "nou", "sja", "och"])+"\n";
 
-def emote(action, nick, remainder):
+
+def emote(action, remainder):
 	if len(action)==0 or len(remainder)==0:
-		return "ACTION frot"
-	toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht",
-						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",
-						 "nauwelijks", "bijna, maar toch maar niet", "vol overgave"]
-	if action[0]=="aai":
-		action[0]="aait"
-	if action[0][-1] in "aeoui":
-		action[0]=action[0]+action[0][-1]
-	if action[0][-1]!='t':
-		action[0]=action[0]+"t"
-	if len(action)==2:
-		action[1]=action[1]+" "
-	return "ACTION "+action[0]+" "+random.choice(toevoeging)+" "+action[1]+nick+" "+" ".join(remainder)
-
+		return "ACTION frot";
+	toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht", \
+						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",\
+						 "nauwelijks", "bijna, maar toch maar niet", "vol overgave"];
+	if action=="aai":
+		action="aait";
+	if action[-1] in "aeoui":
+		action=action+action[-1];
+	if action[-1]!='t':
+		action=action+"t";
+	return "ACTION "+action+" "+random.choice(toevoeging)+" "+" ".join(remainder);
 
 
 def convert(char):
