@@ -2684,6 +2684,7 @@ functions = {
     "je heet nu":        ("piet", 500, jeheetnu, "je heet nu <nick>, geef nieuwe nick"),
     "renick":            ("piet", 200, randomnaam, "renick, verzint een willekeurige nick"),
     "opme":              ("piet", 500, opme, "opme, geef @"),
+    "op me":             ("piet", 500, opme, ""),
     "koffie?":           ("piet", 121, leeg, "koffie?, vraag of ie koffie wil"),
     "wees stil":         ("piet", 1000, leeg, "wees stil, laat piet z'n kop houden met loze dingen"),
     "stil?":             ("piet", 1000, leeg, "stil?, probeert piet zich stil te houden?"),
