@@ -6,20 +6,6 @@
 #include <string>
 #include <list>
 
-//#define INITIALNICK "rarepiet"
-
-//#define SERVER "irc.xs4all.nl"
-//#define SERVER "irc.snt.utwente.nl"
-//#define SERVER "irc.nl.uu.net"
-//#define SERVER "130.89.169.34" // groentje
-//#define SERVER "eris.ircnet.org"
-
-//#define CHANNEL "#piettest"
-//#define CHANNEL "#\22a\22e_mensen"
-
-//#define SERVICE "ircd_groentje"
-//#define SERVICE "ircd"
-
 class c_piet_config // global variable g_config can be used to access this one
 {
 	public:
