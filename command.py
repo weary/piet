@@ -1802,7 +1802,8 @@ def temp2(regel):
 				.replace("sunny", "zonnig")
 				.replace("snow", "sneeuw")
 				.replace("thunderstorm", "onweer mogelijk met regen")
-				.replace("thundershower", "kort onweer met zware regen"))
+				.replace("thundershower", "kort onweer met zware regen")
+				.replace("dense fog", "dichte mist"))
 
 		timezone = None
 		if country=="Netherlands":
