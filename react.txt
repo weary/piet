@@ -91,8 +91,7 @@ mept piet#0.5#ACTION ontwijkt de slag maar struikelt en gaat ontzettend op zijn 
 mept piet#1#ACTION rent gillende het kanaal rond
 compressed piet#1.0#ACTION was al niet zo groot, maar nu helemaal niks meer
 comprimeerd piet#1.0#ACTION blaast zichzelf maar weer op
-blaast piet op#1.0#ACTION is ook in veel kleine stukjes nog behoorlijk
-aanwezig
+blaast piet op#1.0#ACTION is ook in veel kleine stukjes nog behoorlijk aanwezig
 scp't piet#1.0#ACTION blijft lekker zitten waar'ie zit
 delete piet#1.0#ACTION valt je nu lastig vanuit de prullenbak
 zaagt piet#1.0#ACTION waarschuwt voor splinters
@@ -114,8 +113,11 @@ piet zijn gezicht#1#ACTION draait met z'n ogen
 piet's schedel#1#ACTION heeft een schedel van titanium
 piets schedel#1#ACTION heeft een schedel van titanium
 piet zijn schedel#1#ACTION heeft een schedel van titanium
-blast piet #1#ACTION woont in een stenen huisje wat niet omgeblazen kan worden
+blast piet #1#ACTION woont in een stenen huisje wat niet omgeblast kan worden
 laat piet#0.5#ACTION blijft liggen op de grond
+stopt piet in een#1#maar daar wil ik helemaal niet in!
+prikt piet#1.0#ACTION drupt leeg
+highfives piet#1#ACTION lowfives NICK
 blub#0.05#reblub
 blub#0.05263157894#piet: afk blub
 blub#0.0555555555#piet: vandale blub
@@ -205,11 +207,14 @@ toch maar#0.7#ik heb liever van niet trouwens
 wat betekend#1.0#betekent moet vast met een t
 dirk#1.0#he? wat moet dirk hier?
 schopt piet#1.0#ACTION rent huilend weg
+schuurt tegen piet#1.0#ACTION schopt NICK in een hoekje
+rost piet#1.0#ACTION kermt zieligjes
 hakt piet#1.0#ACTION wordt gehacked
 ramt piet#1.0#ACTION zet het op het huilen
 scheldt piet#1.0#schelden doet geen zeer
 pakt piet#1.0#blijf van me af NICK
 duwt piet#1.0#ACTION wil niet geduwt worden en gaat zelf al
+ piet verrot#1.0#ACTION blijft toch je leven verpesten
 jammer hoor#0.2#ach
 jammer hoor#0.2#inderdaad diep triest
 geen idee#0.1#ACTION weet het ook niet
@@ -390,4 +395,37 @@ piet heeft gelijk#1.0#tuurlijk heb ik gelijk, twijfelt niemand aan
 piet heeft geen gelijk#1.0#echt wel!
 koffiebaan#1.0#achja, koffiebaan, bloedbaan, 't is maar hoe je 't noemt
 rot op piet#1.0#piet begint wat te rotten en 't hele kanaal stinkt ernaar
+iphone#0.333#gaat 't nu alweer over die dure baksteen?
+iphone#0.5#boem!
+iphone#1.0#pfrtlt..
+kenya#0.3333#tanzania!
+kenya#0.5#badger badger badger
+valt wel mee#1.0#het komt wel goed
+komt wel goed#1.0#het valt wel mee
+kriebeltrui#1.0#ACTION kiepert het papier uit de versnipperaar in je ondergoed
+heen en weer#1.0#achnee, alweer.."
+huisbot#0.25#ja, huisbot ja, maar je troep mag je zelf opruimen
+huisbot#0.3333#GOEIEMORGEN, BUREAUS!
+huisbot#0.5#stoot een vaas om
+huisbot#1.0#gaat de senseo niet bijvullen, een beetje lichaamsbeweging is goed voor jullie
+testing 1 2 3#1.0#ik werk niet, ben maar een botje, je kunt testen wat je wilt
+appeltje#0.5#banaantje
+appeltje#0.3333#peertje
+BANANAPHONE#1.0#ja, weer's wat anders dan zo'n appelfoon
+bananaphone#1.0#ACTION dingdongt enthousiast mee
+ding dong ding#1.0#BANANAPHONE
+DING DONG DING#1.0#bananaphone...
+ring dong ring#1.0#BANANAPHONE!
+RING DONG RING#1.0#bananaphone...
+banaluar phone!#1.0#"bananular" zal je bedoelen...
+bananular phone!#1.0#ACTION zet een muts met belletjes op en danst een rondje
+de BOM!#0.25#ACTION rent weg in paniek, struikelt over een draad en gaat vreselijk op z'n bek
+de BOM!#0.333#ACTION hoopt maar dat fran gepansert is
+de BOM!#0.5#de rode draad! niet de blauwe!
+de BOM!#1.0#um, wiens moeder bedoel je precies?
+llu #1.0#ACTION hoopt dat je een PRIu64 gaat gebruiken
+%llu#1.0#ACTION hoopt dat je een %"PRIu64" gaat gebruiken
+da39a3ee5e6b4b0d3255bfef95601890afd80709#1.0#ACTION denkt even diep na en roept dan: lege string!
+6af5a2bfa9c5935b9952a65d2df5d1b82a0588ec#1.0#ACTION denkt even diep na en roept dan: woot
+ff2f8089face79fa9e04021d89bd763da7c5f166#1.0#ACTION denkt even diep na en roept dan: woot!
 

@@ -2,13 +2,13 @@
 # -*- coding: iso-8859-1 -*-
 
 import sys, string, random, re, os, time, crypt, socket, urllib
-import traceback, datetime, stat, telnetlib
+import traceback, datetime, stat, telnetlib, calendar, math
 
-import piet;
-sys.path.append(".");
-import BeautifulSoup;
-import pietlib;
-import calc, Distance, pistes, ov9292, kookbalans, bash, gps;
+import piet
+sys.path.append(".")
+import BeautifulSoup
+import pietlib
+import calc, Distance, pistes, ov9292, kookbalans, bash, gps
 
 # python 2.5 functions
 def all(seq):
@@ -1456,16 +1456,16 @@ def mep(regel):
   params=string.split(regel,' ');
   if (len(params)<1) or (len(params[0])==0):
     return "ACTION mept er lustig op los";
-  if (params[0]=="piet" or params[0]=="jezelf" or params[0]=="zichzelf"):
-    return "ACTION heeft een hekel aan zichzelf, maar doet niet aan zelfverminking";
-  r=random.random();
+  if (params[0]=="piet" or params[0]==piet.nick() or params[0]=="jezelf" or params[0]=="zichzelf"):
+    return "ACTION heeft een hekel aan zichzelf, maar doet niet aan zelfverminking"
+  r=random.random()
   if (r<=0.1):
-    return "ik zou niet weten waarom";
+    return "ik zou niet weten waarom"
   if (r<=0.2):
-    return "ACTION mept "+nick+" zelf";
+    return "ACTION mept "+nick+" zelf"
   if (r<=0.5):
-    return "ACTION deelt een corrigerende mep uit aan "+params[0];
-  return "ACTION mept "+params[0];
+    return "ACTION deelt een corrigerende mep uit aan "+params[0]
+  return "ACTION mept "+params[0]
 
 def geef(regel):
   params=string.split(regel,' ');
@@ -1734,8 +1734,7 @@ def temp2(regel):
 	print repr(regel)
 	regel = regel.strip()
 	if not(regel):
-		regel="voorburg rotterdam arnhem enschede sydney"
-		#raise pietlib.piet_exception("het is lekker knus en warm hier in m'n computerkast")
+		raise pietlib.piet_exception("het is lekker knus en warm hier in m'n computerkast")
 	splitpos=regel.find(' ')
 	if regel[:8].lower()=="den haag":
 		splitpos=8
@@ -2587,6 +2586,61 @@ def test_encoding(regel):
 		piet.send(channel, "iso8859: "+chr(200))
 		return "E met backtick erop"
 
+
+def prime(n):
+	if(n==1):           # 1 is not prime so return false
+		return False
+	if(n==2):           # 2 is prime so return true
+		return True
+	if(not n%2):        # If the number is divisible by 2 the number is not prime
+		return False
+	for i in xrange(3,int(math.sqrt(n))+1,2): # Check for divisibility by each odd number from 3 to sqrt(n)
+		if(not n%i):    # The number is divisible by some number so it is not prime.
+			return False
+	return True 
+
+
+def factorize(n,l):         # n is the number to be factorized, l is a list which holds the prime factors
+	for i in xrange(2,int(math.sqrt(n))+1): # Check each number from 2 to sqrt(n)
+		if(not n%i):        # Some number i divides n
+			if(prime(i)):   # If it is prime then append it to the list
+				l.append(i)
+			else:
+				factorize(i,l) # If it is not prime then find the prime factors of that number 
+			if(prime(n/i)):    # If the quotient is prime then append it to the list 
+				l.append(n/i)
+			else:
+				factorize(n/i,l) # If the quotient is not prime then find the prime factors of the quotient.
+			break
+
+
+def factor(regel):
+	try:
+		nr = int(regel)
+	except:
+		return "ongeveer 3"
+	factors = []
+	factorize(nr, factors)
+	factors = [ str(i) for i in factors ]
+	return "factors: "+pietlib.make_list(factors)
+
+
+def utc(regel):
+	regel = regel.strip()
+	tz = pietlib.tijdzone_nick(nick)
+	if re.match('1[0-9]{9}([.][0-9]+)?', regel):
+		t = float(regel)
+		t = pietlib.format_localtijd(t, tz)
+		return "dat is %s in jouw tijdzone" % t
+	else:
+		try:
+			t = pietlib.parse_tijd(regel, tz)
+		except:
+			return "sorry, ik snap je tijd niet"
+		return "%s is in utc: %d" % (pietlib.format_localtijd(t, tz), t)
+
+
+
 functions = {
 # loos
     "anagram":           ("loos", 100, anagram, "bedenk een anagram, gebruik anagram <woorden> of anagram en <woorden> om engels te forceren."),
@@ -2642,7 +2696,7 @@ functions = {
     "file":              ("misc", 100, filemeldingen, "file <weg>, zoekt fileinformatie op van die weg"),
     "files":             ("misc", 100, filemeldingen, ""),
     "simon?":            ("misc", 100, simon, "simon?, kijkt of simon op sorcsoft ingelogd is"),
-		"topic":             ("misc", 100, topic_cmds, "topic <cmd>, doe dingen met de topic"),
+    "topic":             ("misc", 100, topic_cmds, "topic <cmd>, doe dingen met de topic"),
     "context":           ("misc", 100, context, "context <text>, geeft de context waarin iets gezegd is"),
     "kies":              ("misc", 100, kies, "kies een willekeurig woord uit de opgegeven lijst"),
     "kookbalans":        ("misc", 100, kookbalans_kookbalans, "geeft een saldolijst"),
@@ -2653,13 +2707,15 @@ functions = {
     "dw":                ("misc", 100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
     "dwho":              ("misc", 100, discwho, "dwho, kijk wie van Taido, Irk, Weary of Szwarts op discworld zijn"),
     "gps":		 ("misc", 100, gps.gps_coord, "gps <adres> Zoekt GPS coordinaten op van adres"),
+    "factor":            ("misc", 100, factor, "factoriseer <nr>"),
+    "utc":               ("misc", 100, utc, "utc <secs>|<tijd>, reken van/naar utc"),
 
 # system
     "nmblookup":         ("system", 500, nmblookup, "nmblookup <host>, zoek op campusnet naar een ip"),
     "ping":              ("system", 100, ping, "ping <host>, ping een computer"),
     "geoip":             ("system", 100, geoip, "geoip <ip>, zoekt positie op aarde van ip"),
     "hex":               ("system", 101, hex2dec, "hex <nummer>, reken van/naar hex"),
-		"encoding":          ("loos", 1000, test_encoding, "print iso8859 en utf8 karakter"),
+    "encoding":          ("loos", 1000, test_encoding, "print iso8859 en utf8 karakter"),
 
 # handig
     "remind":            ("handig", 300, remind, "remind <time> <message>, wacht <time> seconden en zeg dan <message>"),
@@ -2763,7 +2819,7 @@ def parse(param_org, first, magzeg):
     piet.send(channel, "pas op, deze functie werkt niet helemaal zoals bedoeld")
   meer_data[nick]=[]
   maxlines=10;
-  r2=[i for i in string.split(r, '\n') if len(string.strip(i))>0];
+  r2=[i for i in r.split('\n') if len(string.strip(i))>0]
   if (len(r2)>maxlines):
     l=str(len(r2));
     meer_data[nick]=r2[maxlines:];

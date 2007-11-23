@@ -60,11 +60,13 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
         result=pietlib.format_tijdsduur(tu, 2);
 
         titel=random.choice(("heer", "meester", "prins", "gast", "joker",
-          "orgelspeler", "held", "bedwinger", "plaag"));
+          "orgelspeler", "held", "bedwinger", "plaag", "buitenlander", "mastermind",
+          "heerser", "samensteller"));
         subtitel=random.choice(("des duisternis", "van het licht", "des ubers",
           "des modders", "des oordeels", "van de knaagdieren", "overste",
-          "heerser", "ongezien", "enzo", "extraordinaire", "(gevallen)",
-          "in rust"));
+          "ongezien", "enzo", "extraordinaire", "(gevallen)",
+          "in rust", "ten strijde", "(onverschrokken)", "van iedereen", "van deze wereld",
+          "in de dop", "(te jong)"));
         
         reply="ACTION presenteert: %s, %s %s, weer terug na %s" % (nick, titel, subtitel, result)
         try:
