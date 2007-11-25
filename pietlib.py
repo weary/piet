@@ -1,4 +1,4 @@
-import os, time, re, urllib, sys
+import os, time, re, urllib, sys, datetime, calendar
 sys.path.append(".")
 import BeautifulSoup
 import traceback
@@ -97,88 +97,153 @@ def format_tijdsduur(secs, items=2):
 
   return make_list(tijd);
 
+
+# copy-paste from http://docs.python.org/lib/datetime-tzinfo.html
+# needed to work with datetime library and timezones
+class LocalTimezone(datetime.tzinfo):
+	def __init__(self):
+		self.STDOFFSET = datetime.timedelta(seconds = - time.timezone)
+		if time.daylight:
+			self.DSTOFFSET = datetime.timedelta(seconds = - time.altzone)
+		else:
+			self.DSTOFFSET = self.STDOFFSET
+		self.DSTDIFF = self.DSTOFFSET - self.STDOFFSET
+		self.ZERO = datetime.timedelta(0)
+	def utcoffset(self, dt):
+		if self._isdst(dt):
+			return self.DSTOFFSET
+		else:
+			return self.STDOFFSET
+	def dst(self, dt):
+		if self._isdst(dt):
+			return self.DSTDIFF
+		else:
+			return self.ZERO
+	def tzname(self, dt):
+		return time.tzname[self._isdst(dt)]
+	def _isdst(self, dt):
+		tt = (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.weekday(), 0, -1)
+		stamp = time.mktime(tt)
+		tt = time.localtime(stamp)
+		return tt.tm_isdst > 0
+
+
+
+def nogroups(x):
+	return re.sub("[(]([^?])", "(?:\\1", x)
+
 DATEREGEX = \
-"(\d{1,2})[-/ ](\d{1,2}|"+"|".join(calc.monthmap.keys())+")[-/ ](\d{4})|"+\
-"(vandaag|morgen|overmorgen)";
+	"(\d{1,2})[-/ ](\d{1,2}|"+"|".join(calc.monthmap.keys())+")[-/ ](\d{4})|" \
+	"(vandaag|morgen|overmorgen)"
+
+# only absolute time is matched
+ABSTIMEREGEX = "(\d{1,2}):?(\d{2})(?:[:](\d{2}))?(?:\s*uur)?"
+
+unitaliasses={
+	"j": 365*24*3600,
+	"jaar": 365*24*3600,
+	"jaren": 365*24*3600,
+	"w": 7*24*3600,
+	"week": 7*24*3600,
+	"weken": 7*24*3600,
+	"d": 24*3600,
+	"dag": 24*3600,
+	"dagen": 24*3600,
+	"u": 3600,
+	"uur": 3600,
+	"uren": 3600,
+	"m": 60,
+	"min": 60,
+	"s": 1,
+	"sec": 1,
+	"secondes": 1,
+	"seconden": 1}
+
+# match one element from "5 jaren 10 dagen"
+RELTIMEELEM = "(\d+)\s*(%s)" % '|'.join([u+"(?:\\b|\\Z)" for u in unitaliasses.keys()])
+
+RELTIMEREGEX = "%s(?:[\s]+%s)*" % (nogroups(RELTIMEELEM), nogroups(RELTIMEELEM))
+
+TIMEREGEX = "(%s)|(%s)" % (nogroups(ABSTIMEREGEX), nogroups(RELTIMEREGEX))
+DATETIMEREGEX = "(?:(%s)\s+(%s))|(?:(%s)\s+(%s))|(%s)|(%s)" % (
+		nogroups(DATEREGEX), nogroups(TIMEREGEX),
+		nogroups(TIMEREGEX), nogroups(DATEREGEX),
+		nogroups(TIMEREGEX), nogroups(DATEREGEX))
 
 # convert tijd-string naar secs t.o.v epoch
 # als er geen datum gegeven is, en de tijd<nu is, dan wordt er 24 uur bij
 # opgeteld
-def parse_tijd(tijd, tijdzone):
-  def parse_abs_tijd(datesplit):
-    have_date = True # might prove otherwise
-    day = int(datesplit.group(1));
-    year = int(datesplit.group(3));
-    try:
-      month = int(datesplit.group(2));
-    except ValueError:
-      try:
-        month = calc.monthmap[datesplit.group(2).lower()];
-      except KeyError:
-        have_date = False;
-  
-    if have_date:
-      datumformat = "%d-%m-%Y ";
-      datum = "%s-%s-%s " % (day, month, year);
-    return (datumformat, datum);
+# returns tuple (time-since-epoch, remainder-of-string)
+def parse_tijd(input, tijdzone):
+	input = input.strip()
+	os.environ['TZ'] = tijdzone
+	time.tzset()
+	try:
+		tz = LocalTimezone()
+		now = datetime.datetime.now(tz)
 
-  def parse_rel_tijd(datesplit):
-    os.environ['TZ'] = tijdzone;
-    time.tzset();
-    t_now = time.time();
-    if datesplit.group(4) == "vandaag":
-      datum = time.strftime("%d-%m-%Y ", time.localtime(t_now));
-      datumformat = "%d-%m-%Y ";
-    elif datesplit.group(4) == "morgen":
-      datum = time.strftime("%d-%m-%Y ", time.localtime(t_now+24*60*60));
-      datumformat = "%d-%m-%Y ";
-    elif datesplit.group(4) == "overmorgen":
-      datum = time.strftime("%d-%m-%Y ", time.localtime(t_now+2*24*60*60));
-      datumformat = "%d-%m-%Y ";
-    return (datumformat, datum);
+		fullmatch = re.match(DATETIMEREGEX, input)
+		if not(fullmatch):
+			raise piet_exception("geen datum/tijd gevonden")
+		remainder = input[fullmatch.end():].strip()
 
-  tijd = tijd.strip();
-  datesplit = re.match(DATEREGEX, tijd);
-  datum = "";
-  datumformat = "";
-  have_date = False;
-  if datesplit:
-    have_date = True;
-    assert(datesplit.group(1) or datesplit.group(4));
-    if datesplit.group(1):
-      datumformat, datum = parse_abs_tijd(datesplit);
-    else:
-      datumformat, datum = parse_rel_tijd(datesplit);
+		# either date-time or time-date
+		datum = fullmatch.group(1) or fullmatch.group(4) or fullmatch.group(6)
+		tijd = fullmatch.group(2) or fullmatch.group(3) or fullmatch.group(5)
+		#print "datum", repr(datum)
+		#print "tijd", repr(tijd)
 
-    if (have_date):
-      tijd = tijd[datesplit.end():].strip();
+		the_moment = now
 
-  try:
-    tijd = time.strptime(datum+tijd, datumformat+"%H:%M");
-  except ValueError:
-    tijd = time.strptime(datum+tijd, datumformat+"%H:%M:%S");
-    # note, no try/except here, if not parsed here, exception will fall through
+		if datum:
+			if datum == "vandaag":
+				pass
+			elif datum == "morgen":
+				the_moment = the_moment + datetime.timedelta(days=1)
+			elif datum == "overmorgen":
+				the_moment = the_moment + datetime.timedelta(days=2)
+			else: # absolute date
+				d = re.match(DATEREGEX, datum)
+				assert(d and not(d.group(4)))
+				day = int(d.group(1))
+				year = int(d.group(3))
+				month = 0
+				try:
+					month = int(d.group(2))
+				except ValueError:
+					try:
+						month = calc.monthmap[d.group(2).lower()]
+					except KeyError:
+						raise piet_exception("onbekende maand: "+repr(d.group(2)))
+				d = datetime.date(year, month, day)
+				the_moment = datetime.datetime.combine(d, the_moment.time())
+			#print "datum", repr(datum), "geparsed naar", the_moment.date()
 
-  os.environ['TZ'] = tijdzone;
-  time.tzset();
-  if (datum):
-    tijd = time.mktime(tijd);
-  else:
-    loctime = time.localtime();
-    tijd = (
-        (tijd[3]-loctime[3])*3600+
-        (tijd[4]-loctime[4])*60+
-        (tijd[5]-loctime[5])+
-        time.time());
-    #if (tijd<0): tijd+=24*3600;
-  timezone_reset();
+		if tijd:
+			t = re.match(TIMEREGEX, tijd)
+			assert(t and (t.group(1) or t.group(2)))
+			if t.group(1): # abs time
+				t = re.match(ABSTIMEREGEX, t.group(1))
+				assert(t)
+				uur = int(t.group(1))
+				min = int(t.group(2))
+				sec = int(t.group(3) or 0)
+				t = datetime.time(uur, min, sec, tzinfo=tz)
+				the_moment = datetime.datetime.combine(the_moment.date(), t)
+			else:
+				lt = re.findall(nogroups(RELTIMEELEM), tijd)
+				lt = [ re.match(RELTIMEELEM, i).groups() for i in lt ]
+				lt = [ int(t)*unitaliasses[u] for t,u in lt ]
+				the_moment = the_moment + datetime.timedelta(seconds = sum(lt))
 
-  if not(have_date):
-    rel_tijd = tijd-time.time();
-    if (rel_tijd<0 and rel_tijd>-24*3600):
-      tijd += 24*3600;
-
-  return round(tijd);
+			#print "tijd", repr(tijd), "geparsed naar", the_moment.time()
+		if not(datum) and the_moment<now and the_moment+datetime.timedelta(days=1)>now:
+			the_moment = the_moment + datetime.timedelta(days=1)
+		
+		print the_moment
+		return (calendar.timegm(the_moment.utctimetuple()), remainder)
+	finally:
+		timezone_reset()
 
 
 # geef de tijdzone van de gegeven nick. als nick niet bekend is, dan default

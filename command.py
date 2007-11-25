@@ -1313,103 +1313,43 @@ def remind_thread(unused1, unused2):
   remind_threads-=1;
 
 def remind(regel):
-  try:
-    if (regel[0:4]=="list"):
-      return list_reminds(string.strip(regel[5:]));
-  except:
-    traceback.print_exc();
-    return "frop";
-  units={
-    "j": "*365*24*3600 ",
-    "w": "*7*24*3600 ",
-    "d": "*24*3600 ",
-    "h": "*3600 ",
-    "m": "*60 ",
-    "s": " "};
-  unitaliasses={
-    "jaar": "j",
-    "jaren": "j",
-    "week": "w",
-    "weken": "w",
-    "dagen": "d",
-    "dag": "d",
-    "uren": "h",
-    "uur": "h",
-    "u": "h",
-    "min": "m",
-    "m": "*60 ",
-    "sec": "s"};
-  # add identity mappings for units to aliasses
-  relnames=string.join(units.keys()+unitaliasses.keys(), '|');
-  relformat="((\d+\s*(%s)\s*)+)\W" % relnames;
-  absformat="(("+pietlib.DATEREGEX+"\s)?\s*\d+:\d+(:\d+)?\s*)";
-  # do split, abs before rel, want 1m en 1maart lijken op elkaar
-  fullregex="\s*("+absformat+"|"+relformat+")"
-  split=re.match(fullregex, regel);
-  if (split==None):
-    return "zou je dat nog eens helder kunnen formuleren? ik snap er niks van"
-  now=int(round(time.time()));
-  tijd=string.strip(split.group(0));
-  result = string.strip(regel[split.end():]);
-  if (len(result)==0):
-    result=nick+": ik moest je ergens aan herinneren, maar zou niet "+\
-           "meer weten wat";
-  tz=pietlib.tijdzone_nick(nick);
-  if (string.find(tijd, ":")==-1): # relative time if no :
-    tijd=re.sub(" ", "", tijd);
-    tijd=string.replace(tijd, "jaren", "j");
-    tijd=string.replace(tijd, "jaar", "j");
-    tijd=string.replace(tijd, "weken", "w");
-    tijd=string.replace(tijd, "week", "w");
-    tijd=string.replace(tijd, "dagen", "d");
-    tijd=string.replace(tijd, "dag", "d");
-    tijd=string.replace(tijd, "uren", "h");
-    tijd=string.replace(tijd, "uur", "h");
-    tijd=string.replace(tijd, "u", "h");
-    tijd=string.replace(tijd, "min", "m");
-    tijd=string.replace(tijd, "sec", "s");
-    tijd=string.replace(tijd, "m", "*60 ");
-    tijd=string.replace(tijd, "h", "*3600 ");
-    tijd=string.replace(tijd, "d", "*24*3600 ");
-    tijd=string.replace(tijd, "w", "*7*24*3600 ");
-    tijd=string.replace(tijd, "j", "*365*24*3600 ");
-    tijd=string.replace(tijd, "s", " ");
-    tijd=string.strip(tijd);
-    tijd=re.sub('\ +', '+', tijd);
-    tijd=eval(tijd); # tijd in secs t.o.v now
-    if (tijd < 0):
-      return "tijdsaanduiding klopt niet";
-    elif (tijd == 0):
-      return "dat is nu. je bent wel erg vergeetachtig, niet?";
-    tijdstr=pietlib.format_localtijd(now+tijd, tz);
-    piet.send(channel, "ok, ergens rond "+tijdstr+
-        " zal ik dat wel's roepen dan, als ik zin heb\n");
-  else: # absolute time
-    try:
-      tijd=pietlib.parse_tijd(tijd, tz)-time.time();
-    except:
-      return "volgens mij hou je me voor de gek, wat is dit voor rare tijd?";
-    if (tijd<120):
-      piet.send(channel, "dat is al over "+str(int(tijd))+
-          " seconden! maar goed, ik zal herinneren\n");
-    else:
-      piet.send(channel, "goed, ik zal je waarschuwen. maar pas over "+
-          pietlib.format_tijdsduur(tijd)+", hoor\n");
-  if (tijd<5*60 and tijd>=0):
-    chan=channel;
-    time.sleep(tijd);
-    piet.send(chan, string.strip(parse(result, False, True)));
-    return "";
-  # meer dan 5 min, stop in db
-  # CREATE TABLE reminds (channel string, nick string, msg string, tijd int)
-  piet.db("INSERT INTO reminds VALUES(\""+
-      string.replace(channel, '"', '""')+"\",\""+
-      string.replace(nick, '"', '""')+"\",\""+
-      string.replace(result, '"', '""')+"\","+
-      repr(now+tijd)+");");
-  piet.thread(channel, "remind_thread", ""); # make sure a thread is running
-  return "";
-piet.thread(channel, "remind_thread", "");
+	try:
+		if (regel[0:4]=="list"):
+			return list_reminds(string.strip(regel[5:]))
+	except:
+		traceback.print_exc()
+		return "frop"
+
+	now = time.time()
+	tz=pietlib.tijdzone_nick(nick);
+	try:
+		(tijd,result) = pietlib.parse_tijd(regel, tz)
+		tijd = round(tijd - now)
+	except:
+		traceback.print_exc()
+		return "volgens mij hou je me voor de gek, wat is dit voor rare tijd?"
+	if (tijd<120):
+		piet.send(channel, "dat is al over "+str(tijd) +
+				" seconden! maar goed, ik zal herinneren\n")
+	else:
+		piet.send(channel, "goed, ik zal je waarschuwen. maar pas over " +
+				pietlib.format_tijdsduur(tijd)+", hoor\n")
+	if (tijd<5*60 and tijd>=0):
+		chan = channel
+		time.sleep(tijd)
+		piet.send(chan, string.strip(parse(result, False, True)))
+		return ""
+
+	# meer dan 5 min, stop in db
+	# CREATE TABLE reminds (channel string, nick string, msg string, tijd int)
+	piet.db("INSERT INTO reminds VALUES(\""+
+			string.replace(channel, '"', '""')+"\",\""+
+			string.replace(nick, '"', '""')+"\",\""+
+			string.replace(result, '"', '""')+"\","+
+			repr(now+tijd)+");")
+	piet.thread(channel, "remind_thread", "") # make sure a thread is running
+	return ""
+piet.thread(channel, "remind_thread", "")
 
 def list_reminds(regel):
   try:
@@ -2634,7 +2574,9 @@ def utc(regel):
 		return "dat is %s in jouw tijdzone" % t
 	else:
 		try:
-			t = pietlib.parse_tijd(regel, tz)
+			(t, remainder) = pietlib.parse_tijd(regel, tz)
+			if len(remainder):
+				return "ik kon niks maken van "+repr(remainder)
 		except:
 			return "sorry, ik snap je tijd niet"
 		return "%s is in utc: %d" % (pietlib.format_localtijd(t, tz), t)
