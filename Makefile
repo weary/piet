@@ -1,7 +1,6 @@
 
 CC=g++
 CXX=g++
-TARGET_ARCH=-march=pentium2
 CPPFLAGS=-I/home/weary/lubi -I/usr/include/python2.4
 CXXFLAGS=-ggdb3 -Wall
 LDFLAGS=-ggdb3

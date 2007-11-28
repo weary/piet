@@ -137,7 +137,7 @@ DATEREGEX = \
 	"(vandaag|morgen|overmorgen)"
 
 # only absolute time is matched
-ABSTIMEREGEX = "(\d{1,2}):?(\d{2})(?:[:](\d{2}))?(?:\s*uur)?"
+ABSTIMEREGEX = "(\d{1,2}):(\d{2})(?:[:](\d{2}))?(?:\s*uur)?"
 
 unitaliasses={
 	"j": 365*24*3600,
