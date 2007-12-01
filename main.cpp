@@ -242,7 +242,10 @@ void interpret(const std::string &input)
 
   printf("interpret(\"%s\", \"%s\", \"%s\")\n", sender.c_str(), command.c_str(), params.c_str());
  
-	std::string channel=g_config.get_channel();
+	std::string channel = g_config.get_channel();
+	std::string::size_type spacepos = channel.find(' ');
+	if (spacepos != std::string::npos)
+		channel.erase(spacepos, std::string::npos);
   if (command=="PING")
   {
     sendstr_prio(std::string("PONG ")+params);
@@ -287,7 +290,7 @@ void interpret(const std::string &input)
   }
   else if (command=="422" || command=="376")
 	{
-		send(":%s JOIN %s \22aa\22\n", g_config.get_nick().c_str(), g_config.get_channel().c_str());
+		send(":%s JOIN %s\n", g_config.get_nick().c_str(), g_config.get_channel().c_str());
 	}
   else if (command=="PRIVMSG")
   {
