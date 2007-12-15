@@ -955,7 +955,7 @@ def supercalc(toparse):
   toparse=string.replace(toparse," b$"," cur_bzd")
   toparse=string.replace(toparse," $b"," cur_bzd")
   toparse=string.replace(toparse," in ","_in_")
-  toparse=string.replace(toparse,"i ","i_")
+  toparse=string.replace(toparse,"\\bi ","i_")
 
   # if time after date change space to _ so it doesn't get lost
   digits=re.compile('[0-9]+(\-|\ )?'+months+'(\-|\ )?[0-9]+(\ )+[0-9]+\:')
