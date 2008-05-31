@@ -41,8 +41,8 @@ def get_url(url, postdata=None, agent=DEFAULTAGENT):
   return tmp;
 
 
-def get_url_soup(url, agent=DEFAULTAGENT):
-  return BeautifulSoup.BeautifulSoup(get_url(url, agent=agent));
+def get_url_soup(url, postdata=None, agent=DEFAULTAGENT):
+  return BeautifulSoup.BeautifulSoup(get_url(url, postdata=postdata, agent=agent));
 
 LOCALTIMEZONE = "Europe/Amsterdam";
 

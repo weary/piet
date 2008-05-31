@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys, string, random, re, os, time, crypt, socket, urllib
+import sys, string, random, re, os, time, crypt, socket, urllib, shlex
 import traceback, datetime, stat, telnetlib, calendar, math
 
 import piet
@@ -2013,87 +2013,51 @@ def mytest(regel):
   return "result: "+repr(piet.db(regel))+"\n";
 
 def tel(regel):
-  if not(regel):
-    result=piet.db("SELECT naam,nummer FROM telefoonnrs")[1:]
-    if not(result):
-      return "geef eens een naam ofzo"
-    result = ["%s: %s" % (i,j) for i,j in result ]
-    return "\n".join(result)
-  result = db_get('telefoonnrs', 'naam', regel, 'nummer')
-  if result:
-    return "ah! die weet ik! "+regel+" is bereikbaar op "+result
-  else:
-    params=string.split(regel," ")
-    i=0
+	if not(regel):
+		result=piet.db("SELECT naam,nummer FROM telefoonnrs")[1:]
+		if not(result):
+			return "geef eens een naam ofzo"
+		result = ["%s: %s" % (i,j) for i,j in result ]
+		return "\n".join(result)
+	result = db_get('telefoonnrs', 'naam', regel, 'nummer')
+	if result:
+		return "ah! die weet ik! "+regel+" is bereikbaar op "+result
+
+	params = shlex.split(regel)
+	i=0
 #parse naam argument
-    naam="";
-    if (len(params)<1) or (len(params[0])==0):
-      return "mis naam argument";
-    if (params[i][0]=="\""):
-      while (params[i][len(params[i])-1]!="\""):
-        naam+=params[i]+" ";
-        i+=1;
-        if (len(params)==i):
-          return "Mis sluit \"";
-      naam+=params[i];
-      naam=naam[1:(len(naam)-1)];
-    else:
-      naam=params[i];
-    i+=1;
+	naam="";
+	if (len(params)<1) or (len(params[0])==0):
+		return "mis naam argument";
+	else:
+		naam=params[i];
+	i+=1;
 
 #parse plaats argument
-    plaats="";
-    if (len(params)==i):
-      return "mis plaats argument";
-    if (params[i][0]=="\""):
-      while (params[i][len(params[i])-1]!="\""):
-        plaats+=params[i]+" ";
-        i+=1;
-        if (len(params)==i):
-          return "Mis sluit \"";
-      plaats+=params[i];
-      plaats=plaats[1:(len(plaats)-1)];
-    else:
-      plaats=params[i];
-    cmd="wget -O - -q \"";
-    cmd+="http://www.detelefoongids.nl/tginl.dll?action=white&type=search&resultsperpage=25&pagestart=1&name2=";
-    cmd+=naam;
-    cmd+="&name=&initials=&city=";
-    cmd+=plaats;
-    cmd+="&citycode=&dcity=";
-    cmd+=plaats;
-    cmd+="&areacode=&dname=";
-    cmd+=naam;
-    cmd+="&dwhere=";
-    cmd+=plaats;
-    cmd+="&country=&source=homepage\" | grep \"Adres=\"";
-#geen idee waarom het allemaal dubbel moet, vraag dat de kpn maar
-    inp,outp,stderr = os.popen3(cmd);
-    result = outp.read();
-    outp.close();
-    inp.close();
-    stderr.close();
-    if (len(result)<10):
-      return "Volgens de telefoongids woont er geen %s in %s, sorry" %\
-        (naam,plaats);
-    fresult="";
-    i=0;
-    while (string.find(result,"<td",i)>=0):
-      if (i>0):
-        fresult+="\n";
-      i=string.find(result,"<td",i);
-      i=string.find(result,"Naam=",i)+5;
-      j=string.find(result,"Gidsnr=",i);
-      fresult+=result[i:j];
+	plaats="";
+	if (len(params)==i):
+		return "mis plaats argument";
+	else:
+		plaats=params[i];
+	soup = pietlib.get_url_soup("http://mobiel.detelefoongids.nl/frontpage.seam",
+			postdata={'lang':'nld', 'new':'1', 'index':'0', 'rq':'', 'lockey':'', 'white':'Zoek',
+			'UMP_FORM_ACTION':'aHR0cDovL3BvcnRhbC1hcHAudW53aXJlLmRrL2Vkc2EvcmVzdWx0cGFnZS5zZWFt',
+			'PORTAL_SERVER_ENCODING':'UTF-8',
+			'what':naam, 'where':plaats})
+	# geen idee wat die UMP_FORM_ACTION cruft is
+	result = soup.findAll('div', {'class':'searchResultInfo'})
 
-    fresult=string.replace(fresult,"%20"," ");
-    fresult=string.replace(fresult,"&amp;"," ");
-    fresult=string.replace(fresult,"Adres=","");
-    fresult=string.replace(fresult,"PC=","");
-    fresult=string.replace(fresult,"Plaats=","");
-    fresult=string.replace(fresult,"Telnr=","");
-    return fresult;    
-  return "Bla bla... functie mislukte er zal wel iets fout gegaan zijn";
+	if not result:
+		return "Volgens de telefoongids woont er geen %s in %s, sorry" % (naam,plaats)
+
+	namen = soup.findAll('div', {'class':'searchWhiteResultHeader'})
+	namen = [ str(i.a.string) for i in namen ]
+	notags = lambda x: re.sub('<[^>]*>', '', str(x)).replace('&nbsp;', ' ')
+	fresult = ''
+	for n,r in zip(namen,result):
+		r = notags(r).replace('\t',' ').replace('\xc2\xa0',' ').split('\n')
+		fresult += "%s, %s, %s\n" % (n, r[1], r[4].strip())
+	return fresult;    
 
 def geoip(params):
   params=string.split(params," ")
