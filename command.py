@@ -8,7 +8,7 @@ import piet
 sys.path.append(".")
 import BeautifulSoup
 import pietlib
-import calc, Distance, pistes, ov9292, kookbalans, bash, gps
+import calc, Distance, pistes, ov9292, kookbalans, bash, gps, ns
 
 # python 2.5 functions
 def all(seq):
@@ -339,18 +339,18 @@ def kies(params):
 
 def vandale(woord):
   result=pietlib.get_url("http://www.vandale.nl/opzoeken/woordenboek/?zoekwoord="+woord)
-  start=string.find(result,"<BIG")
-  stop=string.rfind(result,"</BIG")
-  stop=string.find(result,"</tr",stop)
+  if (string.find(result,"<p>Geen resultaat.</p>") > 0):
+    return "Helaas niet gevonden"
+  start=string.find(result,"<div class=\"query\">")
+  start=string.find(result,"<div class=\"gb\"",start)
+  stop=string.rfind(result,"<div class=\"metaNav\">",start)
   result=result[start:stop]
   result=string.replace(result,"\n","")
   result=string.replace(result,"\t","")
   result=string.replace(result,"\r","")
-  result=string.replace(result,"<BIG>","\n")
-  result=string.replace(result,"</BIG>","\n")
-  result=string.replace(result,"<DD>","\n")
   result=string.replace(result,"&#183;",".")
   result=string.replace(result,"&#126;","~")
+  result=string.replace(result,"</table>","\n")
   start=string.find(result,"<")
   while start>=0:
     stop=string.find(result,">",start)+1
@@ -359,6 +359,7 @@ def vandale(woord):
   while string.find(result,"  ")>=0:
     result=string.replace(result,"  "," ")
   result=string.strip(result)
+  return result
   if result=="":
     return "Helaas niet gevonden"
   result=string.replace(result,"\n ","\n")
@@ -865,6 +866,10 @@ def dvorak2qwerty(params):
       "anihdyujgcvpmlsrxo;kf.,bt/weqANIHDYUJGCVPMLSRXO:KF><BT?WEQ",
       "abcdefghijklmnopqrstuvwxyz,.'ABCDEFGHIJKLMNOPQRSTUVWXYZ<>\"");
   return params.translate(t);
+
+def reverse(params):
+  params = string.strip(parse(params, False, True));
+  return params[-1::-1]
 
 def last(params):
   params = string.strip(params);
@@ -1742,7 +1747,8 @@ def temp2(regel):
 				.replace("snow", "sneeuw")
 				.replace("thunderstorm", "onweer mogelijk met regen")
 				.replace("thundershower", "kort onweer met zware regen")
-				.replace("dense fog", "dichte mist"))
+				.replace("dense fog", "dichte mist")
+				.replace("light fog", "lichte mist"))
 
 		timezone = None
 		if country=="Netherlands":
@@ -1751,37 +1757,37 @@ def temp2(regel):
 			timezone = 'Australia/Sydney'
 
 		print "tijd op pagina voor %s was %s" % (city, t)
-		t2 = re.match('^([0-9]+):([0-9]+)$', t)
-		if timezone and t2: # convert the time on page to relative time for the user
-			os.environ['TZ'] = timezone;
-			time.tzset();
-			ts = time.localtime()
-			pietlib.timezone_reset()
-			h_diff = ts.tm_hour - int(t2.group(1))
-			if h_diff<0: h_diff=h_diff+24
-			m_diff = ts.tm_min - int(t2.group(2))
-			if m_diff<0:
-				m_diff=m_diff+60
-				h_diff=h_diff-1
-			dur = (h_diff * 60 + m_diff) * 60.0
-			print (h_diff, m_diff, dur)
-			if dur>=14340 and dur==14400:
-				piet.send(channel, "prutssite is europa nog even aan het zoeken, ik probeer zo weer")
-				time.sleep(10)
-				succes=None
-			if dur<-5*60:
-				t=', '+t+'\x02(lokale tijd, toekomst!)\x02'
-			elif dur<0:
-				t=", over "+pietlib.format_tijdsduur(dur, 1)
-			elif dur<5*60:
-				t=""#pietlib.format_tijdsduur(dur, 1) +" geleden"
-			else:
-				t=', \x02'+pietlib.format_tijdsduur(dur, 2) +" geleden\x02"
-		else:
-			t=", om "+t+'(lokale tijd)'
+		#t2 = re.match('^([0-9]+):([0-9]+)$', t)
+		#if timezone and t2: # convert the time on page to relative time for the user
+		#	os.environ['TZ'] = timezone;
+		#	time.tzset();
+		#	ts = time.localtime()
+		#	pietlib.timezone_reset()
+		#	h_diff = ts.tm_hour - int(t2.group(1))
+		#	if h_diff<0: h_diff=h_diff+24
+		#	m_diff = ts.tm_min - int(t2.group(2))
+		#	if m_diff<0:
+		#		m_diff=m_diff+60
+		#		h_diff=h_diff-1
+		#	dur = (h_diff * 60 + m_diff) * 60.0
+		#	print (h_diff, m_diff, dur)
+		#	if dur>=14340 and dur==14400:
+		#		piet.send(channel, "prutssite is europa nog even aan het zoeken, ik probeer zo weer")
+		#		time.sleep(10)
+		#		succes=None
+		#	if dur<-5*60:
+		#		t=', '+t+'\x02(lokale tijd, toekomst!)\x02'
+		#	elif dur<0:
+		#		t=", over "+pietlib.format_tijdsduur(dur, 1)
+		#	elif dur<5*60:
+		#		t=""#pietlib.format_tijdsduur(dur, 1) +" geleden"
+		#	else:
+		#		t=', \x02'+pietlib.format_tijdsduur(dur, 2) +" geleden\x02"
+		#else:
+		#	t=", om "+t+'(lokale tijd)'
 
-	line = "%s%s, %s, wind uit %s, %s, %s%% vochtigheid, %s" % (
-			city, t, current_temp, wind[0], wind[1], hum, current_weather)
+	line = "%s, %s, wind uit %s, %s, %s%% vochtigheid, %s" % (
+			city, current_temp, wind[0], wind[1], hum, current_weather)
 	return line+"\n"+recurse_result
 
 
@@ -2002,235 +2008,6 @@ def trigram(woord):
     (woord,ok)=trigram_grow_front(woord);
   return woord;
 
-def ns(regel):
-  params=string.split(regel," ");
-  i=0
-  vandaag=0
-  morgen=0
-
-#parse vanstation argument
-  vanStation="";
-  if (len(params)==1) and (regel=="?"):
-    # haal storing site op, kijk of er storing op het ns net zijn"
-    result=pietlib.get_url("http://mobiel.ns.nl/storingen.html")
-    start=string.find(result,"<img")
-    start=string.find(result,">",start)+1
-    stop=string.find(result,"<img",start)
-    result=result[start:stop]
-    result=string.replace(result,"\n","")
-    result=string.replace(result,"<strong>","\n")
-    start=string.find(result,"<")
-    while start>=0:
-      stop=string.find(result,">",start)+1
-      result=result[:start]+" "+result[stop:]
-      start=string.find(result,"<")
-    while string.find(result,"  ")>=0:
-      result=string.replace(result,"  "," ")
-    result=string.replace(result,". ",".\n")
-    result=string.replace(result,"\n ","\n")
-
-    return string.strip(result)
-  if (len(params)<1) or (len(params[0])==0):
-    return "mis vertrek plaats";
-  if (params[i][0]=="\""):
-    while (params[i][len(params[i])-1]!="\""):
-      vanStation+=params[i]+" ";
-      i+=1;
-      if (len(params)==i):
-        return "Mis sluit \"";
-    vanStation+=params[i];
-    vanStation=vanStation[1:(len(vanStation)-1)];
-  else:
-    vanStation=params[i];
-  i+=1;
-
-#parse naarstation argument
-  naarStation="";
-  if (len(params)==i):
-    return "mis aankomst plaats";
-  if (params[i][0]=="\""):
-    while (params[i][len(params[i])-1]!="\""):
-      naarStation+=params[i]+" ";
-      i+=1;
-      if (len(params)==i):
-        return "Mis sluit \"";
-    naarStation+=params[i];
-    naarStation=naarStation[1:(len(naarStation)-1)];
-  else:
-    naarStation=params[i];
-  i+=1;
-  if params[len(params)-1].lower()=="vandaag":
-    params=params[:len(params)-1]
-    vandaag=1
-  if params[len(params)-1].lower()=="morgen":
-    params=params[:len(params)-1]
-    morgen=1
-  if params[len(params)-2].lower()=="vandaag":
-    params=params[:len(params)-2]+[params[len(params)]]
-    vandaag=1
-  if params[len(params)-2].lower()=="morgen":
-    params=params[:len(params)-2]+[params[len(params)]]
-    morgen=1
-
-  if (len(params)==i):
-    tijdstring="nu";
-  else:
-    tijdstring=params[i];
-  if (tijdstring=="nu"):
-    tijdstring=string.strip(time.strftime("%H:%M"));
-  if (string.find(tijdstring,":")<0):
-    return "Tijd "+tijdstring+" snap ik niet";
-  day=int(time.strftime("%d"));
-  month=int(time.strftime("%m"));
-  year=int(time.strftime("%Y"));
-
-  tijd=string.split(tijdstring,":");
-  hour=int(tijd[0]);
-  minute=int(tijd[1]);
-
-  timenow=str(datetime.datetime.now()).split(":")
-  timenow[0]=timenow[0].split(" ")[1]
-
-  resultstr=""
-  if (vandaag!=1) and (morgen==1 or (int(timenow[0]) > hour or
-        ((hour==int(timenow[0])) and (int(timenow[1]) > minute)))):
-    # time is before now, maybe user meant this time tomorrow!
-    resultstr="Tijden voor morgen:\n"
-    morgen=datetime.date(year,month,day)+datetime.timedelta(days=1);
-    day=int(morgen.strftime("%d"));
-    month=int(morgen.strftime("%m"));
-    year=int(morgen.strftime("%Y"));
-
-#NS site is weird! First retrieve the cid
-  cmd = "lynx -dump -width=200 www.ns.nl"
-  inp,outp,stderr = os.popen3(cmd);
-  result = outp.read();
-  outp.close();
-  inp.close();
-  stderr.close();
-  i1=string.find(result,"[1]");
-  i2=string.find(result,"\n",i1);
-  result=result[i1:i2];
-  i1=string.find(result,"cid=")+4;
-  i2=string.find(result,"&",i1);
-  cid=result[i1:i2];
-
-#Now post data
-  cmd = "echo -e \"vanStation=";
-  cmd += vanStation;
-  cmd += "&naarStation="
-  cmd += naarStation;
-  cmd += "&reisdatumDag=";
-  cmd += str(day);
-  cmd += "&reisdatumMaand=";
-  cmd += str(month);
-  cmd += "&reisdatumJaar=";
-  cmd += str(year);
-  cmd += "&reisdatumUur="
-  cmd += str(hour);
-  cmd += "&reisdatumMinuut=";
-  cmd += str(minute);
-  cmd += "&reisdatumVertrekAankomst=true\" | lynx -post_data -dump \"http://www.ns.nl/servlet/Satellite?referrer=snelplanner_plus&cid=";
-  cmd += cid;
-  cmd += "&pagename=www.ns.nl%2FPlanner%2Fplannerplus2stap&action=js2&p=1071147988062\"";
-  inp,outp,stderr = os.popen3(cmd);
-  result = outp.read();
-  outp.close();
-  inp.close();
-  stderr.close();
- 
-#Process output
-  waarschuwing="";
-  i1=string.find(result,"Reisdetails");
-  if (i1 < 0):
-    errorscorrected=0;
-    #Iets fout... een station niet goed ingetypt?
-    i1=string.find(result," Bij `Van station'");
-    if (i1 >=0 ):
-      #Van station niet goed
-      i1=string.find(result,"n [",i1)+3;
-      i2=string.find(result,".",i1);
-      errorscorrected+=1;
-      waarschuwing+=vanStation+" is veranderd in: "+result[i1:i2];
-      vanStation=result[i1:i2];
-    i1=string.find(result," Bij `Naar station'");
-    if (i1 >=0 ):
-      #Naar station niet goed
-      i1=string.find(result,"Reisdoel",i1);
-      i1=string.find(result,"n [",i1)+3;
-      i2=string.find(result,".",i1);
-      errorscorrected+=1;
-      if (waarschuwing!=""):
-        waarschuwing+=" en ";
-      waarschuwing+=naarStation+" is veranderd in: "+result[i1:i2];
-      naarStation=result[i1:i2];
-    if (errorscorrected==0):
-      return "NS site werkt niet mee of stations bestaan niet";
-    #Try again with correct data
-    cmd = "echo -e \"vanStation=";
-    cmd += vanStation;
-    cmd += "&naarStation="
-    cmd += naarStation;
-    cmd += "&reisdatumDag=";
-    cmd += str(day);
-    cmd += "&reisdatumMaand=";
-    cmd += str(month);
-    cmd += "&reisdatumJaar=";
-    cmd += str(year);
-    cmd += "&reisdatumUur="
-    cmd += str(hour);
-    cmd += "&reisdatumMinuut=";
-    cmd += str(minute);
-    cmd += "&reisdatumVertrekAankomst=true\" | lynx -post_data -dump \"http://www.ns.nl/servlet/Satellite?referrer=snelplanner_plus&cid=";
-    cmd += cid;
-    cmd += "&pagename=www.ns.nl%2FPlanner%2Fplannerplus2stap&action=js2&p=1071147988062\"";
-    inp,outp,stderr = os.popen3(cmd);
-    result = outp.read();
-    outp.close();
-    inp.close();
-    stderr.close();
-    i1=string.find(result,"Reisdetails");
-    if (i1<0):
-      return "NS-site werkt niet mee";
-
-  i1=string.find(result,":",i1);
-  returnstring="";
-  vannaar="";
-  while ((i1>10) and (string.find(result[i1-2:i1+3],"tp")<0)):
-#Elk station
-
-    if (vannaar=="Vertrek: "):
-      vannaar="Aankomst:";
-    else:
-      vannaar="Vertrek: ";
-
-#tijd
-    returnstring+=vannaar+" "+result[i1-2:i1+3];
-
-#station en spoor
-    i2=string.find(result,"]",i1);
-    if (result[i2+1]=="i"):
-      i2=string.find(result,"]",i2+1);
-    i3=string.find(result," ",i2);
-    returnstring+= " "+result[i2+1:i3];
-
-    spoor_lus=0;
-    while (spoor_lus==0):
-      i2=string.find(result," ",i2+1);
-      i3=string.find(result," ",i2+1);
-      if any(string.find(result[i2:i3],str(x))>=0 for x in range(0,9)):
-        returnstring+=" spoor:";
-        spoor_lus=1;
-      returnstring+= " "+string.strip(result[i2:i3]);
-
-#volgend station
-    i1=string.find(result,":",i1+1);
-    returnstring+="\n";
-  returnstring=resultstr+returnstring
-  if (waarschuwing!=""):
-    return string.strip("Waarschuwing: "+waarschuwing+"\n"+returnstring);
-  return string.strip(returnstring);
-
 def mytest(regel):
   piet.db("PRAGMA temp_store=2");
   return "result: "+repr(piet.db(regel))+"\n";
@@ -2386,6 +2163,9 @@ def reloadding(params):
     elif params[0] in ("ov9292", "ov"):
       reload(ov9292);
       return "_ov_ernieuw ingelezen!";
+    elif params[0] in ("ns"):
+      reload(ns);
+      return "ns ingelezen!";
     elif params[0] in ("kook", "kookbalans"):
       reload(kookbalans);
       return "ok, gedaan";
@@ -2593,6 +2373,7 @@ functions = {
     "spreuk":            ("loos", 0, spreuk, "spreuk, geef een leuke(?) spreuk"),
     "oneliner":          ("loos", 0, spreuk, ""),
     "dvorak2qwerty":     ("loos", 0, dvorak2qwerty, "dvorak2qwerty <text>, maak iets dat op een qwerty-tb in dvorak is getikt leesbaar"),
+    "achteruit":         ("loos", 0, reverse, "achteruit <text>, draait de tekst om"),
     "d2q":               ("loos", 0, dvorak2qwerty, ""),
     "leet":              ("loos", 0, leet, "leet <text>, convert to 1337"),
     "unleet":            ("loos", 0, unleet, "unleet <text>, unconvert to 1337"),
@@ -2601,7 +2382,8 @@ functions = {
     "pistes":            ("loos", 100, pistes.cmd_pistes, "pistes, doet iets met skipistes"),
     "weekend?":          ("loos", 100, weekend, ""),
     "url":               ("loos", 100, commando_url, "geef willekeurige oude url"),
-    "tv":                ("loos", 100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
+    #"tv":                ("loos", 100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
+    "tv":                ("loos", 100, lambda x: "weer niks", "geef overzicht van wat er op tv is"),
     "trigram":           ("loos", 1000, trigram, "praat nonsens"),
     "bash":              ("loos", 100, bash.bash, "Geef bash quote <nummer> terug of een random bashquote bij gebrek aan nummer"),
     "sentence":          ("loos", 100, random_sentence, "sentence, geef een willekeurige engelse zin"),
@@ -2613,7 +2395,7 @@ functions = {
     "verklaar":          ("dicts", 100, verklaar, "Zoekt op het internet wat <regel> is"),
     "vandale":           ("dicts", 100, vandale, "vandale <woord>, zoek woord op in woordenboek"),
     "urban":             ("dicts", 100, urban, "urban <woord>, zoek woord op in urbandictionary (warning: explicit content)"),
-    "rijm":              ("dicts", 100, rijm, "rijm <woord>, zoek rijmwoorden op"),
+    #"rijm":              ("dicts", 100, rijm, "rijm <woord>, zoek rijmwoorden op"),
     "vertaal":           ("dicts", 100, vertaal, "vertaal <brontaal> <doeltaal> <regel>, vertaalt <regel> van de taal <brontaal> naar de taal <doeltaal>"),
     "afk":               ("dicts", 100, afk, "afk <afk>, zoek een afkorting op"),
     "spel":              ("dicts", 0, spell_nl, "spel <woord/zin>, spellcheck een woord/zin in het nederlands"),
@@ -2648,7 +2430,7 @@ functions = {
     "manbalans":         ("misc", 100, lambda x: "er zijn precies 0 mannen, en %d jongens hier" % len(nicks), "geeft het aantal mannen op het kanaal"),
     "dw":                ("misc", 100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
     "dwho":              ("misc", 100, discwho, "dwho, kijk wie van Taido, Irk, Weary of Szwarts op discworld zijn"),
-    "gps":		 ("misc", 100, gps.gps_coord, "gps <adres> Zoekt GPS coordinaten op van adres"),
+    "gps":               ("misc", 100, gps.gps_coord, "gps <adres> Zoekt GPS coordinaten op van adres"),
     "factor":            ("misc", 100, factor, "factoriseer <nr>"),
     "utc":               ("misc", 100, utc, "utc <secs>|<tijd>, reken van/naar utc"),
 
@@ -2700,7 +2482,7 @@ functions = {
     "test":              ("piet", 100, mytest, "ding"),
 
 # geografie / reizen
-    "ns":                ("reizen", 100, ns, "ns <vertrekplaats> <aankomstplaats> <tijd>"),
+    "ns":                ("reizen", 100, lambda x: ns.ns(x,channel), "ns van <station> naar <station> via <plaats> vertrek/aankomst <tijd>"),
     "hoever":            ("reizen", 100, lambda x: Distance.Distance(x), "hoever <van> <naar>"),
     "afstand":           ("reizen", 100, lambda x: Distance.Distance(x), ""),
     "distance":          ("reizen", 100, lambda x: Distance.Distance(x), ""),
