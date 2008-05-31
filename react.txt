@@ -244,7 +244,6 @@ achtervolgt piet#1.0#ACTION verstopt zich heel goed
 warcraft#0.5#je kan ook gaan mudden
 zobiezo#0.3#ACTION lacht even
 grijpt piet#1#ACTION moves aggresivly towards NICK
-misschien#0.1#arg! mischien met 2 essen, wat goed van je!
 vi #1.0#ACTION ziet niet in wat een romeinse 6 met text editing heeft te maken#avi
 prutser#0.1#ik zie NICK anders ook wel eens flink prutsen
 mooi#0.1#ACTION krijgt er tranen van in zijn ogen
@@ -403,7 +402,7 @@ kenya#0.5#badger badger badger
 valt wel mee#1.0#het komt wel goed
 komt wel goed#1.0#het valt wel mee
 kriebeltrui#1.0#ACTION kiepert het papier uit de versnipperaar in je ondergoed
-heen en weer#1.0#achnee, alweer.."
+heen en weer#1.0#achnee, alweer..
 huisbot#0.25#ja, huisbot ja, maar je troep mag je zelf opruimen
 huisbot#0.3333#GOEIEMORGEN, BUREAUS!
 huisbot#0.5#stoot een vaas om
