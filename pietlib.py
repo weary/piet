@@ -152,6 +152,7 @@ unitaliasses={
 	"u": 3600,
 	"uur": 3600,
 	"uren": 3600,
+	"h": 3600,
 	"m": 60,
 	"min": 60,
 	"s": 1,
@@ -236,11 +237,14 @@ def parse_tijd(input, tijdzone):
 				lt = [ int(t)*unitaliasses[u] for t,u in lt ]
 				the_moment = the_moment + datetime.timedelta(seconds = sum(lt))
 
+			#print "het is nu", time.time()
 			#print "tijd", repr(tijd), "geparsed naar", the_moment.time()
 		if not(datum) and the_moment<now and the_moment+datetime.timedelta(days=1)>now:
 			the_moment = the_moment + datetime.timedelta(days=1)
 		
-		print the_moment
+		#print the_moment
+		#print "result:",repr(the_moment.utctimetuple())
+		#print "result:",calendar.timegm(the_moment.utctimetuple())
 		return (calendar.timegm(the_moment.utctimetuple()), remainder)
 	finally:
 		timezone_reset()
