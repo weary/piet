@@ -26,7 +26,6 @@ def get_url_title(channel, url):
 		soup = BeautifulSoup.BeautifulSoup(url_input)
 		piet.send(channel, "de titel van "+tinyurl+" is: "+soup.html.title.string+"\n")
 		if url.find('divx.com'):
-			open("/home/weary/tmp/frop.txt", "w").write(url_input)
 			value = dict(soup.input.attrs)['value']
 			value = urllib.unquote(value)
 			value = value.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"')
