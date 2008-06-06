@@ -275,7 +275,12 @@ python_handler::~python_handler()
 std::string mystrerror(int errnum)
 {
 	char buf[1024];
-	assert(strerror_r(errnum, buf, 1024)==0);
+	const char *result = strerror_r(errnum, buf, 1024);
+	if (!result)
+	{
+		snprintf(buf, 1024, "unknown error code %d", errnum);
+		result = buf;
+	}
 	return buf;
 }
 
@@ -285,8 +290,9 @@ void python_handler::checkfile_and_read(const std::string channel_, const std::s
 	int r=stat(file_.c_str(), &st);
 	if (r!=0)
 	{
+		int e = errno;
 		privmsg(channel_, (boost::format("Ik kan \"%1%\" niet bereiken! (%2%)\n") %
-					file_ % mystrerror(errno)).str());
+					file_ % mystrerror(e)).str());
 	}
 	else
 	{
