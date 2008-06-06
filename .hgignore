@@ -5,3 +5,7 @@
 ^tailor.state$
 ^tailor.state.old$
 ^tailor.state.journal$
+log.txt
+results.txt
+piet.db
+
