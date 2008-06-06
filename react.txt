@@ -89,6 +89,7 @@ slaat piet#0.3#het digitale bloed spuit uit piet zijn hoofd
 slaat piet#1#ACTION rent gillend op NICK af
 mept piet#0.5#ACTION ontwijkt de slag maar struikelt en gaat ontzettend op zijn bek
 mept piet#1#ACTION rent gillende het kanaal rond
+zoent piet#1#ACTION stamelt wat en kleurt een mooie tint roze
 compressed piet#1.0#ACTION was al niet zo groot, maar nu helemaal niks meer
 comprimeerd piet#1.0#ACTION blaast zichzelf maar weer op
 blaast piet op#1.0#ACTION is ook in veel kleine stukjes nog behoorlijk aanwezig
@@ -143,9 +144,9 @@ apt-get#0.2#Ja, apt-get dat even, of ben je weer je rootpasswd vergeten?
 apt-get#0.3#Of was het emergen?
  agi#0.2#afk agi => apt-get install
 joker#0.2#Ik wil ook jokertekens!
-backup#0.3#Altijd backuppen voordat ik een gebouw in de fik steek
-backup#0.5#back nou maar gewoon op
-backup#1#Wat? Kan iemand me even backuppen?
+backup#0.1#Altijd backuppen voordat ik een gebouw in de fik steek
+backup#0.111#back nou maar gewoon op
+backup#0.125#Wat? Kan iemand me even backuppen?
 nano#0.5#nano? gelukkig geen zes.
 nano#1#Jed is beter
 react.txt#0.1#ACTION voelt zich ongemakkelijk

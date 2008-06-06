@@ -18,6 +18,7 @@ class c_piet_config // global variable g_config can be used to access this one
 
 		const std::string &get_initial_nick() { return _initial_nick; }
 		const std::string &get_channel() { return _channel; }
+		const std::string &get_channel_key() { return _key; }
 
 		// changing configuration
 		const std::string &get_nick() { return _nick; }
@@ -28,6 +29,7 @@ class c_piet_config // global variable g_config can be used to access this one
 		int _port;
 		std::string _initial_nick;
 		std::string _channel;
+		std::string _key;
 
 		std::string _nick;
 };

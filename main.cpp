@@ -289,9 +289,12 @@ void interpret(const std::string &input)
     send(":%s PRIVMSG %s :server roept dat ik een ongeldige nick probeer te gebruiken!\n", g_config.get_nick().c_str(), channel.c_str());
   }
   else if (command=="422" || command=="376")
-	{
-		send(":%s JOIN %s\n", g_config.get_nick().c_str(), g_config.get_channel().c_str());
-	}
+  {
+    if (g_config.get_channel_key().empty())
+      send(":%s JOIN %s\n", g_config.get_nick().c_str(), g_config.get_channel().c_str());
+    else
+      send(":%s JOIN %s %s\n", g_config.get_nick().c_str(), g_config.get_channel().c_str(), g_config.get_channel_key().c_str());
+  }
   else if (command=="PRIVMSG")
   {
     std::string chan;

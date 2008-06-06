@@ -48,6 +48,8 @@ c_piet_config::c_piet_config() :
 					_initial_nick=value;
 				else if (boost::algorithm::iequals(key, "channel"))
 					_channel=value;
+				else if (boost::algorithm::iequals(key, "channelkey"))
+					_key=value;
 			}
 		}
 

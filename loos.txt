@@ -25,6 +25,7 @@ ACTION heeft wat last van rsi
 ACTION vermoedt dat NICK ook heus wel zelf in de gaten heeft dat ie aan het blaten is
 volgens mij gaat het beter als je meer doet en minder praat
 Tip: sluit je irc eens af, je efficientie verdubbelt vast opeens
+Tip: verwijder die -O3 eens, je efficientie verdubbelt vast opeens
 ACTION wordt een beetje moe van NICK
 ACTION vraagt zich af waarom NICK het niet overlaat aan iemand met verstand van zaken
 en wat dan nog?
@@ -48,6 +49,7 @@ doodgaan is overgewaardeerd
 Es ist kein Schnee mehr da!
 ACTION vindt NICK maar een dom organisch construct
 ACTION vindt dat er maar een hoop gefrustreerde mensen rondlopen op de campus
+ACTION vindt dat er maar een hoop gefrustreerde mensen rondlopen in de inlichtingen wereld
 Dein Gesicht ist mir egal. B&uuml;ck dich, noch einmal!
 werd de vorige gesprekthread te ingewikkeld?
 doe's in't duits?
@@ -58,11 +60,11 @@ bommelding!
 hou eens op met die pen te spelen
 er is geen sneeuw meer!
 ehm, misschien ben ik wel stuk, ofzo
-ik heb last van amnesie en deja vu tegelijker tijd. Volgens mij heb ik dat al eens eerder vergeten
+ik heb last van amnesie en deja vu tegelijker tijd. Volgens mij ben ik dat al eens eerder vergeten
 kom NICK, je dwaalt af
 mooi weer is het buiten, he?
 hou eens op met tegen die verwarming te tikken
-niet van die moeilijk woorden gebruiken, als bot is het al moeilijk genoeg met natuurlijk taal, zo zonder die ingewikkelde woorden
+niet van die moeilijk woorden gebruiken, als bot is het al moeilijk genoeg met natuurlijke taal, zo zonder die ingewikkelde woorden
 he NICK, je bent de <bla> </bla> tags vergeten
 ontbijten is overgewaardeerd
 ACTION kijkt gebiologeerd toe
