@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys, string, random, re, os, time, crypt, socket, urllib, shlex
-import traceback, datetime, stat, telnetlib, calendar, math
+import sys, string, random, re, os, time, crypt, socket, urllib
+import traceback, datetime, stat, telnetlib, calendar, math, inspect, shlex
 
 import piet
 sys.path.append(".")
@@ -97,17 +97,21 @@ def onbekend_commando(param):
     return emote(split[0],split[1:]);
 
   if (len(param)==0):
-    return "ok\n";
+    return "ok\n"
+  elif split[0]=="wanneer":
+    return random.choice(["nog lang niet", "voorlopig niet", "echt geen idee", "met sint juttemis"])
+  elif split[0]=="is" and split[1]=="het":
+    return "dunno"
   elif (param[-1]=='?'):
     if (random.random()>=0.475):
-      return "ja\n";
+      return "ja\n"
     else:
-      return "nee\n";
+      return "nee\n"
   elif param in groeten:
-    return random.choice(groeten)+"\n";
+    return random.choice(groeten)+"\n"
   elif param in ["stfu"]:
-    return "jaja, ik zeur\n";
-  return random.choice(["goh", "nou", "sja", "och"])+"\n";
+    return "jaja, ik zeur\n"
+  return random.choice(["goh", "nou", "sja", "och"])+"\n"
 
 
 def emote(action, remainder):
@@ -117,12 +121,14 @@ def emote(action, remainder):
 						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",\
 						 "nauwelijks", "bijna, maar toch maar niet", "vol overgave"];
 	if action=="aai":
-		action="aait";
+		action="aait"
+	if action=="gooi":
+		action="gooit"
 	if action[-1] in "aeoui":
-		action=action+action[-1];
+		action=action+action[-1]
 	if action[-1]!='t':
-		action=action+"t";
-	return "ACTION "+action+" "+random.choice(toevoeging)+" "+" ".join(remainder);
+		action=action+"t"
+	return "ACTION "+action+" "+random.choice(toevoeging)+" "+" ".join(remainder)
 
 
 def convert(char):
@@ -249,41 +255,42 @@ if not(vars().has_key("boottime")):
 
 def hex2dec(params):
   if (params[:2]=="0x" or params[-1]=='h'):
-    if (params[-1]=='h'): params=params[:-1];
-    if (params[:2]=='0x'): params=params[2:];
+    if (params[-1]=='h'): params=params[:-1]
+    if (params[:2]=='0x'): params=params[2:]
     try:
-      val=int(params, 16);
+      val=int(params, 16)
     except:
-      traceback.print_exc();
-      return "doe nou niet alsof dat hexadecimaal is.. dat is't niet";
-    result="0x"+params+" wordt door sommigen aangeduid als "+str(val);
+      traceback.print_exc()
+      return "doe nou niet alsof dat hexadecimaal is.. dat is't niet"
+    result="0x"+params+" wordt door sommigen aangeduid als "+str(val)
     if (val>=2**7 and val<=2**8):
-      result+=", en soms ook als -"+str(2**8-val);
+      result+=", en soms ook als -"+str(2**8-val)
     elif (val>=2**15 and val<=2**16):
-      result+=", en soms ook als -"+str(2**16-val);
+      result+=", en soms ook als -"+str(2**16-val)
     elif (val>=2**31 and val<=2**32):
-      result+=", en soms ook als -"+str(2**32-val);
+      result+=", en soms ook als -"+str(2**32-val)
     elif (val>=2**63 and val<=2**64):
-      result+=", en soms ook als -"+str(2**64-val);
-    return result;
+      result+=", en soms ook als -"+str(2**64-val)
+    return result
   try:
     print "converting \""+params+"\""
-    val=int(params);
+    val=int(params)
   except:
-    traceback.print_exc();
-    return "ACTION stuurt een grote boze heks op je af";
+    traceback.print_exc()
+    return "ACTION stuurt een grote boze heks op je af"
+  hex2 = lambda x: hex(x).replace('L','')
   if (val>=0):
-    return str(val)+" is ook wel "+hex(val);
+    return str(val)+" is ook wel "+hex2(val)
   if (val>=-(2**7)):
-    return str(val)+" is dus "+hex(2**8+val);
+    return str(val)+" is dus "+hex2(2**8+val)
   elif (val>=-(2**15)):
-    return str(val)+" is dus "+hex(2**16+val);
+    return str(val)+" is dus "+hex2(2**16+val)
   elif (val>=-(2**31)):
-    return str(val)+" is dus "+hex(2**32+val);
+    return str(val)+" is dus "+hex2(2**32+val)
   elif (val>=-(2**63)):
-    return str(val)+" is dus "+hex(2**64+val);
+    return str(val)+" is dus "+hex2(2**64+val)
   else:
-    return str(val)+" is wel heel klein, "+hex(val);
+    return str(val)+" is wel heel klein, "+hex2(val)
 
 def weekend(params):
   tz=pietlib.tijdzone_nick(nick);
@@ -695,6 +702,8 @@ def random_sentence(params):
 
 def command_help(param):
   try:
+    if len(functions[param][3])==0:
+      raise "frop"
     return functions[param][3]+"\n"
   except:
     categories = dict([ (tup[0], 0) for (_, tup) in functions.iteritems() ]).keys()
@@ -720,7 +729,7 @@ def spreuk(params):
 
 def ping(woord):
   a=string.split(woord, ' ');
-  if (len(a)!=1) or (len(a[0])==0):
+  if len(a)!=1 or len(a[0])==0 or a[0]=='?':
     return nick+": pong\n";
   else:
     inp = os.popen("ping -q -c 10 "+a[0]+" | tail -n 2");
@@ -865,6 +874,13 @@ def dvorak2qwerty(params):
   t=string.maketrans(
       "anihdyujgcvpmlsrxo;kf.,bt/weqANIHDYUJGCVPMLSRXO:KF><BT?WEQ",
       "abcdefghijklmnopqrstuvwxyz,.'ABCDEFGHIJKLMNOPQRSTUVWXYZ<>\"");
+  return params.translate(t);
+
+def qwerty2dvorak(params):
+  params = string.strip(parse(params, False, True));
+  t=string.maketrans(
+      """axje.uidchtnmbrl'poygk,qf;wv-AXJE>UIDCHTNMBRL"POYGK<QF:WV_ """,
+      """abcdefghijklmnopqrstuvwxyz,.'ABCDEFGHIJKLMNOPQRSTUVWXYZ<>" """);
   return params.translate(t);
 
 def reverse(params):
@@ -1298,12 +1314,16 @@ def remind_thread(unused1, unused2):
         for m in msgs:
           if (len(m)!=4):
             print "WARNING: malformed db response in remind: "+repr(m);
-          telaat=now-int(float(m[3]));
-          if (telaat>0):
-            piet.send(m[0], "%s (ja, %s te laat)" %
-                (m[2], pietlib.format_tijdsduur(telaat)));
+          if m[2][:4]=="zeg ":
+            channel = m[0]
+            zeg(m[2])
           else:
-            piet.send(m[0], m[2]);
+            telaat=now-int(float(m[3]));
+            if (telaat>0):
+              piet.send(m[0], "%s (ja, %s te laat)" %
+                  (m[2], pietlib.format_tijdsduur(telaat)));
+            else:
+              piet.send(m[0], m[2]);
         piet.db("DELETE FROM reminds WHERE tijd<="+repr(now+1));
       except:
         #traceback.print_exc();
@@ -1748,7 +1768,8 @@ def temp2(regel):
 				.replace("thunderstorm", "onweer mogelijk met regen")
 				.replace("thundershower", "kort onweer met zware regen")
 				.replace("dense fog", "dichte mist")
-				.replace("light fog", "lichte mist"))
+				.replace("light fog", "lichte mist")
+				.replace("foggy", "mistig"))
 
 		timezone = None
 		if country=="Netherlands":
@@ -2337,8 +2358,10 @@ functions = {
     "spreuk":            ("loos", 0, spreuk, "spreuk, geef een leuke(?) spreuk"),
     "oneliner":          ("loos", 0, spreuk, ""),
     "dvorak2qwerty":     ("loos", 0, dvorak2qwerty, "dvorak2qwerty <text>, maak iets dat op een qwerty-tb in dvorak is getikt leesbaar"),
+    "qwerty2dvorak":     ("loos", 0, qwerty2dvorak, "qwerty2dvorak <text>, maak iets dat op een dvorak-tb in qwerty is getikt leesbaar"),
     "achteruit":         ("loos", 0, reverse, "achteruit <text>, draait de tekst om"),
     "d2q":               ("loos", 0, dvorak2qwerty, ""),
+    "q2d":               ("loos", 0, qwerty2dvorak, ""),
     "leet":              ("loos", 0, leet, "leet <text>, convert to 1337"),
     "unleet":            ("loos", 0, unleet, "unleet <text>, unconvert to 1337"),
     "geordi":            ("loos", 0, geordi, ""),
@@ -2354,12 +2377,15 @@ functions = {
     "dum":               ("loos", 0, dum, ""),
     "verveel":           ("loos", 100, verveel, "geeft een voorstel voor een activiteit"),
     "quote":             ("loos", 1000, quote, "quote <add> <regel> om iets toe te voegen of quote om iets op te vragen"),
+    "kunstje":           ("loos", 100, lambda x: "nee, prutser, er bestaat geen 'kunstje' commando", ""),
+    "trukje":            ("loos", 100, lambda x: "nee, prutser, kunstje", ""),
+    "truckje":           ("loos", 100, lambda x: "nee, prutser, kunstje", ""),
 
 # dicts
     "verklaar":          ("dicts", 100, verklaar, "Zoekt op het internet wat <regel> is"),
     "vandale":           ("dicts", 100, vandale, "vandale <woord>, zoek woord op in woordenboek"),
     "urban":             ("dicts", 100, urban, "urban <woord>, zoek woord op in urbandictionary (warning: explicit content)"),
-    #"rijm":              ("dicts", 100, rijm, "rijm <woord>, zoek rijmwoorden op"),
+    "rijm":              ("dicts", 100, rijm, "rijm <woord>, zoek rijmwoorden op"),
     "vertaal":           ("dicts", 100, vertaal, "vertaal <brontaal> <doeltaal> <regel>, vertaalt <regel> van de taal <brontaal> naar de taal <doeltaal>"),
     "afk":               ("dicts", 100, afk, "afk <afk>, zoek een afkorting op"),
     "spel":              ("dicts", 0, spell_nl, "spel <woord/zin>, spellcheck een woord/zin in het nederlands"),
@@ -2495,6 +2521,15 @@ def parse(param_org, first, magzeg):
     else:
       functie=functions["zeg"];
       params=param_org;
+
+  try:
+    funcmodule = inspect.getmodule(functie[2])
+    if funcmodule:
+      funcmodule.channel = channel
+    else:
+      print "could not get function module for function"
+  except:
+    traceback.print_exc();
   
   r="";
   if (int(auth)>=functie[1]):
@@ -2506,7 +2541,9 @@ def parse(param_org, first, magzeg):
   if functie[0] == "stuk":
     piet.send(channel, "pas op, deze functie werkt niet helemaal zoals bedoeld")
   meer_data[nick]=[]
-  maxlines=10;
+  maxlines=10
+  if type(r) == type(None):
+    return "rare functie, kwam niks uit"
   r2=[i for i in r.split('\n') if len(string.strip(i))>0]
   if (len(r2)>maxlines):
     l=str(len(r2));
