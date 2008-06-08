@@ -114,14 +114,10 @@ def do_react(channel, nick, pietnick, auth_, line):
 	line = line.replace(pietnick, "piet");
 
 	# ok, alles in een file
-	inf = open(reactfile)
-	lines = inf.read().split('\n')
-	inf.close()
+	lines = open(reactfile).read().split('\n')
 
 	# laatste regel even in een logfile
-	inf = open(logfile, "a+");
-	inf.write(line+"\n");
-	inf.close();
+	open(logfile, "a+").write(line+"\n")
 
 	ready=False;
 
@@ -136,6 +132,9 @@ def do_react(channel, nick, pietnick, auth_, line):
 				"s/"+line+"//"]);
 		piet.send(channel, r+"\n");
 		ready=True;
+	
+	if line[:1] == '\x01' and line[-1:] == '\x01':
+		line = line[1:-1]
 
 	# check for url's in the input
 	urlmatch=re.search("((https?://|www\.)[^ \t,]*)", line);
