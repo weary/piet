@@ -68,6 +68,7 @@ const scommand commands[]= {
 
 void Feedback(const std::string &nick, int auth, const std::string &channel_in, const std::string &msg_in)
 {
+	using boost::algorithm::iequals;
   std::string msg=msg_in;
   std::string channel=channel_in;
   printf("Feedback, processing (\"%s\", %d, \"%s\", \"%s\")\n", nick.c_str(), auth, channel.c_str(), msg.c_str());
@@ -85,7 +86,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
 	if (pos != msg.end())
 	{
 		std::string testnick(msg.begin(), pos);
-		if (testnick==pietnick || testnick=="piet")
+		if (iequals(testnick, pietnick) || iequals(testnick, "piet"))
 		{
 			++pos;
 			msg.erase(msg.begin(), pos);

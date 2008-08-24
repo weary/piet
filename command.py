@@ -2498,9 +2498,10 @@ def parse(param_org, first, magzeg):
   command="";
   params=param_org;
   for x in functions:
-    if param_org.startswith(x) and len(x)>len(command):
-      command=x;
-      params=string.strip(param_org[len(command):]);
+    if params.lower().startswith(x) and len(x)>len(command):
+      command = x;
+      params = params[len(command):].strip()
+      break
 
   if params[:2]=="t ":
     params="ik %s helemaal niet, en al zeker niet voor jou" % command
@@ -2569,8 +2570,7 @@ def do_command(nick_, auth_, channel_, msg_):
       msg_=re.sub(regexparts[1], regexparts[2], prev_command);
 
   prev_command=msg_;
-  print "channel is now ", channel;
-  print "executing", nick, auth, channel, msg_;
+  print "executing nick=%s, auth=%s, channel=%s, msg=%s" % (repr(nick), repr(auth), repr(channel), repr(msg_))
   try:
     result=parse(msg_, True, True);
     piet.send(channel_, result);
