@@ -59,7 +59,8 @@ std::string obj2str(PyObject *obj)
 	else if (PyTraceBack_Check(obj))
 	{
 		str << "obj-traceback";
-		PyObject *f = PySys_GetObject("stderr");
+		char stderr_str[] = "stderr";
+		PyObject *f = PySys_GetObject(stderr_str);
 		PyTraceBack_Print(obj, f);
 	}
 	else if (PyClass_Check(obj))
