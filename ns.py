@@ -1,12 +1,63 @@
-import re, pietlib, time, piet
+import re, urllib, time, pietlib, piet
 import BeautifulSoup
 
-def stripquotes(x):
-	if (x[0]=='"' and x[-1]=='"') or (x[0]=="'" and x[-1]=="'"):
-		return x[1:-1]
-	return x
+
+class StationsNamen:
+	# class that can translatie station-names to station-accroniems and back
+	# works by retreiving from the net and caching.
+	# note, a short name can have several long names, but we only store one, so
+	# long_to_short(short_to_long(..)) might not return the input
+
+	def __init__(self):
+		self.short = {}
+		self.long = {}
+		
+	def fetch(self, name): # either a long or a short name. returns the short name of the 'best match'
+		name = name.lower().strip()
+		s=pietlib.get_url('http://mobiel.ns.nl/mobiel/stations.action?station='+urllib.quote(name))
+		namelist = re.findall("<strong>([^<]*)</strong>[^]]*\[([^]]*)", s)
+		if not namelist:
+			return None
+		for (l,s) in namelist:
+			l = l.lower().strip()
+			s = s.lower().strip()
+			self.short[s] = l
+			self.long[l] = s
+		return namelist[0][1].lower().strip()
+
+	def to_short(self, long):
+		long = long.lower()
+		if long in self.long:
+			return self.long[long]
+		if long in self.short:
+			return long # it wasn't long after all
+		return self.fetch(long)
+
+	def to_long(self, short):
+		short = short.lower()
+		if short in self.short:
+			return self.short[short]
+		if short in self.long:
+			return short # it wasn't short after all
+		short = self.fetch(short)
+		if not short:
+			return None
+		return self.short[short]
+
+
+stations = StationsNamen()
 
 def ns(regel, channel):
+	def format_station(x, opmerkingen):
+		if (x[0]=='"' and x[-1]=='"') or (x[0]=="'" and x[-1]=="'"):
+			x = x[1:-1]
+		y = stations.to_short(x)
+		if not y:
+			return x
+		if x!=y:
+			opmerkingen.append((y,stations.to_long(y)))
+		return y
+
 	pietlib.timezone_reset()
 
 	if regel == "?":
@@ -16,6 +67,15 @@ def ns(regel, channel):
 			return "er zijn storingen op:\n  " + "\n  ".join(storingen)
 		else:
 			return "er zijn geen storingen"
+
+	if regel.lower().startswith("afko") or regel.lower().startswith("accr"):
+		naam = regel.split(' ', 1)[1:]
+		if not naam:
+			return "ja, ik wil je best afkortingen geven, ook wel van stations"
+		s = stations.to_short(naam[0])
+		if not s:
+			return "beter dan '%s' wordt het niet, daar is geen afkorting voor" % naam[0]
+		return '%s (%s)' % (s, stations.to_long(s))
 
 	qs = """\s*((?:["][^"]*["])|(?:['][^']*['])|(?:[^'"]\S*))\s*"""
 	full = (
@@ -28,12 +88,18 @@ def ns(regel, channel):
 	if not(r):
 		return "uh, dus je wilt met de trein. verder snapte ik het allemaal niet"
 	(van, naar, via, tijdtype, tijd) = r.groups()
-	van = stripquotes(van)
-	naar = stripquotes(naar)
-	via = via and stripquotes(via) or ""
+	opmerkingen = []
+	van = format_station(van, opmerkingen)
+	naar = format_station(naar, opmerkingen)
+	via = via and format_station(via, opmerkingen) or ""
 	datum = time.strftime("%d-%m-%Y")
 	tijdtype = not(tijdtype) or tijdtype=="om" or tijdtype[0]=="v"
-	print "NS:", repr((van, naar, via, tijdtype, tijd))
+
+	if opmerkingen:
+		opm = [ "\002%s\002 voor %s" % (s,l) for s,l in opmerkingen ]
+		piet.send(channel, "%s was korter geweest" % pietlib.make_list(opm))
+
+	print "NS: van %s naar %s via %s %s %s", (repr(van), repr(naar), repr(via), repr(tijdtype), repr(tijd))
 
 	def finderr(soup):
 		# find the text in <div id="errors">
