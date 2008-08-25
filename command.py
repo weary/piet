@@ -301,7 +301,21 @@ def hex_no_l(v):
 
 def hton(params):
 	p = params.split()
-	value = p[-1]
+
+	bytes = 0
+	if len(p) >= 2:
+		if p[0].lower() == 's' or p[0] == '16':
+			bytes = 2
+			del p[0]
+		elif p[0].lower() == 'l' or p[0] == '32':
+			bytes = 4
+			del p[0]
+		elif p[0] == '64':
+			bytes = 8
+			del p[0]
+
+	value = ' '.join(p)
+	piet.send(channel, "value = %s" % repr(value))
 	if not p:
 		return "ACTION zet het niets maar eens in omgekeerde volgorde"
 
@@ -316,19 +330,14 @@ def hton(params):
 			except:
 				value = int(value, 16)
 	except:
-		traceback.print_exc()
-		return "tja, '%s' is omgekeerd '%s'" % (
-				params, ''.join([params[i] for i in range(len(params)-1,-1,-1)]))
+		try:
+			value = int(parse(value, False, True))
+		except:
+			traceback.print_exc()
+			return "tja, '%s' is omgekeerd '%s'" % (
+					params, ''.join([params[i] for i in range(len(params)-1,-1,-1)]))
 
-	bytes = 0
-	if len(p) == 2:
-		if p[0].lower() == 's' or p[0] == '16':
-			bytes = 2
-		elif p[0].lower() == 'l' or p[0] == '32':
-			bytes = 4
-		elif p[0] == '64':
-			bytes = 8
-	else:
+	if not bytes:
 		if value>=(1<<32):
 			bytes = 8
 		elif value>=(1<<16):
@@ -345,55 +354,6 @@ def hton(params):
 	return "de waarde %d (%s) zou door grote indianen gezien worden als %d (%s)" % (
 			value, hex_no_l(value), rev, hex_no_l(rev))
 
-
-
-
-def hton(params):
-	p = params.split()
-	value = p[-1] 
-	if not p:
-		return "ACTION zet het niets maar eens in omgekeerde volgorde"
-
-	try:
-		if value[:2] == "0x":
-			value = int(value[2:], 16)
-		elif value[-1].lower() == "h":
-			value = int(value[:-1], 16)
-		else:
-			try:
-				value = int(value)
-			except:
-				value = int(value, 16)
-	except:
-		traceback.print_exc()
-		return "tja, '%s' is omgekeerd '%s'" % (
-				params, ''.join([params[i] for i in range(len(params)-1,-1,-1)]))
-
-	bytes = 0
-	if len(p) == 2: 
-		if p[0].lower() == 's' or p[0] == '16':
-			bytes = 2
-		elif p[0].lower() == 'l' or p[0] == '32':
-			bytes = 4
-		elif p[0] == '64':
-			bytes = 8
-	else:
-		if value>=(1<<32):
-			bytes = 8
-		elif value>=(1<<16):
-			bytes = 4
-		else:
-			bytes = 2
-
-	rev = 0
-	work = value 
-	for i in range(0, bytes):
-		rev = (rev << 8) + (work & 0xFF)
-		work = work >> 8 
-
-	hex2 = lambda x: hex(x).replace('L','')
-	return "de waarde %d (%s) zou door grote indianen gezien worden als %d (%s)" % (
-			value, hex2(value), rev, hex2(rev))
 
 
 def weekend(params):
