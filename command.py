@@ -292,6 +292,110 @@ def hex2dec(params):
   else:
     return str(val)+" is wel heel klein, "+hex2(val)
 
+
+def hex_no_l(v):
+	r = hex(v)
+	if r[-1] == 'L':
+		return r[:-1]
+	return r
+
+def hton(params):
+	p = params.split()
+	value = p[-1]
+	if not p:
+		return "ACTION zet het niets maar eens in omgekeerde volgorde"
+
+	try:
+		if value[:2] == "0x":
+			value = int(value[2:], 16)
+		elif value[-1].lower() == "h":
+			value = int(value[:-1], 16)
+		else:
+			try:
+				value = int(value[:-1])
+			except:
+				value = int(value, 16)
+	except:
+		traceback.print_exc()
+		return "tja, '%s' is omgekeerd '%s'" % (
+				params, ''.join([params[i] for i in range(len(params)-1,-1,-1)]))
+
+	bytes = 0
+	if len(p) == 2:
+		if p[0].lower() == 's' or p[0] == '16':
+			bytes = 2
+		elif p[0].lower() == 'l' or p[0] == '32':
+			bytes = 4
+		elif p[0] == '64':
+			bytes = 8
+	else:
+		if value>=(1<<32):
+			bytes = 8
+		elif value>=(1<<16):
+			bytes = 4
+		else:
+			bytes = 2
+
+	rev = 0
+	work = value
+	for i in range(0, bytes):
+		rev = (rev << 8) + (work & 0xFF)
+		work = work >> 8
+
+	return "de waarde %d (%s) zou door grote indianen gezien worden als %d (%s)" % (
+			value, hex_no_l(value), rev, hex_no_l(rev))
+
+
+
+
+def hton(params):
+	p = params.split()
+	value = p[-1] 
+	if not p:
+		return "ACTION zet het niets maar eens in omgekeerde volgorde"
+
+	try:
+		if value[:2] == "0x":
+			value = int(value[2:], 16)
+		elif value[-1].lower() == "h":
+			value = int(value[:-1], 16)
+		else:
+			try:
+				value = int(value)
+			except:
+				value = int(value, 16)
+	except:
+		traceback.print_exc()
+		return "tja, '%s' is omgekeerd '%s'" % (
+				params, ''.join([params[i] for i in range(len(params)-1,-1,-1)]))
+
+	bytes = 0
+	if len(p) == 2: 
+		if p[0].lower() == 's' or p[0] == '16':
+			bytes = 2
+		elif p[0].lower() == 'l' or p[0] == '32':
+			bytes = 4
+		elif p[0] == '64':
+			bytes = 8
+	else:
+		if value>=(1<<32):
+			bytes = 8
+		elif value>=(1<<16):
+			bytes = 4
+		else:
+			bytes = 2
+
+	rev = 0
+	work = value 
+	for i in range(0, bytes):
+		rev = (rev << 8) + (work & 0xFF)
+		work = work >> 8 
+
+	hex2 = lambda x: hex(x).replace('L','')
+	return "de waarde %d (%s) zou door grote indianen gezien worden als %d (%s)" % (
+			value, hex2(value), rev, hex2(rev))
+
+
 def weekend(params):
   tz=pietlib.tijdzone_nick(nick);
   os.environ['TZ']=tz;
@@ -1761,6 +1865,9 @@ def temp2(regel):
 				.replace("partly", "gedeeltelijk")
 				.replace("mostly", "vooral")
 				.replace("cloudy", "bewolkt")
+				.replace("lgt.", "lichte ")
+				.replace("light", "lichte")
+				.replace("hvy.", "zware ")
 				.replace("rainshower", "buien")
 				.replace("rain", "regen")
 				.replace("sunny", "zonnig")
@@ -1768,6 +1875,7 @@ def temp2(regel):
 				.replace("thunderstorm", "onweer mogelijk met regen")
 				.replace("thundershower", "kort onweer met zware regen")
 				.replace("dense fog", "dichte mist")
+				.replace("ground fog", "mist aan de grond")
 				.replace("light fog", "lichte mist")
 				.replace("foggy", "mistig"))
 
@@ -2360,6 +2468,7 @@ functions = {
     "dvorak2qwerty":     ("loos", 0, dvorak2qwerty, "dvorak2qwerty <text>, maak iets dat op een qwerty-tb in dvorak is getikt leesbaar"),
     "qwerty2dvorak":     ("loos", 0, qwerty2dvorak, "qwerty2dvorak <text>, maak iets dat op een dvorak-tb in qwerty is getikt leesbaar"),
     "achteruit":         ("loos", 0, reverse, "achteruit <text>, draait de tekst om"),
+    "reverse":           ("loos", 0, reverse, ""),
     "d2q":               ("loos", 0, dvorak2qwerty, ""),
     "q2d":               ("loos", 0, qwerty2dvorak, ""),
     "leet":              ("loos", 0, leet, "leet <text>, convert to 1337"),
@@ -2429,6 +2538,7 @@ functions = {
     "ping":              ("system", 100, ping, "ping <host>, ping een computer"),
     "geoip":             ("system", 100, geoip, "geoip <ip>, zoekt positie op aarde van ip"),
     "hex":               ("system", 101, hex2dec, "hex <nummer>, reken van/naar hex"),
+    "hton":              ("system", 101, hton, "hton[ls] <nummer>, byteswap"),
     "encoding":          ("loos", 1000, test_encoding, "print iso8859 en utf8 karakter"),
 
 # handig
