@@ -2565,13 +2565,12 @@ def parse(param_org, first, magzeg):
   # check of het een calc commando is en voeg dan calc toe voor  het commando
   param_org=calc.addcalc(param_org)
 
-  command="";
-  params=param_org;
+  command = ""
+  params = param_org
   for x in functions:
-    if params.lower().startswith(x) and len(x)>len(command):
+    if param_org.lower().startswith(x) and len(x)>len(command):
       command = x;
-      params = params[len(command):].strip()
-      break
+      params = param_org[len(command):].strip()
 
   if params[:2]=="t ":
     params="ik %s helemaal niet, en al zeker niet voor jou" % command
@@ -2597,6 +2596,7 @@ def parse(param_org, first, magzeg):
     funcmodule = inspect.getmodule(functie[2])
     if funcmodule:
       funcmodule.channel = channel
+      funcmodule.nick = nick
     else:
       print "could not get function module for function"
   except:
