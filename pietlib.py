@@ -127,7 +127,8 @@ class LocalTimezone(datetime.tzinfo):
 		tt = time.localtime(stamp)
 		return tt.tm_isdst > 0
 
-
+def to_float(x):
+	return float(x.replace(",","."))
 
 def nogroups(x):
 	return re.sub("[(]([^?])", "(?:\\1", x)
@@ -161,7 +162,7 @@ unitaliasses={
 	"seconden": 1}
 
 # match one element from "5 jaren 10 dagen"
-RELTIMEELEM = "(\d+)\s*(%s)" % '|'.join([u+"(?:\\b|\\Z)" for u in unitaliasses.keys()])
+RELTIMEELEM = "([\d,.]+)\s*(%s)" % '|'.join([u+"(?:\\b|\\Z)" for u in unitaliasses.keys()])
 
 RELTIMEREGEX = "%s(?:[\s]+%s)*" % (nogroups(RELTIMEELEM), nogroups(RELTIMEELEM))
 
@@ -234,7 +235,7 @@ def parse_tijd(input, tijdzone):
 			else:
 				lt = re.findall(nogroups(RELTIMEELEM), tijd)
 				lt = [ re.match(RELTIMEELEM, i).groups() for i in lt ]
-				lt = [ int(t)*unitaliasses[u] for t,u in lt ]
+				lt = [ to_float(t)*unitaliasses[u] for t,u in lt ]
 				the_moment = the_moment + datetime.timedelta(seconds = sum(lt))
 
 			#print "het is nu", time.time()
