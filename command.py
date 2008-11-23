@@ -818,6 +818,48 @@ def zoekvrouw(params):
   return result;
 
 def vertaal(regel):
+	aliassen = dict((
+			("dutch", "nl"),("nederlands", "nl"),
+			("english", "en"),("engels", "en"),
+			("spanish", "es"),("spaans", "es"),
+			("german", "de"),("duits", "de"),
+			("french", "fr"),("frans", "fr"),
+			("arabic", "ar"),("arabic", "ar")))
+	talen = 'auto ar bg ca cs da de el en es fi fr hi hr id it iw ja ko lt lv nl no pl pt ro ru sk sl sr sv tl uk vi zh-CN zh-TW'.split(' ')
+	talenre = '|'.join(aliassen.keys()+talen)
+	reresult = re.match('\s*(?:(%s)\s+)?(?:(%s)\s+)?(.*)' % (talenre,talenre), regel)
+	if not reresult:
+		return "beetje onwaarschijnlijk dat dit gebeurd, maar ik snap je vraag niet"
+
+	(bron,doel,regel) = reresult.groups()
+	if not bron:
+		bron = "auto"
+	if not doel:
+		doel = "nl"
+	regel = regel.strip()
+	if not regel:
+		return "um, ik wil best vertalen, maar je hebt niks gegeven om te vertalen"
+	
+	form = { 'client':'t', 'text':regel, 'sl':bron, 'tl':doel }
+	url = """http://translate.google.com/translate_a/t?""" + urllib.urlencode(form)
+	result = pietlib.get_url(url, agent="piet").strip()
+	if not result:
+		return "ik heb helemaal niks teruggekregen, sorry"
+
+	# sometimes we get: ["translation","sourcelang"]
+	sourcelangre = re.match('\[\s*"([^"]*)"\s*,\s*"([^"]*)"\s*\]', result)
+	if sourcelangre:
+		(result,bron) = sourcelangre.groups()
+		result = result.strip()
+	elif result[0]=='"' and result[-1]=='"': # or we get: "translation"
+		result = result[1:-1].strip()
+	if not result:
+		return "van het resultaat bleef helemaal niks over.."
+
+	return '%s->%s: %s' % (bron, doel, result)
+
+#niet meer gebruikt
+def vertaal_oud(regel):
   def uniform(a):
     bron="X";
     a=a.lower();
