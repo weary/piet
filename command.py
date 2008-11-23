@@ -831,11 +831,22 @@ def vertaal(regel):
 	if not reresult:
 		return "beetje onwaarschijnlijk dat dit gebeurd, maar ik snap je vraag niet"
 
-	(bron,doel,regel) = reresult.groups()
-	if not bron:
+	(taal1,taal2,regel) = reresult.groups()
+	if taal1 and taal1 in aliassen:
+		taal1 = aliassen[taal1]
+	if taal2 and taal2 in aliassen:
+		taal2 = aliassen[taal2]
+
+	if taal1 and taal2:
+		bron = taal1
+		doel = taal2
+	elif taal1 or taal2:
 		bron = "auto"
-	if not doel:
+		doel = taal1 or taal2
+	else:
+		bron = "auto"
 		doel = "nl"
+
 	regel = regel.strip()
 	if not regel:
 		return "um, ik wil best vertalen, maar je hebt niks gegeven om te vertalen"
