@@ -15,10 +15,20 @@ class StationsNamen:
 	def fetch(self, name): # either a long or a short name. returns the short name of the 'best match'
 		name = name.lower().strip()
 		s=pietlib.get_url('http://mobiel.ns.nl/mobiel/stations.action?station='+urllib.quote(name))
-		namelist = re.findall("<strong>([^<]*)</strong>[^]]*\[([^]]*)", s)
+		h3title = re.findall("<h3>([^<]*)</h3>", s)
+		if not h3title or not h3title[0]:
+			return None
+		if h3title[0].lower() != 'list of stations':
+			l = h3title[0].lower()
+			s = re.findall('Abbreviation: <strong>([^<]*)</strong>', s)[0]
+			self.short[s] = l
+			self.long[l] = s
+			return s
+		h3title = h3title[0]
+		namelist = re.findall('action\?station=([^"]*)">([^<]*)', s)
 		if not namelist:
 			return None
-		for (l,s) in namelist:
+		for (s,l) in namelist:
 			l = l.lower().strip()
 			s = s.lower().strip()
 			self.short[s] = l
@@ -68,7 +78,7 @@ def ns(regel, channel):
 		else:
 			return "er zijn geen storingen"
 
-	if regel.lower().startswith("afko") or regel.lower().startswith("accr"):
+	if regel.lower().startswith("afk") or regel.lower().startswith("accr"):
 		naam = regel.split(' ', 1)[1:]
 		if not naam:
 			return "ja, ik wil je best afkortingen geven, ook wel van stations"
@@ -99,7 +109,13 @@ def ns(regel, channel):
 		opm = [ "\002%s\002 voor %s" % (s,l) for s,l in opmerkingen ]
 		piet.send(channel, "%s was korter geweest" % pietlib.make_list(opm))
 
-	print "NS: van %s naar %s via %s %s %s", (repr(van), repr(naar), repr(via), repr(tijdtype), repr(tijd))
+	print "NS: van %s naar %s via %s %stijd %s" % (repr(van), repr(naar), repr(via), tijdtype and "vertrek" or "aankomst", repr(tijd))
+
+	# test ns site en haal cookies
+	cookies = []
+	pietlib.get_url("http://mobiel.ns.nl/mobiel/planner.action?lang=nl", outcookies=cookies)
+	cookies = [ re.sub(';.*', '', c) for c in cookies ]
+	#print "cookies:", repr(cookies)
 
 	def finderr(soup):
 		# find the text in <div id="errors">
@@ -108,17 +124,20 @@ def ns(regel, channel):
 		c = c.span
 		if not(c): return None
 		return str(c.contents[0])
+	def findwarn(soup):
+		return soup.findAll('', {'class':'warn'})
 
 	ircred = lambda x: re.sub('<font color="red">(.*?)</font>', '\00304\\1\003 ', str(x).replace('<font color="red"></font>', ''))
-	notags = lambda x: re.sub('<[^>]*>', '', ircred(x)).replace('&nbsp;', ' ')
+	striptags = lambda x: re.sub('<[^>]*>', '', x)
+	notags = lambda x: striptags(ircred(x)).replace('&nbsp;', ' ')
 
 	postdata = {
 		'from':van, 'to':naar, 'via':via,
 		'date':datum, 'time':tijd, 'departure':(tijdtype and 'true' or 'false'),
-		'planroute':'reisadvies'}
+		'planroute':'Reisadvies'}
 	
 	for retrycount in range(5): # try max 5 times to get a correct page
-		page = pietlib.get_url("http://mobiel.ns.nl/mobiel/planner.action", postdata)
+		page = pietlib.get_url("http://mobiel.ns.nl/mobiel/planner.action", postdata, incookies=cookies)
 		open("nsresult.html", "w").write(page)
 		soup = BeautifulSoup.BeautifulSoup(page)
 		err = finderr(soup)
@@ -133,6 +152,10 @@ def ns(regel, channel):
 			postdata[field] = val
 		else:
 			break # got a correct page
+
+	for warn in soup.findAll('', {'class':'warn'}):
+		tmp = notags(warn).replace('Let op, ', '')
+		piet.send(channel, '\00304%s\003 ' % tmp)
 	
 	if not(soup.table):
 		return "de ns site is weer's brak (of ik ben stuk..)"
@@ -140,28 +163,36 @@ def ns(regel, channel):
 	# ok, we hebben de goeie pagina, nu het resultaat eruit halen
 	rows = soup.table.findAll("tr")
 	out = []
-	while rows:
+	while len(rows)>=3:
 		# delete additional information lines first (bikes allowed, etc)
-		while len(rows)>3 and not rows[3].hr:
+		while len(rows)>3 and not rows[3].img:
 			del rows[2]
-		tmp = rows[0].findAll('td')
-		vertrektijd = notags(tmp[1].a.string).replace("V ", "")
-		vertrekstation = notags(tmp[2].renderContents())
-		tmp = rows[1].findAll('td')[1].contents
-		beschrijving = str(tmp[0] + tmp[1].string) # 'Stoptrein NS richting Hengelo'
-		tmp = rows[2].findAll('td')
-		aankomsttijd = notags(tmp[1].b.string).replace("A ", "")
-		aankomststation = notags(tmp[2].renderContents())
+		line = []
+		line.append(rows[0].findAll('td'))
+		line.append(rows[1].findAll('td'))
+		line.append(rows[2].findAll('td'))
+		if striptags(line[0][0].renderContents()).strip() != '[+]':
+			piet.send(channel, 'NS-parser weer stuk, regel begon niet met [+]')
+			break
+
+		vertrektijd = notags(line[0][1].b.string).replace("V ", "")
+		vertrekstation = notags(line[0][2].renderContents())
+		beschrijving = notags(line[1][1]) # 'Stoptrein NS richting Hengelo'
+		aankomsttijd = notags(line[2][1].b.string).replace("A ", "")
+		aankomststation = notags(line[2][2])
 		del rows[:4]
 		row = "%s %s, %s %s, %s" % (vertrektijd, vertrekstation, aankomsttijd,
 				aankomststation, beschrijving)
-		row = row.replace("&nbsp;", " ")
+		#row = row.replace("&nbsp;", " ")
+		row = re.sub(' +', ' ', row)
 		row = re.sub(r" spoor ([0-9]+[ab]?)", lambda x: "(%s)" % x.group(1), row)
 		row = row.replace("richting", "r").replace("Centraal", "cs").replace("Stoptrein", "boemel").replace("Intercity", "ic").replace("Sneltrein", "sneltrein").replace("NS ", "")
-		row = re.sub(" *,", ",", row)
+		#row = re.sub(" *,", ",", row)
 		out.append(row)
 	if not(out):
 		return "uh, het is me niet gelukt de route uit de pagina te parsen.."
+	if rows:
+		piet.send(channel, "um, regels over gehouden na parsen.")
 	return '\n'.join(out)
 
 
