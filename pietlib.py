@@ -22,23 +22,30 @@ class piet_exception(Exception):
     return self._text
 
 
-def get_url(url, postdata=None, agent=DEFAULTAGENT):
+def get_url(url, postdata=None, agent=DEFAULTAGENT, incookies=[], outcookies=[]):
   class PietUrlOpener(urllib.FancyURLopener):
-    version = agent;
+    version = agent
   
-  oldopener = urllib._urlopener;
-  urllib._urlopener = PietUrlOpener();
+  # incookies should be ['label=value', 'label2=value2']
+  # outcookies will be appended with ['label=value; path=/', 'label2=value2; path=/; ..']
+  
+  oldopener = urllib._urlopener
+  urllib._urlopener = PietUrlOpener()
+  if incookies:
+    urllib._urlopener.addheader('Cookie', '; '.join(incookies))
   try:
     if not(postdata):
-      tmp = urllib.urlopen(url).read(100000);
+      urlobj = urllib.urlopen(url)
     else:
       if (type(postdata)==dict):
-        postdata = urllib.urlencode(postdata);
-      tmp = urllib.urlopen(url, postdata).read(100000);
+        postdata = urllib.urlencode(postdata)
+      urlobj = urllib.urlopen(url, postdata)
+    tmp = urlobj.read(100000)
+    outcookies.extend(urlobj.info().getheaders('set-cookie'))
   except:
     raise piet_exception("die stomme site reageert niet, andere keer misschien")
-  urllib._urlopener = oldopener;
-  return tmp;
+  urllib._urlopener = oldopener
+  return tmp
 
 
 def get_url_soup(url, postdata=None, agent=DEFAULTAGENT):
