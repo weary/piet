@@ -115,7 +115,6 @@ def ns(regel, channel):
 	cookies = []
 	pietlib.get_url("http://mobiel.ns.nl/mobiel/planner.action?lang=nl", outcookies=cookies)
 	cookies = [ re.sub(';.*', '', c) for c in cookies ]
-	#print "cookies:", repr(cookies)
 
 	def finderr(soup):
 		# find the text in <div id="errors">
@@ -171,8 +170,8 @@ def ns(regel, channel):
 		line.append(rows[0].findAll('td'))
 		line.append(rows[1].findAll('td'))
 		line.append(rows[2].findAll('td'))
-		if striptags(line[0][0].renderContents()).strip() != '[+]':
-			piet.send(channel, 'NS-parser weer stuk, regel begon niet met [+]')
+		if striptags(line[0][1].renderContents()).strip()[:1] != 'V':
+			piet.send(channel, 'NS-parser weer stuk, regel begon niet met V')
 			break
 
 		vertrektijd = notags(line[0][1].b.string).replace("V ", "")
