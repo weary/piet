@@ -190,7 +190,7 @@ def ns(regel, channel):
 				aankomststation, beschrijving)
 		#row = row.replace("&nbsp;", " ")
 		row = re.sub(' +', ' ', row)
-		row = re.sub(r" spoor ([0-9]+[ab]?)", lambda x: "(%s)" % x.group(1), row)
+		row = re.sub(r" (?:spoor|platform) ([0-9]+[abc]?)", lambda x: "(%s)" % x.group(1), row)
 		row = row.replace("richting", "r").replace("Centraal", "cs").replace("Stoptrein", "boemel").replace("Intercity", "ic").replace("Sneltrein", "sneltrein").replace("NS ", "")
 		row = row.replace("direction", "r")
 		#row = re.sub(" *,", ",", row)
