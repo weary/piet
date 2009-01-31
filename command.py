@@ -409,33 +409,16 @@ def kies(params):
 
 
 def vandale(woord):
-  result=pietlib.get_url("http://www.vandale.nl/opzoeken/woordenboek/?zoekwoord="+woord)
-  if (string.find(result,"<p>Geen resultaat.</p>") > 0):
-    return "Helaas niet gevonden"
-  start=string.find(result,"<div class=\"query\">")
-  start=string.find(result,"<div class=\"gb\"",start)
-  stop=string.rfind(result,"<div class=\"metaNav\">",start)
-  result=result[start:stop]
-  result=string.replace(result,"\n","")
-  result=string.replace(result,"\t","")
-  result=string.replace(result,"\r","")
-  result=string.replace(result,"&#183;",".")
-  result=string.replace(result,"&#126;","~")
-  result=string.replace(result,"</table>","\n")
-  start=string.find(result,"<")
-  while start>=0:
-    stop=string.find(result,">",start)+1
-    result=result[:start]+" "+result[stop:]
-    start=string.find(result,"<")
-  while string.find(result,"  ")>=0:
-    result=string.replace(result,"  "," ")
-  result=string.strip(result)
-  return result
-  if result=="":
-    return "Helaas niet gevonden"
-  result=string.replace(result,"\n ","\n")
-  result=string.replace(result,"\n("," (")
-  return result
+	page = pietlib.get_url("http://www.vandale.nl/vandale/opzoeken/woordenboek/?zoekwoord="+woord)
+	#open("vandaleresult.html", "w").write(page)
+	if page.find('De betekenis van dit woord is te vinden in')>=0:
+		return "als je iets over '%s' wilt weten, moet je eerst geld geven aan vandale-lui" % woord
+	soup = BeautifulSoup.BeautifulSoup(page)
+	all = soup.findAll(id='pnn4web_')
+	result = []
+	for a in all:
+		result.append(re.sub('<[^>]*>', '', str(a)))
+	return '\n'.join(result)
 
 def rijm(woord):
   try:
