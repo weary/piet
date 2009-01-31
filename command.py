@@ -1878,6 +1878,8 @@ def temp2(regel):
 				.replace("partly", "gedeeltelijk")
 				.replace("mostly", "vooral")
 				.replace("cloudy", "bewolkt")
+				.replace("overcast", "bewolkt")
+				.replace("light fog", "lichte mist")
 				.replace("lgt.", "lichte ")
 				.replace("light", "lichte")
 				.replace("hvy.", "zware ")
@@ -1889,7 +1891,6 @@ def temp2(regel):
 				.replace("thundershower", "kort onweer met zware regen")
 				.replace("dense fog", "dichte mist")
 				.replace("ground fog", "mist aan de grond")
-				.replace("light fog", "lichte mist")
 				.replace("foggy", "mistig"))
 
 		timezone = None
