@@ -14,7 +14,7 @@ class StationsNamen:
 		
 	def fetch(self, name): # either a long or a short name. returns the short name of the 'best match'
 		name = name.lower().strip()
-		s=pietlib.get_url('http://mobiel.ns.nl/mobiel/stations.action?station='+urllib.quote(name))
+		s=pietlib.get_url('http://mobiel.ns.nl/stations.action?station='+urllib.quote(name))
 		h3title = re.findall("<h3>([^<]*)</h3>", s)
 		if not h3title or not h3title[0]:
 			return None
@@ -134,10 +134,13 @@ def ns(regel, channel):
 		'from':van, 'to':naar, 'via':via,
 		'date':datum, 'time':tijd, 'departure':(tijdtype and 'true' or 'false'),
 		'planroute':'Reisadvies'}
-	
+
+	werkzaamheden = False	
 	for retrycount in range(5): # try max 5 times to get a correct page
-		page = pietlib.get_url("http://mobiel.ns.nl/mobiel/planner.action", postdata, incookies=cookies)
+		page = pietlib.get_url("http://mobiel.ns.nl/planner.action", postdata, incookies=cookies)
 		open("nsresult.html", "w").write(page)
+		if page.find("Advice changed due to railway construction work")>=0:
+			werkzaamheden = True
 		soup = BeautifulSoup.BeautifulSoup(page)
 		err = finderr(soup)
 		if err:
@@ -155,6 +158,8 @@ def ns(regel, channel):
 	for warn in soup.findAll('', {'class':'warn'}):
 		tmp = notags(warn).replace('Let op, ', '')
 		piet.send(channel, '\00304%s\003 ' % tmp)
+	if werkzaamheden:
+		piet.send(channel, '\00304let op, werkzaamheden (ja, alweer)\003 ')
 	
 	if not(soup.table):
 		return "de ns site is weer's brak (of ik ben stuk..)"
@@ -170,11 +175,12 @@ def ns(regel, channel):
 		line.append(rows[0].findAll('td'))
 		line.append(rows[1].findAll('td'))
 		line.append(rows[2].findAll('td'))
-		if striptags(line[0][1].renderContents()).strip()[:1] != 'V':
-			piet.send(channel, 'NS-parser weer stuk, regel begon niet met V')
+		linestart = striptags(line[0][1].renderContents()).strip()[:1]
+		if linestart != 'V' and linestart !='D':
+			piet.send(channel, "NS-parser weer stuk, regel begon niet met V of D (maar met '%s')" % repr(linestart))
 			break
 
-		vertrektijd = notags(line[0][1].b.string).replace("V ", "")
+		vertrektijd = notags(line[0][1].b.string).replace("V ", "").replace("D ", "")
 		vertrekstation = notags(line[0][2].renderContents())
 		beschrijving = notags(line[1][1]) # 'Stoptrein NS richting Hengelo'
 		aankomsttijd = notags(line[2][1].b.string).replace("A ", "")
@@ -186,12 +192,14 @@ def ns(regel, channel):
 		row = re.sub(' +', ' ', row)
 		row = re.sub(r" spoor ([0-9]+[ab]?)", lambda x: "(%s)" % x.group(1), row)
 		row = row.replace("richting", "r").replace("Centraal", "cs").replace("Stoptrein", "boemel").replace("Intercity", "ic").replace("Sneltrein", "sneltrein").replace("NS ", "")
+		row = row.replace("direction", "r")
 		#row = re.sub(" *,", ",", row)
 		out.append(row)
 	if not(out):
 		return "uh, het is me niet gelukt de route uit de pagina te parsen.."
 	if rows:
 		piet.send(channel, "um, regels over gehouden na parsen.")
+	
 	return '\n'.join(out)
 
 
