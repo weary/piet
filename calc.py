@@ -866,13 +866,8 @@ def calcM(param):
       outp.close();
       inp.close();
       stderr.close();
-      i1=string.find(result,"EUR");
-      i1=string.find(result,"EUR",i1+1);
-      i1=string.find(result,".",i1);
-      i1=string.rfind(result[:i1]," ");
-      i2=string.find(result," ",i1+1)
-      val = float(string.strip(result[i1:i2]))
-      return("",(1/val,0),param[endpos:],"$^1",1,1)
+      val = float(re.findall("1 EUR = ([0-9.]+)", result)[0])
+      return("",(val,0),param[endpos:],"$^1",1,1)
 
   unit=""
 
