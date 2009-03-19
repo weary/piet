@@ -867,7 +867,7 @@ def calcM(param):
       inp.close();
       stderr.close();
       val = float(re.findall("1 EUR = ([0-9.]+)", result)[0])
-      return("",(val,0),param[endpos:],"$^1",1,1)
+      return("",(1/val,0),param[endpos:],"$^1",1,1)
 
   unit=""
 
