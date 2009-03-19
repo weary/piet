@@ -139,6 +139,7 @@ def ns(regel, channel):
 	for retrycount in range(5): # try max 5 times to get a correct page
 		page = pietlib.get_url("http://mobiel.ns.nl/planner.action", postdata, incookies=cookies)
 		open("nsresult.html", "w").write(page)
+		page = page.replace("&#160;", " ")
 		if page.find("Advice changed due to railway construction work")>=0:
 			werkzaamheden = True
 		soup = BeautifulSoup.BeautifulSoup(page)
