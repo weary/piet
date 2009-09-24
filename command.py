@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import sys, string, random, re, os, time, crypt, socket, urllib
+import sys, string, random, re, os, time, crypt, socket, urllib, types
 import traceback, datetime, stat, telnetlib, calendar, math, inspect, shlex
 
 import piet
@@ -100,8 +100,12 @@ def onbekend_commando(param):
     return "ok\n"
   elif split[0]=="wanneer":
     return random.choice(["nog lang niet", "voorlopig niet", "echt geen idee", "met sint juttemis"])
-  elif split[0]=="is" and split[1]=="het":
+  elif param.startswith("hoe is het met "):
+    return random.choice(["goed", "slecht", "matig", "het gaat"])
+  elif len(split)>2 and split[0]=="is" and split[1]=="het":
     return "dunno"
+  elif len(split)>1 and split[0]=="waarom":
+		return random.choice(["nergens om", "is vast een goeie reden voor", "gaat je niks aan", "waarom zijn de banananen krom", "ik ga er even voor je over denken, vraag het straks nog maar eens", "geen reden"])
   elif (param[-1]=='?'):
     if (random.random()>=0.475):
       return "ja\n"
@@ -753,20 +757,25 @@ def random_sentence(params):
     return "'t is stuk, nu geen zin";
 
 def command_help(param):
-  try:
-    if len(functions[param][3])==0:
-      raise "frop"
-    return functions[param][3]+"\n"
-  except:
-    categories = dict([ (tup[0], 0) for (_, tup) in functions.iteritems() ]).keys()
-    for cat in categories:
-      r = [ fun for (fun, tup) in functions.iteritems() if tup[0] == cat and tup[3] ]
-      if r:
-        r.sort()
-        cmds = len(r)
-        r = ', '.join(r)
-        piet.send(channel, "%s(%d commands): %s\n" % (cat, cmds, r))
-    return ""
+	param = param.strip()
+	if not param:
+		categories = dict([ (tup[0], 0) for (_, tup) in functions.iteritems() ]).keys()
+		for cat in categories:
+			r = [ fun for (fun, tup) in functions.iteritems() if tup[0] == cat and tup[3] ]
+			if r:
+				r.sort()
+				cmds = len(r)
+				r = ', '.join(r)
+				piet.send(channel, "%s(%d commands): %s\n" % (cat, cmds, r))
+		return ""
+	else:
+		if param not in functions:
+			return "daarmee kan ik je niet helpen. eigenlijk weet ik niet eens wat het is.."
+		h = functions[param][3]
+		if not h:
+			return "tja, goeie vraag wat dat doet. ik weet 't niet"
+		else:
+			return h
 
 def alias(params):
   r=[b for b in functions if (functions[b][3]=="") and (functions[b][1]<=auth)];
@@ -1832,6 +1841,7 @@ def temp2(regel):
 	if reqcity.find(',')<0:
 		reqcity = reqcity+",nl"
 	reqcity = reqcity.replace("_", " ")
+	reqcity = reqcity.replace(", ", ",")
 
 	form = { 'submit': 'GO', 'u': '1', 'partner': 'accuweather' }
 	form['loccode']=reqcity
@@ -1867,7 +1877,6 @@ def temp2(regel):
 				.replace("mostly", "vooral")
 				.replace("cloudy", "bewolkt")
 				.replace("overcast", "bewolkt")
-				.replace("light fog", "lichte mist")
 				.replace("lgt.", "lichte ")
 				.replace("light", "lichte")
 				.replace("hvy.", "zware ")
@@ -1879,6 +1888,7 @@ def temp2(regel):
 				.replace("thundershower", "kort onweer met zware regen")
 				.replace("dense fog", "dichte mist")
 				.replace("ground fog", "mist aan de grond")
+				.replace("fog", "mist")
 				.replace("foggy", "mistig"))
 
 		timezone = None
@@ -2234,38 +2244,43 @@ def ov9292_wrapper(params):
 
 def reloadding(params):
   params=string.split(params," ")
+  def do_reload(lib):
+    reload(lib)
+    if lib.__dict__.has_key("piet_init"):
+      lib.piet_init(functions)
+
   if (len(params)<1) or (len(params[0])==0):
     return "reload wat?"
   else:
     if params[0] in ("calc", "supercalc"):
-      reload(calc)
+      do_reload(calc)
       return "'t is vast gelukt";
     if params[0] in ("distance", "Distance"):
-      reload(Distance)
+      do_reload(Distance)
       return "Distance lib ready to go";
     elif params[0]=="pistes":
-      reload(pistes);
+      do_reload(pistes);
       return "och, wie weet is't gelukt";
     elif params[0]=="vandale":
       reload(vandale);
       return "och, wie weet is't gelukt";
     elif params[0]=="bash":
-      reload(bash);
+      do_reload(bash);
       return "kheb vast gereload";
     elif params[0]=="pietlib":
-      reload(pietlib);
+      do_reload(pietlib);
       return "tjip, een nieuwe lib!";
     elif params[0]=="gps":
-      reload(gps);
+      do_reload(gps);
       return "gps module good to go!";
     elif params[0] in ("ov9292", "ov"):
-      reload(ov9292);
+      do_reload(ov9292);
       return "_ov_ernieuw ingelezen!";
     elif params[0] in ("ns"):
-      reload(ns);
+      do_reload(ns);
       return "ns ingelezen!";
     elif params[0] in ("kook", "kookbalans"):
-      reload(kookbalans);
+      do_reload(kookbalans);
       return "ok, gedaan";
   return "die module ken ik niet"
 
@@ -2433,10 +2448,15 @@ def factorize(n,l):         # n is the number to be factorized, l is a list whic
 
 
 def factor(regel):
+	if regel[:2] == 's ':
+		regel = regel[2:]
 	try:
 		nr = int(regel)
 	except:
-		return "ongeveer 3"
+		try:
+			nr = int(calc.supercalc(regel))
+		except:
+			return "ongeveer 3"
 	factors = []
 	factorize(nr, factors)
 	factors = [ str(i) for i in factors ]
@@ -2446,7 +2466,10 @@ def factor(regel):
 def utc(regel):
 	regel = regel.strip()
 	tz = pietlib.tijdzone_nick(nick)
-	if re.match('1[0-9]{9}([.][0-9]+)?', regel):
+	if not regel:
+		t = time.time()
+		return "het is nu %s, dat is in utc: %d" % (pietlib.format_localtijd(t, tz), t)
+	elif re.match('1[0-9]{9}([.][0-9]+)?', regel):
 		t = float(regel)
 		t = pietlib.format_localtijd(t, tz)
 		return "dat is %s in jouw tijdzone" % t
@@ -2456,6 +2479,7 @@ def utc(regel):
 			if len(remainder):
 				return "ik kon niks maken van "+repr(remainder)
 		except:
+			traceback.print_exc();
 			return "sorry, ik snap je tijd niet"
 		return "%s is in utc: %d" % (pietlib.format_localtijd(t, tz), t)
 
@@ -2600,6 +2624,11 @@ functions = {
 # intern
     "onbekend_commando": ("intern", 0, onbekend_commando, "")
 };
+
+# we just (re-)read the functions table. (re-)call all piet_init functions in imported modules
+for m in [i for i in globals().values() if type(i)==types.ModuleType]:
+	if 'piet_init' in m.__dict__:
+		m.piet_init(functions)
 
 #param_org: string containing command+parameters
 #first: True for outer call, False for recursions
