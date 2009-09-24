@@ -212,6 +212,7 @@ schuurt tegen piet#1.0#ACTION schopt NICK in een hoekje
 rost piet#1.0#ACTION kermt zieligjes
 hakt piet#1.0#ACTION wordt gehacked
 ramt piet#1.0#ACTION zet het op het huilen
+slaps piet#1.0#ACTION vindt dat niet aardig
 scheldt piet#1.0#schelden doet geen zeer
 pakt piet#1.0#blijf van me af NICK
 duwt piet#1.0#ACTION wil niet geduwt worden en gaat zelf al

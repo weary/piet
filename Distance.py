@@ -40,7 +40,7 @@ def Distance(args):
   ("enschede","52:13N 6:53E","Enschede, Netherlands"),
   ("hengelo","52:15N 6:47E","Hengelo (ov), Netherlands"),
   ("utrecht","52:5N 5:6E","Utrecht, Netherlands"),
-  ("rotterdam","51:93N 4.48E","Rotterdam, Netherlands"),
+  ("rotterdam","51:93N 4:48E","Rotterdam, Netherlands"),
   ("den haag","52:04N 4:18E","Den Haag, Netherlands"),
   ("'s gravenhage","52:08N 4:28E","Den Haag, Netherlands"),
   ("eindhoven","51:44N 5:47E","Eindhoven, Netherlands"),

@@ -1,7 +1,7 @@
 
 CC=g++
 CXX=g++
-CPPFLAGS=-I/home/weary/lubi -I/usr/include/python2.4
+CPPFLAGS=-I/home/weary/lubi -I/usr/include/python2.6
 CXXFLAGS=-ggdb3 -Wall
 LDFLAGS=-ggdb3
 
@@ -9,7 +9,7 @@ SOURCES=$(filter-out test.cpp,$(wildcard *.cpp))
 OBJS:=$(patsubst %.cpp, %.o, $(SOURCES))
 DEPS:=$(patsubst %.o,.%.d,$(OBJS))
 
-LDLIBS=-ldl -lcrypt -lpthread -lpython2.4 -lsqlite3 -lboost_regex
+LDLIBS=-ldl -lcrypt -lpthread -lpython2.6 -lsqlite3 -lboost_regex
 
 all: .depend pietbot
 

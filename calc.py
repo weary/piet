@@ -834,7 +834,7 @@ def calcM(param):
       return("",(convertrate,0),param[endpos:],siunit,1,1)
 
   #check for money currency
-  money=[("euro","EUR"), ("dollar","USD"), ("pond","GBP"),
+  money=[("euro","EUR"), ("dollar","USD"), ("pond","GBP"), ("gbp","GBP"),
   ("britsepond","GBP"), ("britishpound","GBP"), ("eur","EUR"), ("usd","usd"),
   ("gbp","GBP"), ("a$","AUD"), ("$a","AUD"), ("aud","AUD"),
   ("cur_bzd","BZD"),
@@ -945,7 +945,7 @@ def supercalc(toparse):
   toparse=string.replace(toparse," aud"," $a")
   toparse=string.replace(toparse,"$hk"," cur_hkd")
   toparse=string.replace(toparse,"hk$"," cur_hkd")
-  toparse=string.replace(toparse," gbp"," ukp")
+  toparse=string.replace(toparse,"gbp"," ukp")
   toparse=string.replace(toparse," a$"," $a")
   toparse=string.replace(toparse," b$"," cur_bzd")
   toparse=string.replace(toparse," $b"," cur_bzd")

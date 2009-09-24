@@ -8,7 +8,7 @@ import piet
 sys.path.append(".")
 import BeautifulSoup
 import pietlib
-import calc, Distance, pistes, ov9292, kookbalans, bash, gps, ns
+import calc, Distance, pistes, ov9292, kookbalans, bash, gps, ns, vandale
 
 # python 2.5 functions
 def all(seq):
@@ -254,9 +254,9 @@ if not(vars().has_key("boottime")):
   boottime=time.time();
 
 def hex2dec(params):
-  if (params[:2]=="0x" or params[-1]=='h'):
-    if (params[-1]=='h'): params=params[:-1]
-    if (params[:2]=='0x'): params=params[2:]
+  if params[:2]=="0x" or params[-1]=='h':
+    if params[-1]=='h': params=params[:-1]
+    if params[:2]=='0x': params=params[2:]
     try:
       val=int(params, 16)
     except:
@@ -280,7 +280,16 @@ def hex2dec(params):
     return "ACTION stuurt een grote boze heks op je af"
   hex2 = lambda x: hex(x).replace('L','')
   if (val>=0):
-    return str(val)+" is ook wel "+hex2(val)
+    result = str(val)+" is ook wel "+hex2(val)
+    if val>=2**7 and val <2**8:
+      result += ", maar misschien was er wel "+str(val-2**8)+" bedoeld"
+    elif val>=2**15 and val <2**16:
+      result += ", maar misschien was er wel "+str(val-2**16)+" bedoeld"
+    elif val>=2**31 and val <2**32:
+      result += ", maar misschien was er wel "+str(val-2**32)+" bedoeld"
+    elif val>=2**63 and val <2**64:
+      result += ", maar misschien was er wel "+str(val-2**64)+" bedoeld"
+    return result
   if (val>=-(2**7)):
     return str(val)+" is dus "+hex2(2**8+val)
   elif (val>=-(2**15)):
@@ -315,7 +324,6 @@ def hton(params):
 			del p[0]
 
 	value = ' '.join(p)
-	piet.send(channel, "value = %s" % repr(value))
 	if not p:
 		return "ACTION zet het niets maar eens in omgekeerde volgorde"
 
@@ -326,7 +334,7 @@ def hton(params):
 			value = int(value[:-1], 16)
 		else:
 			try:
-				value = int(value[:-1])
+				value = int(value)
 			except:
 				value = int(value, 16)
 	except:
@@ -382,22 +390,19 @@ def uptime(params):
   hours,minutes=int(minutes/60),int(minutes%60);
   days,hours=int(hours/24),int(hours%24);
   if (days>100):
-    return "ben oud... "+str(days)+" dagen (en "+str(hours)+" uur)"
+    return "ben oud... " + pietlib.format_tijdsduur(ut)
   elif (days>31):
-    return "ben met "+str(days)+" dagen en "+str(hours)+\
-      " toch een goede irc verslaafde"
+    return "ben met " + pietlib.format_tijdsduur(ut) + " toch een goede irc verslaafde"
   elif (days>1):
-    return "woei! alweer "+str(days)+" dagen (en "+str(hours)+\
-      " uur en "+str(minutes)+" minuten)";
+    return "woei! alweer " + pietlib.format_tijdsduur(ut)
   elif (days>0):
-    return "toch alweer een dag en "+str(hours)+" uur (en "+str(minutes)+\
-      " minuten)";
+    return "toch alweer " + pietlib.format_tijdsduur(ut)
   elif (hours>1):
-    return "alweer "+str(hours)+" uur en "+str(minutes)+" minuten";
+    return "alweer " + pietlib.format_tijdsduur(ut)
   elif (hours>0):
-    return "een uurtje, en "+str(minutes)+" minuten";
+    return "nog maar " + pietlib.format_tijdsduur(ut)
   else:
-    return str(minutes)+" minuten en "+str(seconds)+" secs";
+    return pietlib.format_tijdsduur(ut)
 
 
 def kies(params):
@@ -408,7 +413,7 @@ def kies(params):
   return choice.strip();
 
 
-def vandale(woord):
+def vandale_old(woord):
 	page = pietlib.get_url("http://www.vandale.nl/vandale/opzoeken/woordenboek/?zoekwoord="+woord)
 	#open("vandaleresult.html", "w").write(page)
 	if page.find('De betekenis van dit woord is te vinden in')>=0:
@@ -836,7 +841,7 @@ def vertaal(regel):
 	
 	form = { 'client':'t', 'text':regel, 'sl':bron, 'tl':doel }
 	url = """http://translate.google.com/translate_a/t?""" + urllib.urlencode(form)
-	result = pietlib.get_url(url, agent="piet").strip()
+	result = pietlib.get_url(url, agent="Mozilla/5.0").strip()
 	if not result:
 		return "ik heb helemaal niks teruggekregen, sorry"
 
@@ -2241,6 +2246,9 @@ def reloadding(params):
     elif params[0]=="pistes":
       reload(pistes);
       return "och, wie weet is't gelukt";
+    elif params[0]=="vandale":
+      reload(vandale);
+      return "och, wie weet is't gelukt";
     elif params[0]=="bash":
       reload(bash);
       return "kheb vast gereload";
@@ -2489,7 +2497,7 @@ functions = {
 
 # dicts
     "verklaar":          ("dicts", 100, verklaar, "Zoekt op het internet wat <regel> is"),
-    "vandale":           ("dicts", 100, vandale, "vandale <woord>, zoek woord op in woordenboek"),
+    "vandale":           ("dicts", 100, lambda x: vandale.LookUp(x), "vandale <woord>, zoek woord op in woordenboek"),
     "urban":             ("dicts", 100, urban, "urban <woord>, zoek woord op in urbandictionary (warning: explicit content)"),
     "rijm":              ("dicts", 100, rijm, "rijm <woord>, zoek rijmwoorden op"),
     "vertaal":           ("dicts", 100, vertaal, "vertaal <brontaal> <doeltaal> <regel>, vertaalt <regel> van de taal <brontaal> naar de taal <doeltaal>"),
