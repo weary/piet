@@ -3,6 +3,7 @@
 
 import sys, string, random, re, os, time, crypt, socket, urllib, types
 import traceback, datetime, stat, telnetlib, calendar, math, inspect, shlex
+import simplejson
 
 import piet
 sys.path.append(".")
@@ -105,7 +106,7 @@ def onbekend_commando(param):
   elif len(split)>2 and split[0]=="is" and split[1]=="het":
     return "dunno"
   elif len(split)>1 and split[0]=="waarom":
-		return random.choice(["nergens om", "is vast een goeie reden voor", "gaat je niks aan", "waarom zijn de banananen krom", "ik ga er even voor je over denken, vraag het straks nog maar eens", "geen reden"])
+    return random.choice(["nergens om", "is vast een goeie reden voor", "gaat je niks aan", "waarom zijn de banananen krom", "ik ga er even voor je over denken, vraag het straks nog maar eens", "geen reden"])
   elif (param[-1]=='?'):
     if (random.random()>=0.475):
       return "ja\n"
@@ -416,18 +417,6 @@ def kies(params):
   choice=parse(choice, False, True);
   return choice.strip();
 
-
-def vandale_old(woord):
-	page = pietlib.get_url("http://www.vandale.nl/vandale/opzoeken/woordenboek/?zoekwoord="+woord)
-	#open("vandaleresult.html", "w").write(page)
-	if page.find('De betekenis van dit woord is te vinden in')>=0:
-		return "als je iets over '%s' wilt weten, moet je eerst geld geven aan vandale-lui" % woord
-	soup = BeautifulSoup.BeautifulSoup(page)
-	all = soup.findAll(id='pnn4web_')
-	result = []
-	for a in all:
-		result.append(re.sub('<[^>]*>', '', str(a)))
-	return '\n'.join(result)
 
 def rijm(woord):
   try:
@@ -853,135 +842,29 @@ def vertaal(regel):
 	result = pietlib.get_url(url, agent="Mozilla/5.0").strip()
 	if not result:
 		return "ik heb helemaal niks teruggekregen, sorry"
+	open("googletranslate.txt","w").write(result)
+	result = simplejson.loads(result)
 
-	# sometimes we get: ["translation","sourcelang"]
-	sourcelangre = re.match('\[\s*"([^"]*)"\s*,\s*"([^"]*)"\s*\]', result)
-	if sourcelangre:
-		(result,bron) = sourcelangre.groups()
-		result = result.strip()
-	elif result[0]=='"' and result[-1]=='"': # or we get: "translation"
-		result = result[1:-1].strip()
-	if not result:
-		return "van het resultaat bleef helemaal niks over.."
-
-	return '%s->%s: %s' % (bron, doel, result)
-
-#niet meer gebruikt
-def vertaal_oud(regel):
-  def uniform(a):
-    bron="X";
-    a=a.lower();
-    if a in ("nl", "dutch", "nederlands", "ne"):
-      bron="Dutch";
-    if a in ("en", "english", "engels", "eng"):
-      bron="English";
-    if a in ("sp", "spanish", "spaans", "spa"):
-      bron="Spanish";
-    if a in ("du", "german", "dl", "duits", "dui", "ge"):
-      bron="German";
-    return bron;
-  a=string.split(regel, ' ');
-  if (len(a)<1):
-    return "brontaal mist\n";
-  else:
-    bron=uniform(a[0]);
-    if (bron == "X"):
-      return "sorry, ik spreek geen "+a[0]+" "+"\n";
-  if (len(a)<2):
-    return "doeltaal mist\n";
-  else:
-    doel=uniform(a[1]);
-    if (doel == "X"):
-      return "sorry, ik spreek geen "+a[1]+"\n";
-  if (doel==bron):
-    return "ja zeg, dat heet geen vertalen meer, met dezelfde talen\n";
-  if (len(a)<3):
-    return "niks te vertalen, verveel me\n";
-  regel=string.strip(string.join(a[2:]," "));
-  regel=string.strip(parse(regel, False, True));
-  regel=string.split(regel," ");
-  regel=string.join(regel,"%20");
-  i1 = string.find(regel,".");
-  while i1 > 0:
-    regel = regel[:i1]+".%20"+regel[i1+1:];
-    i1 = string.find(regel,".",i1+3);
-  i2 = string.find(regel,",");
-  while i2 > 0:
-    regel = regel[:i2]+",%20"+regel[i2+1:];
-    i2 = string.find(regel,",",i2+3);
-
-  if (len(string.split(regel,"%20"))==1):
-  # voor een enkel woord gebruiken we intertran... die geeft
-  # namelijk voor een woord meerdere opties... voor meer worden gebruiken
-  # we liever babelfish
-  # Intertran:
-
-    c = "wget -O - -q";
-    c = c+" \"http://www.tranexp.com:2000/Translate/result.shtml?text=";
-    c = c+regel+"&from="+bron+"&to="+doel+"\"";
-    outp = os.popen(c);
-    result = outp.read();
-    i1 = string.rfind(result,"<textarea");
-    i2 = string.rfind(result,"/textarea");
-    result=result[i1:i2];
-    i1 = string.find(result,">");
-    i1=i1+1;
-    i2 = string.rfind(result,"<");
-    result=result[i1:i2];
-    result=string.strip(result);
-  else:
-  # babelfish:
-    Command = "wget -O - -q ";
-    Command = Command + "\"http://world.altavista.com/babelfish/tr?urltext=";
-    Command = Command + regel+"&lp=";
-    if (bron=="Dutch"):
-      Command = Command + "nl_";
-    elif (bron=="German"):
-      Command = Command + "de_";
-    elif (bron=="Spanish"):
-      Command = Command + "es_";
-    elif (bron=="English"):
-      Command = Command + "en";
-    if (doel=="Dutch"):
-      Command = Command + "nl";
-    elif (doel=="German"):
-      Command = Command + "de";
-    elif (doel=="Spanish"):
-      Command = Command + "es";
-    elif (doel=="English"):
-      Command = Command + "en";
-    Command = Command + "\"";
-    outp = os.popen(Command);
-    result = outp.read();
-    i1 = string.find(result,"<td bgcolor=white");
-    i1 = string.find(result,"<div",i1);
-    i1 = string.find(result,">",i1);
-    i2 = string.find(result,"</div",i1);
-    result=result[i1:i2+1];
-    i1 = string.find(result,">");
-    i1=i1+1;
-    i2 = string.rfind(result,"<");
-    result=result[i1:i2];
-    result=string.strip(result);
-    i1=string.find(result,"&#39;");
-    while (i1>=0):
-      result=result[0:i1]+"'"+result[i1+5:];
-      i1=string.find(result,"&#39;");
-    i1=string.find(result,"&#9;");
-    while (i1>=0):
-      result=result[0:i1]+"'"+result[i1+4:];
-      i1=string.find(result,"&#9;");
-    result=string.split(result,'\n');
-    result=string.join(result," ");
-
-  if (result=="") :
-    d={"Spanish": "Spaans",
-       "German": "Duits",
-       "Dutch": "Nederlands",
-       "English": "Engels"};
-    doel=d[doel];
-    result="wuh, nu even niet vertalen naar "+doel+" hoor, probeer het nog eens.";
-  return result;
+	if 'src' in result:
+		bron = result['src']
+	
+	out = []
+	seen = set()
+	if 'dict' in result:
+		for d in result['dict']:
+			pos = d['pos']
+			pos = {'noun':'znw','verb':'werkwoord','adjective':'bijv.nw'}.get(pos,pos)
+			out.append('als %s: %s' % (pos, pietlib.make_list(d['terms'], sep="of")))
+			for t in d['terms']:
+				seen.add(t)
+	if 'sentences' in result:
+		sentence = ''
+		for d in result['sentences']:
+			if d['trans'] not in seen:
+				sentence = sentence + d['trans']
+		if sentence:
+			out.append('in een zin: %s' % sentence)
+	return "%s->%s, %s" % (bron, doel, pietlib.make_list(out))
 
 def dvorak2qwerty(params):
   params = string.strip(parse(params, False, True));
@@ -1841,7 +1724,6 @@ def temp2(regel):
 	if reqcity.find(',')<0:
 		reqcity = reqcity+",nl"
 	reqcity = reqcity.replace("_", " ")
-	reqcity = reqcity.replace(", ", ",")
 
 	form = { 'submit': 'GO', 'u': '1', 'partner': 'accuweather' }
 	form['loccode']=reqcity
@@ -1927,11 +1809,46 @@ def temp2(regel):
 		#else:
 		#	t=", om "+t+'(lokale tijd)'
 
-	line = "%s, %s, wind uit %s, %s, %s%% vochtigheid, %s" % (
+	line = "%s, %s, wind uit %s, %s, %s rel %% vochtigheid, %s" % (
 			city, current_temp, wind[0], wind[1], hum, current_weather)
 	return line+"\n"+recurse_result
 
 
+def find_xml_block(page, tag):
+	""" returns the block within the first <tag>..</tag> """
+	lpage = page.lower()
+	tag = tag.lower()
+	begin = lpage.find("<%s>" % tag)
+	if begin < 0:
+		raise Exception("no tag <%s> found on page" % tag)
+	end = page.find("</%s>" % tag, begin)
+	if end < 0:
+		raise Exception("no end tag </%s> found on page" % tag)
+	return page[begin+len(tag)+2:end]
+
+def temp3(params):
+	form = { 'hl':'nl', 'weather':params.strip() }
+	page = pietlib.get_url('http://www.google.com/ig/api?' + urllib.urlencode(form))
+
+	info = find_xml_block(page, "forecast_information")
+	dinfo = dict(re.findall('<([^ ]*) data="([^"]*)"/>', info))
+
+	cur = find_xml_block(page, "current_conditions")
+	d = dict(re.findall('<([^ ]*) data="([^"]*)"/>', cur))
+
+	city = dinfo['city'].split(',')[0]
+	tijd = dinfo['current_date_time']
+	tijd = time.strptime(tijd, "%Y-%m-%d %H:%M:%S +0000")
+	tijd = calendar.timegm(tijd) # now in secs since epoch
+	now = time.time()
+	tijdswaarschuwing = ''
+	if now-tijd > 15*60:
+		tijdswaarschuwing = ", %s geleden" % pietlib.format_tijdsduur(now-tijd,1)
+
+	humidity = d['humidity'].split()[-1]
+	wind = d['wind_condition'].split(': ')[-1]
+	r = "%s%s: %s, %s graden, wind %s, vochtigheid %s" % (city, tijdswaarschuwing, d['condition'], d['temp_c'], wind, humidity)
+	return r.lower()
 
 
 def commando_tijd(regel):
@@ -2262,7 +2179,7 @@ def reloadding(params):
       do_reload(pistes);
       return "och, wie weet is't gelukt";
     elif params[0]=="vandale":
-      reload(vandale);
+      do_reload(vandale);
       return "och, wie weet is't gelukt";
     elif params[0]=="bash":
       do_reload(bash);
@@ -2575,7 +2492,7 @@ functions = {
     "was":               ("handig", 300, lambda x: remind("%s %s: je was is weer's klaar" % (x, nick)), ""),
     "reken":             ("handig", 0, lambda x: calc.supercalc(x), "reken uit <expressie> rekent iets uit via de internal piet-processer\nvoor help doe reken help"),
     "calc":              ("handig", 0, lambda x: calc.supercalc(x), ""),
-    "temp":              ("handig", 0,temp, "temp, de temperatuur van sommige plaatsen in de wereld"), 
+    "temp":              ("handig", 0, temp3, "temp, de temperatuur van sommige plaatsen in de wereld"), 
     "temp2":             ("handig", 0,temp2, "temp, nog een poging om een temperatuur-commando te maken"), 
     "datum":             ("handig", 100, datum, "geef de datum van vandaag"),
     "tijd":              ("handig", 0, commando_tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
@@ -2690,7 +2607,7 @@ def parse(param_org, first, magzeg):
   if type(r) == type(None):
     return "rare functie, kwam niks uit"
   r2=[i for i in r.split('\n') if len(string.strip(i))>0]
-  if (len(r2)>maxlines):
+  if len(r2) > maxlines+1:
     l=str(len(r2));
     meer_data[nick]=r2[maxlines:];
     r=string.join(r2[:maxlines], '\n')+\

@@ -1,7 +1,10 @@
 *.o
+*.pyc
 .*.d
 .depend
 log.txt
 piet.db
 quote.txt
 zontijden/
+pietbot
+result.txt
