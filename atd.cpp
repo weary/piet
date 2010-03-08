@@ -1,5 +1,6 @@
 
 #include "atd.h"
+#include <algorithm>
 
 
 atd_t::atd_t()

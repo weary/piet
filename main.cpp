@@ -15,6 +15,7 @@
 #include <sys/poll.h>
 #include <iostream>
 #include <unistd.h>
+#include <signal.h>
 
 using boost::format;
 
@@ -50,7 +51,10 @@ void printsockaddr(const sockaddr *buf, unsigned int size)
 }
 
 
-
+void sighandler(int sig)
+{
+	quit = true;
+}
 
 int connect_to_server(const std::string &addr, int port)
 {
@@ -130,6 +134,8 @@ int main(int argc, char *argv[])
 
 		sendstr_prio(std::string("pass somepass\nnick ")+g_config.get_nick()+"\nuser "+g_config.get_nick()+" b c d\n");
 
+		::signal(SIGINT, sighandler);
+
 		int garbagecollect_count=30;
 		std::string recv_buf;
 		while (!quit)
@@ -138,11 +144,7 @@ int main(int argc, char *argv[])
 			polls[0].fd=sok; polls[0].events=POLLIN|POLLPRI; polls[0].revents=0;
 			int n=poll(polls, 1, 1000/*ms*/);
 			if (n<0 && errno==EINTR)
-			{
-				/*send(":%s PRIVMSG %s :Aaaargh Ik ga dood! help help!\n",
-						g_config.get_nick().c_str(), g_config.get_channel().c_str());*/
 				continue;
-			}
 			else if (n<0)
 			{ // error
 				int e=errno;

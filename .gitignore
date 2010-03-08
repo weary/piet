@@ -1,5 +1,6 @@
 *.o
 .*.d
+.depend
 log.txt
 piet.db
 quote.txt
