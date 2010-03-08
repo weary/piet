@@ -1,0 +1,6 @@
+*.o
+.*.d
+log.txt
+piet.db
+quote.txt
+zontijden/
