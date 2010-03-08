@@ -22,7 +22,7 @@ class piet_exception(Exception):
     return self._text
 
 
-def get_url(url, postdata=None, agent=DEFAULTAGENT, incookies=[], outcookies=[]):
+def get_url(url, postdata=None, agent=DEFAULTAGENT, incookies=[], outcookies=[], maxsize=100000, headers=[]):
   class PietUrlOpener(urllib.FancyURLopener):
     version = agent
   
@@ -31,6 +31,8 @@ def get_url(url, postdata=None, agent=DEFAULTAGENT, incookies=[], outcookies=[])
   
   oldopener = urllib._urlopener
   urllib._urlopener = PietUrlOpener()
+  for name,val in headers:
+    urllib._urlopener.addheader(name, val)
   if incookies:
     urllib._urlopener.addheader('Cookie', '; '.join(incookies))
   try:
@@ -40,7 +42,7 @@ def get_url(url, postdata=None, agent=DEFAULTAGENT, incookies=[], outcookies=[])
       if (type(postdata)==dict):
         postdata = urllib.urlencode(postdata)
       urlobj = urllib.urlopen(url, postdata)
-    tmp = urlobj.read(100000)
+    tmp = urlobj.read(maxsize)
     outcookies.extend(urlobj.info().getheaders('set-cookie'))
   except:
     raise piet_exception("die stomme site reageert niet, andere keer misschien")
@@ -64,6 +66,30 @@ def make_list(items, sep="en"):
   prefix = items[:-1];
   postfix = items[-1];
   return ", ".join(prefix)+" "+sep+" "+postfix;
+
+# if a word is following a number, and it contains 1 or 2 hashes (#), it is changed to the correct plural
+# hash-syntax:
+#  1 hash: vrouw#en -> single 'vrouw', plural 'vrouwen'
+#  2 hashes: lo#op#pen -> single 'loop', plural 'lopen'
+def meervoud(line):
+	words = line.split(' ')
+	for i in xrange(1,len(words)):
+		if '#' in words[i] and words[i-1].isalnum():
+			parts = words[i].split('#')
+			print repr(parts)
+			if (len(parts)!=2 and len(parts)!=3) or not words[i-1].isdigit():
+				continue
+			val = int(words[i-1])
+			if val == 1 and len(parts)==2:
+				words[i] = parts[0]
+			elif val == 1:
+				words[i] = parts[0]+parts[1]
+			elif len(parts)==2:
+				words[i] = parts[0]+parts[1]
+			else:
+				words[i] = parts[0]+parts[2]
+	return ' '.join(words)
+
 
 # maak een nederlandse zin van secs. secs moet een tijdsduur weergeven, niet
 # een absolute tijd, zie format_localtijd voor absolute tijd, items geeft de
@@ -191,7 +217,7 @@ def parse_tijd(input, tijdzone):
 		tz = LocalTimezone()
 		now = datetime.datetime.now(tz)
 
-		fullmatch = re.match(DATETIMEREGEX, input)
+		fullmatch = re.match(DATETIMEREGEX, input, re.IGNORECASE)
 		if not(fullmatch):
 			raise piet_exception("geen datum/tijd gevonden")
 		remainder = input[fullmatch.end():].strip()
