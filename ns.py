@@ -14,7 +14,7 @@ class StationsNamen:
 		
 	def fetch(self, name): # either a long or a short name. returns the short name of the 'best match'
 		name = name.lower().strip()
-		s=pietlib.get_url('http://mobiel.ns.nl/stations.action?station='+urllib.quote(name))
+		s=pietlib.get_url('http://mobiel.ns.nl/stations.action?station='+urllib.quote(name), headers=[('Accept','text/html')])
 		h3title = re.findall("<h3>([^<]*)</h3>", s)
 		if not h3title or not h3title[0]:
 			return None
@@ -92,12 +92,12 @@ def ns(regel, channel):
 		"(?:van)?"+qs+
 		"(?:naar)?"+qs+
 		"(?:via"+qs+")?"+
-		"(om|v\S*|a\S*)?\s*(\d+:\d{2})?")
+		"(om|v\S*|a\S*)?\s*(\d+:\d{2})?\s*(hsl)?")
 
 	r = re.match(full, regel)
 	if not(r):
 		return "uh, dus je wilt met de trein. verder snapte ik het allemaal niet"
-	(van, naar, via, tijdtype, tijd) = r.groups()
+	(van, naar, via, tijdtype, tijd, hsl) = r.groups()
 	opmerkingen = []
 	van = format_station(van, opmerkingen)
 	naar = format_station(naar, opmerkingen)
@@ -113,7 +113,7 @@ def ns(regel, channel):
 
 	# test ns site en haal cookies
 	cookies = []
-	pietlib.get_url("http://mobiel.ns.nl/mobiel/planner.action?lang=nl", outcookies=cookies)
+	pietlib.get_url("http://mobiel.ns.nl/planner.action?lang=nl", outcookies=cookies, headers=[('Accept','text/html')])
 	cookies = [ re.sub(';.*', '', c) for c in cookies ]
 
 	def finderr(soup):
@@ -133,11 +133,12 @@ def ns(regel, channel):
 	postdata = {
 		'from':van, 'to':naar, 'via':via,
 		'date':datum, 'time':tijd, 'departure':(tijdtype and 'true' or 'false'),
-		'planroute':'Reisadvies'}
+		'planroute':'Reisadvies',
+		'hsl':(hsl and 'true' or 'false')}
 
 	werkzaamheden = False	
 	for retrycount in range(5): # try max 5 times to get a correct page
-		page = pietlib.get_url("http://mobiel.ns.nl/planner.action", postdata, incookies=cookies)
+		page = pietlib.get_url("http://mobiel.ns.nl/planner.action", postdata, incookies=cookies, headers=[('Accept','text/html')])
 		open("nsresult.html", "w").write(page)
 		page = page.replace("&#160;", " ")
 		if page.find("Advice changed due to railway construction work")>=0:
@@ -166,7 +167,14 @@ def ns(regel, channel):
 		return "de ns site is weer's brak (of ik ben stuk..)"
 
 	# ok, we hebben de goeie pagina, nu het resultaat eruit halen
-	rows = soup.table.findAll("tr")
+	tables = soup.findAll("table")
+	if not tables:
+		piet.send(channel, "geen tabel gevonden op de ns-site")
+	for et in tables[:-1]:
+		for row in et.findAll("tr"):
+			piet.send(channel, notags(row).replace('\n','').replace('\r','').strip())
+			
+	rows = tables[-1].findAll("tr")
 	out = []
 	while len(rows)>=3:
 		# delete additional information lines first (bikes allowed, etc)
@@ -203,6 +211,19 @@ def ns(regel, channel):
 	
 	return '\n'.join(out)
 
+
+if __name__ == '__main__':
+	import sys
+	piet.send = lambda x,y: sys.stdout.write("%s: %s\n" % (x,y))
+	dotest = lambda cmd: sys.stdout.write("\nTest: %r\n%s\n" % (cmd, ns(cmd, 'channel')))
+
+	dotest('?')
+	dotest('afko grou')
+	dotest('afk ahpr')
+	dotest('vb wezep')
+	dotest('van grou naar ahpr aan 21:00')
+	dotest('van enkhuizen naar zevenaar via vss 21:00')
+	dotest('asd rtd 17:20 hsl')
 
 
 
