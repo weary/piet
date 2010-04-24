@@ -143,9 +143,12 @@ def nickchange(nick_, auth_, channel_, newnick):
 
     if (auth[1]>otherauth[1]):
       piet.send(channel_, "authenticatie "+str(auth[1])+" nu naar "+newnick+" overgezet, "+\
-          nick_+" heeft 't niet meer nodig lijkt me\n");
-    elif (auth_<otherauth and auth_>0):
-      piet.send(channel_, "authenticatie "+str(auth_)+" nu naar "+newnick+" overgezet, niet nickchangen om hogere auth te krijgen\n");
+          nick_+" heeft 't niet meer nodig lijkt me\n")
+    elif auth[1] == otherauth[1] and auth[1]>0:
+      piet.send(channel_, "authenticatie van "+str(nick_)+" en "+newnick+ " zijn gelijk, niks veranderd\n")
+    elif (auth[1]<otherauth[1] and auth[1]>0):
+      piet.send(channel_, "authenticatie "+str(auth[1])+" nu naar "+newnick+
+					" overgezet, niet nickchangen om hogere auth te krijgen\n")
   
   if nicks.has_key(nick_):
     nicks[newnick]=nicks[nick_];
