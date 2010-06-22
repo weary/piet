@@ -189,6 +189,7 @@ unitaliasses={
 	"h": 3600,
 	"m": 60,
 	"min": 60,
+	"minuten": 60,
 	"s": 1,
 	"sec": 1,
 	"secondes": 1,

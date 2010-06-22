@@ -124,7 +124,7 @@ def emote(action, remainder):
 		return "ACTION frot";
 	toevoeging=["met tegenzin", "dan maar even", "met een diepe zucht", \
 						 "enthousiast", "zonder genade", "alsof z'n leven ervan afhangt",\
-						 "nauwelijks", "bijna, maar toch maar niet", "vol overgave"];
+						 "nauwelijks", "bijna, maar toch maar niet", "vol overgave", "graag"];
 	if action=="aai":
 		action="aait"
 	if action=="gooi":
@@ -133,6 +133,8 @@ def emote(action, remainder):
 		action=action+action[-1]
 	if action[-1]!='t':
 		action=action+"t"
+	if action[-3:]=="eet":
+		action=action[:-2]+'d'
 	return "ACTION "+action+" "+random.choice(toevoeging)+" "+" ".join(remainder)
 
 
