@@ -411,12 +411,17 @@ def uptime(params):
 
 
 def kies(params):
-  choices=re.findall('("([^"]*)")|([^" ][^ ]*)', params);
-  choices=[b or c for (a,b,c) in choices];
-  choice=random.choice(choices);
-  choice=parse(choice, False, True);
-  return choice.strip();
-
+	if not params.strip():
+		return "ACTION kiest voor zichzelf"
+	try:
+		choices = shlex.split(params)
+	except Exception, e:
+		return "sja, wat denk je er zelf van, wat zou JIJ kiezen? ik ben van mening dat " + str(e)
+	choice = random.choice(choices)
+	if not choice:
+		return "ACTION maakt een lege keuze"
+	choice = parse(choice, False, True)
+	return choice.strip()
 
 def rijm(woord):
   try:
@@ -507,18 +512,12 @@ def SydWeer(params):
   return fresult;
 
 def nlweer(woord):
-  if (string.lower(woord)=="sydney") or  (string.lower(woord)=="syd"):
-    return SydWeer("");
-  if (string.lower(nick)[:6]=="semyon") and (string.lower(woord)!="nl"):
-    return SydWeer("");
-  a=pietlib.get_url("http://www.weathernews.nl");
-  i=a.find('<div class="weertekst" style="height: 240px">');
-  i2=a.find('</h2>',i);
-  a=a[i:i2].split("<br>");
-  a=[i for i in a if len(i.strip())>0];
-  weer=re.sub("<[^>]*>", "", a[0]).strip();
-  opgesteld=a[-1];
-  return "%s\n%s" % (weer, opgesteld);
+	all = pietlib.get_url('http://api.twitter.com/1/statuses/user_timeline/buienradarnl.xml')
+	text = re.findall('<text>(.*?)</text>', all)
+	for i in text:
+		if i[:1]!='@':
+			return i
+	return "geen idee, kijk eens naar buiten ofzo.."
 
 def itaweer(woord):
   if (woord=="it"):
@@ -836,13 +835,15 @@ def vertaal(regel):
 	regel = regel.strip()
 	if not regel:
 		return "um, ik wil best vertalen, maar je hebt niks gegeven om te vertalen"
+	regel2 = str(parse(regel, False, True))
+	if regel2:
+		regel = regel2
 	
 	form = { 'client':'t', 'text':regel, 'sl':bron, 'tl':doel }
 	url = """http://translate.google.com/translate_a/t?""" + urllib.urlencode(form)
 	result = pietlib.get_url(url, agent="Mozilla/5.0").strip()
 	if not result:
 		return "ik heb helemaal niks teruggekregen, sorry"
-	open("googletranslate.txt","w").write(result)
 	result = simplejson.loads(result)
 
 	if 'src' in result:
@@ -885,11 +886,13 @@ def reverse(params):
   return params[-1::-1]
 
 def last(params):
-  params = string.strip(params);
+  params = string.strip(params)
+  if params[0] == '-':
+    params = params[1:]
   try:
     line=int(params);
   except:
-    line=1;
+    return "alsof jouw mening er wat toe doet" # 'dat' command misused
   inp = os.popen("tail -n "+str(line)+" log.txt | head -n 1");
   result=inp.read();
   return(result);
@@ -1724,6 +1727,7 @@ def temp2(regel):
 	if reqcity.find(',')<0:
 		reqcity = reqcity+",nl"
 	reqcity = reqcity.replace("_", " ")
+	reqcity = reqcity.replace(", ", ",")
 
 	form = { 'submit': 'GO', 'u': '1', 'partner': 'accuweather' }
 	form['loccode']=reqcity
@@ -1768,6 +1772,7 @@ def temp2(regel):
 				.replace("snow", "sneeuw")
 				.replace("thunderstorm", "onweer mogelijk met regen")
 				.replace("thundershower", "kort onweer met zware regen")
+				.replace("shower", "bui")
 				.replace("dense fog", "dichte mist")
 				.replace("ground fog", "mist aan de grond")
 				.replace("fog", "mist")
@@ -2011,6 +2016,8 @@ def topic_cmds(params):
 		nu = time.time()
 		lines = [ "%s geleden, %s" % (pietlib.format_tijdsduur(nu-t), line) for (t,line) in reversed(topic) ]
 		return '\n'.join(lines)
+	elif cmd in ["get", "toon", "view", "tonen"]:
+		return "volgens mij is de topic: "+topic[-1][1]
 	elif cmd in ["set", "reset"]:
 		return "TOPIC "+topic[-1][1]
 	elif cmd in ["pop"]:
@@ -2022,7 +2029,7 @@ def topic_cmds(params):
 		return "ok, ik zet de topic van "+pietlib.format_localtijd(oldtijd, tz
 				)+" terug\nTOPIC "+topic[-1][1]
 	else:
-		return "ja? wat moet ik met de topic? 'reset'ten? wil je de 'geschiedenis' zien? of zal ik een topic van de stapel 'pop'en?"
+		return "ja? wat moet ik met de topic? 'tonen'? 'reset'ten? wil je de 'geschiedenis' zien? of zal ik een topic van de stapel 'pop'en?"
 
 
 def trigram_grow_back(cur):
@@ -2472,12 +2479,11 @@ functions = {
     "gekookt":           ("misc", 100, kookbalans_gekookt, "boekt een kookactie"),
     "kookundo":          ("misc", 100, kookbalans_undo, "boekt een inverse kookactie van de laatste kookactie"),
     "vrouwbalans":       ("misc", 100, lambda x: "er zijn hier precies 0 vrouwen", "geeft het aantal vrouwen op het kanaal"),
-    "manbalans":         ("misc", 100, lambda x: "er zijn precies 0 mannen, en %d jongens hier" % len(nicks), "geeft het aantal mannen op het kanaal"),
+    "manbalans":         ("misc", 100, lambda x: pietlib.meervoud("er zijn precies 0 mannen, en %d jongen#s hier" % mannen()), "geeft het aantal mannen op het kanaal"),
     "dw":                ("misc", 100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
     "dwho":              ("misc", 100, discwho, "dwho, kijk wie van Taido, Irk, Weary of Szwarts op discworld zijn"),
     "gps":               ("misc", 100, gps.gps_coord, "gps <adres> Zoekt GPS coordinaten op van adres"),
     "factor":            ("misc", 100, factor, "factoriseer <nr>"),
-    "utc":               ("misc", 100, utc, "utc <secs>|<tijd>, reken van/naar utc"),
 
 # system
     "nmblookup":         ("system", 500, nmblookup, "nmblookup <host>, zoek op campusnet naar een ip"),
@@ -2496,6 +2502,7 @@ functions = {
     "temp2":             ("handig", 0,temp2, "temp, nog een poging om een temperatuur-commando te maken"), 
     "datum":             ("handig", 100, datum, "geef de datum van vandaag"),
     "tijd":              ("handig", 0, commando_tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
+    "utc":               ("handig", 100, utc, "utc <secs>|<tijd>, reken van/naar utc"),
 
 # piet
     "changelog":         ("piet", 1000, changelog, "changelog, show the recent changes to piet"),
