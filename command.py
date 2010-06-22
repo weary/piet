@@ -844,19 +844,21 @@ def vertaal(regel):
 	result = pietlib.get_url(url, agent="Mozilla/5.0").strip()
 	if not result:
 		return "ik heb helemaal niks teruggekregen, sorry"
-	result = simplejson.loads(result)
+	result = simplejson.loads(result.replace(',,',',null,')) # replace because simplejson does not accept [[],,[]]
 
-	if 'src' in result:
-		bron = result['src']
+	bron = result[-1]
 	
 	out = []
+	out.append(result[0][0][0])
+	if result[0][0][2]:
+		out.append(result[0][0][2])
 	seen = set()
-	if 'dict' in result:
-		for d in result['dict']:
-			pos = d['pos']
+	if result[1]:
+		for d in result[1]:
+			pos = d[0]
 			pos = {'noun':'znw','verb':'werkwoord','adjective':'bijv.nw'}.get(pos,pos)
-			out.append('als %s: %s' % (pos, pietlib.make_list(d['terms'], sep="of")))
-			for t in d['terms']:
+			out.append('als %s: %s' % (pos, pietlib.make_list(d[1], sep="of")))
+			for t in d[1]:
 				seen.add(t)
 	if 'sentences' in result:
 		sentence = ''
@@ -2641,6 +2643,8 @@ def do_command(nick_, auth_, channel_, msg_):
   print "executing nick=%s, auth=%s, channel=%s, msg=%s" % (repr(nick), repr(auth), repr(channel), repr(msg_))
   try:
     result=parse(msg_, True, True);
+    if type(result) == unicode:
+      result = result.encode('UTF-8')
     piet.send(channel_, result);
   except pietlib.piet_exception, e:
     piet.send(channel_, str(e))
