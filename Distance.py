@@ -14,7 +14,7 @@ def Distance(params):
 	 	'sensor' : 'false', 'mode' : 'walking', 'language' : 'nl' }
 	url = """http://maps.google.nl/maps/api/directions/json?""" + urllib.urlencode(google_args)
 	try:
-		result = simplejson.loads(pietlib.get_url(url))
+		result = simplejson.loads(pietlib.get_url(url,maxsize=10*1024*1024))
 	except Exception, e:
 		print "google maps request FAILED:"
 		print " - url: %s" % url
@@ -63,4 +63,5 @@ def Distance(params):
 			vanplaats, naarplaats, result[0], loopafstand)
 
 if __name__ == '__main__':
-	print Distance('delft "sydney, australie"')
+	print Distance('amsterdam enschede')
+
