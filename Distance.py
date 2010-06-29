@@ -15,7 +15,10 @@ def Distance(params):
 	url = """http://maps.google.nl/maps/api/directions/json?""" + urllib.urlencode(google_args)
 	try:
 		result = simplejson.loads(pietlib.get_url(url))
-	except:
+	except Exception, e:
+		print "google maps request FAILED:"
+		print " - url: %s" % url
+		print " - exception: %r" % e
 		return "google maps werkt niet mee (ik wil wel, echt!)"
 	
 	status = result.get('status', 'geen status').lower()
