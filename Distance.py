@@ -52,7 +52,6 @@ def Distance(params):
 	url="http://www.indo.com/cgi-bin/dist?" + urllib.urlencode({'place1' : van, 'place2' : naar})
 	result = pietlib.get_url(url)
 
-	open("indo.txt", "w").write(result)
 	result = re.findall('[0-9]+ miles [(]([0-9]+ km)[)]', result)
 	if not result:
 		return "even geen kraaien beschikbaar, maar als je gaat lopen van %s naar %s dan moet je %s ver" % (vanplaats, naarplaats, loopafstand)
