@@ -1,16 +1,10 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import pietlib, shlex, simplejson, urllib, re
+import pietlib, shlex, simplejson, urllib, re, gps, traceback
 
-def Distance(params):
-	args = shlex.split(params.strip())
-	if len(args) > 2:
-		return "twee argumenten vind ik al moeilijk zat. doe eens rustig"
-	if len(args) < 2:
-		return "de afstand waartussen wil je hebben?"
-
-	google_args = { 'origin' : args[0], 'destination' : args[1],
+def maps_lookup(van, naar):
+	google_args = { 'origin' : van, 'destination' : naar,
 	 	'sensor' : 'false', 'mode' : 'walking', 'language' : 'nl' }
 	url = """http://maps.google.nl/maps/api/directions/json?""" + urllib.urlencode(google_args)
 	try:
@@ -19,49 +13,101 @@ def Distance(params):
 		print "google maps request FAILED:"
 		print " - url: %s" % url
 		print " - exception: %r" % e
-		return "google maps werkt niet mee (ik wil wel, echt!)"
+		raise Exception("could not fetch")
 	
 	status = result.get('status', 'geen status').lower()
 	if status == 'zero_results':
 		return 'dat kan geen mens lopen, en kraaien vinden het vast ook maar niks'
 	if status != "ok" or not result.get('routes'):
 		print "google maps returned %s, url: %s" % (status,url)
-		return "um, waar moet dat precies liggen?"
+		raise Exception("not found")
 	try:
 		loopafstand = result['routes'][0]['legs'][0]['distance']['text']
-		van = result['routes'][0]['legs'][0]['start_location']
-		naar = result['routes'][0]['legs'][0]['end_location']
-		van = '%fN %fE' % (van['lat'], van['lng'])
-		naar = '%fN %fE' % (naar['lat'], naar['lng'])
+		vancoords = result['routes'][0]['legs'][0]['start_location']
+		naarcoords = result['routes'][0]['legs'][0]['end_location']
+		vancoords = (vancoords['lat'], vancoords['lng'])
+		naarcoords = (naarcoords['lat'], naarcoords['lng'])
 	except Exception, e:
 		print "google maps FAILED:"
 		print " - url: %s" % url
 		print " - exception: %r" % e
-		return "google maps api is blijkbaar veranderd. kan iemand me fixen?"
+		raise Exception("could not parse")
 	
 	try:
 		vanplaats = result['routes'][0]['legs'][0]['start_address']
 	except:
-		vanplaats = args[0]
+		vanplaats = van
 	try:
 		naarplaats = result['routes'][0]['legs'][0]['end_address']
 	except:
-		vanplaats = args[1]
+		naarplaats = naar
 
 	vanplaats = vanplaats.replace(', Nederland', '')
 	naarplaats = naarplaats.replace(', Nederland', '')
+	return (vanplaats, vancoords, naarplaats, naarcoords, loopafstand)
 
 
-	url="http://www.indo.com/cgi-bin/dist?" + urllib.urlencode({'place1' : van, 'place2' : naar})
+def Distance(params):
+	args = shlex.split(params.strip())
+	if len(args) > 2:
+		return "twee argumenten vind ik al moeilijk zat. doe eens rustig"
+	if len(args) < 2:
+		return "de afstand waartussen wil je hebben?"
+
+	try:
+		vanplaats, vancoords, naarplaats, naarcoords, loopafstand = maps_lookup(args[0], args[1])
+	except:
+		vanplaats, vancoords, naarplaats, naarcoords, loopafstand = None, None, None, None, None
+
+	if not vanplaats:
+		try:
+			vanplaats, vancoords = gps.gps_lookup(args[0])
+			vanplaats = vanplaats[0]
+		except Exception, e:
+			print "geo-lookup of %r failed, %s" % (args[0], e)
+	if not naarplaats:
+		try:
+			naarplaats, naarcoords = gps.gps_lookup(args[1])
+			naarplaats = naarplaats[0]
+		except Exception, e:
+			print "geo-lookup of %r failed, %s" % (args[1], e)
+
+	if not vanplaats:
+		return "na goed zoeken ben ik tot de conclusie gekomen dat %r niet bestaat" % args[0]
+	if not naarplaats:
+		return "na goed zoeken ben ik tot de conclusie gekomen dat %r niet bestaat" % args[1]
+
+	def indo_graden(f):
+		mins = int(f)
+		f = (f-mins) * 60
+		secs = int(f)
+		f = (f-secs) * 60
+		return '%d:%d:%d' % (mins,secs,int(round(f)))
+
+	def indo_loc_to_string(lat,lng):
+		NS = lat >= 0 and "N" or "S"
+		EW = lng >= 0 and "E" or "W"
+		lat,lng = indo_graden(abs(lat)),indo_graden(abs(lng))
+		return "%s%s %s%s" % (lat, NS, lng, EW)
+
+	url="http://www.indo.com/cgi-bin/dist?" + urllib.urlencode({
+			'place1' : indo_loc_to_string(*vancoords), 'place2' : indo_loc_to_string(*naarcoords)})
 	result = pietlib.get_url(url)
 
 	result = re.findall('[0-9]+ miles [(]([0-9]+ km)[)]', result)
 	if not result:
-		return "even geen kraaien beschikbaar, maar als je gaat lopen van %s naar %s dan moet je %s ver" % (vanplaats, naarplaats, loopafstand)
+		return "even geen kraaien beschikbaar, maar als je gaat lopen van %s naar %s dan moet je %s ver" % (
+				vanplaats, naarplaats, loopafstand)
+
+	if not loopafstand:
+		return "zoals een kraai vliegt van %s naar %s is het %s, en lopen is niet handig" % (
+			vanplaats, naarplaats, result[0])
 	
 	return "zoals een kraai vliegt van %s naar %s is het %s, maar lopend is het %s" % (
 			vanplaats, naarplaats, result[0], loopafstand)
 
 if __name__ == '__main__':
+	print Distance('"den haag" voorburg')
 	print Distance('amsterdam enschede')
+	print Distance('moskow milaan')
 
