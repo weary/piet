@@ -28,7 +28,9 @@ def gps_lookup(params):
 	try:
 		longnames = []
 		for add in result['results'][0]['address_components']:
-			longnames.append(add['long_name'])
+			name = add['long_name']
+			if name.lower() != 'nederland':
+				longnames.append(add['long_name'])
 		lat = float(result['results'][0]['geometry']['location']['lat'])
 		lng = float(result['results'][0]['geometry']['location']['lng'])
 	except Exception, e:
@@ -49,14 +51,7 @@ def graden(f):
 	f = (f-mins) * 60
 	secs = int(f)
 	f = (f-secs) * 60
-	return u"%d°%d'%f''" % (mins,secs,f)
-
-def loc_to_string(lat,lng):
-	NS = lat >= 0 and "N" or "S"
-	EW = lng >= 0 and "E" or "W"
-	lat,lng = graden(abs(lat)),graden(abs(lng))
-	return u"%s: %s, %s: %s" % (NS, lat, EW, lng)
-
+	return u"%d°%d'%.2f''" % (mins,secs,f)
 
 def gps_coord(param):
 	try:
@@ -64,8 +59,13 @@ def gps_coord(param):
 	except:
 		return "%r staat niet op de kaart" % param
 	print repr(loc)
+
+	lat,lng = loc[1]
+	NS = lat >= 0 and "N" or "S"
+	EW = lng >= 0 and "E" or "W"
+	slat,slng = graden(abs(lat)),graden(abs(lng))
 	
-	return u"%s: (%s)" % (u', '.join(loc[0]), loc_to_string(*loc[1]))
+	return u"%s: %s: %s %s: %s (%.4f%s %.4f%s)" % (u', '.join(loc[0]), NS, slat, EW, slng, lat, NS, lng, EW)
 
 if __name__ == '__main__':
 	print gps_coord("haedstrjitte, reduzum")
