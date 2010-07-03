@@ -29,7 +29,7 @@ def gps_lookup(params):
 		longnames = []
 		for add in result['results'][0]['address_components']:
 			name = add['long_name']
-			if name.lower() != 'nederland':
+			if name.lower() != 'nederland' and name not in longnames:
 				longnames.append(add['long_name'])
 		lat = float(result['results'][0]['geometry']['location']['lat'])
 		lng = float(result['results'][0]['geometry']['location']['lng'])
