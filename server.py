@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-import sys,random,re,time;
-sys.path.append(".");
-import piet;
-import pietlib;
+import sys, random, re, time, traceback
+sys.path.append(".")
+import piet
+import pietlib
 
 if not("nicks" in vars()):
   nicks={};
@@ -52,34 +52,42 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
     piet.db(query);
   elif (command_ in ["JOIN"]):
     try:
-      where='WHERE channel="'+chan+'" and nick="'+nick+'"';
-      tijd=piet.db('SELECT tijd FROM logout '+where)[1][0];
-      piet.db('DELETE FROM logout '+where);
-      tu=int(time.time()+0.5)-int(tijd);
-      if (tu>0):
-        result=pietlib.format_tijdsduur(tu, 2);
-
-        titel=random.choice(("heer", "meester", "prins", "gast", "joker",
-          "orgelspeler", "held", "bedwinger", "plaag", "buitenlander", "mastermind",
-          "heerser", "samensteller"));
-        subtitel=random.choice(("des duisternis", "van het licht", "des ubers",
-          "des modders", "des oordeels", "van de knaagdieren", "overste",
-          "ongezien", "enzo", "extraordinaire", "(gevallen)",
-          "in rust", "ten strijde", "(onverschrokken)", "van iedereen", "van deze wereld",
-          "in de dop", "(te jong)"));
-        
-        reply="ACTION presenteert: %s, %s %s, weer terug na %s" % (nick, titel, subtitel, result)
-        try:
-          gemiddeld=doe_gemiddelde_offlinetijd(channel_, nick_, tu);
-          reply+=", gemiddeld %s nu" % pietlib.format_tijdsduur(gemiddeld, 2);
-        except:
-          traceback.print_exc();
-          reply+=", geen gemiddelde";
-        piet.send(channel_, reply+".\n");
+      where='WHERE channel="' + chan + '" and nick="' + nick + '"'
+      dbtijd = piet.db('SELECT tijd FROM logout ' + where)
+      piet.db('DELETE FROM logout ' + where)
+      if len(dbtijd) >= 2:
+        tu = int(time.time()+0.5) - int(dbtijd[1][0])
       else:
-        piet.send(channel_, "Blijkbaar is "+nick_+" aan het fietsen\n");
+        tu = -1
+
+      titel=random.choice(("heer", "meester", "prins", "gast", "joker",
+        "orgelspeler", "held", "bedwinger", "plaag", "buitenlander", "mastermind",
+        "heerser", "samensteller"))
+      subtitel=random.choice(("des duisternis", "van het licht", "des ubers",
+        "des modders", "des oordeels", "van de knaagdieren", "overste",
+        "ongezien", "enzo", "extraordinaire", "(gevallen)",
+        "in rust", "ten strijde", "(onverschrokken)", "van iedereen", "van deze wereld",
+        "in de dop", "(te jong)"))
+        
+      reply = "ACTION presenteert: %s, %s %s" % (nick, titel, subtitel)
+
+      nicks_stripped = set(n.strip('_') for n in nicks.keys())
+      if nick.strip('_') in nicks_stripped:
+        print "user %s was al gejoined, geen groet" % nick
+      elif tu>0:
+        reply = reply + ", weer terug na " + pietlib.format_tijdsduur(tu, 2)
+        try:
+          gemiddeld = doe_gemiddelde_offlinetijd(channel_, nick_, tu)
+          reply += ", gemiddeld %s nu" % pietlib.format_tijdsduur(gemiddeld, 2)
+        except:
+          traceback.print_exc()
+          reply += ", geen gemiddelde"
+        piet.send(channel_, reply+".\n")
+      elif tu==0:
+        piet.send(channel_, "blijkbaar is "+nick_+" aan het fietsen\n")
     except:
-      piet.send(channel_, "Hee "+nick_+"!\n");
+      traceback.print_exc()
+      piet.send(channel_, "Hee "+nick_+"!\n")
 
 def quitmsg_is_split(msg_):
   print("quitmsg_is_split("+msg_+")\n");
@@ -145,10 +153,11 @@ def nickchange(nick_, auth_, channel_, newnick):
       piet.send(channel_, "authenticatie "+str(auth[1])+" nu naar "+newnick+" overgezet, "+\
           nick_+" heeft 't niet meer nodig lijkt me\n")
     elif auth[1] == otherauth[1] and auth[1]>0:
-      piet.send(channel_, "authenticatie van "+str(nick_)+" en "+newnick+ " zijn gelijk, niks veranderd\n")
+      if nick.strip('_') != nick:
+        piet.send(channel_, "authenticatie van "+str(nick_)+" en "+newnick+ " zijn gelijk, niks veranderd\n")
     elif (auth[1]<otherauth[1] and auth[1]>0):
       piet.send(channel_, "authenticatie "+str(auth[1])+" nu naar "+newnick+
-					" overgezet, niet nickchangen om hogere auth te krijgen\n")
+          " overgezet, niet nickchangen om hogere auth te krijgen\n")
   
   if nicks.has_key(nick_):
     nicks[newnick]=nicks[nick_];
@@ -165,39 +174,40 @@ def checkmessages(channel_):
     piet.send(channel_, '\n'.join(msgs));
 
 def check_names(nick_, channel_, msg_):
-  global nicks;
-  print("check_names("+nick_+", "+channel_+", "+msg_+")\n");
-  msg_nicks=msg_[msg_.find(':')+1:].split(' ');
-  nicks={};
+  global nicks
+  print("check_names("+nick_+", "+channel_+", "+msg_+")\n")
+  msg_nicks=msg_[msg_.find(':')+1:].split(' ')
+  nicks={}
   for x in msg_nicks:
     if (x[0]=='@'):
-      nicks[x[1:]]=True;
+      nicks[x[1:]]=True
     else:
-      nicks[x]=False;
-  pietnick=piet.nick();
-  if (nicks[pietnick]):
-    noop=[x for (x,o) in nicks.iteritems() if not(o)];
-    if (bool(noop)):
-      qry="SELECT name FROM auth WHERE auth>=500 AND name IN ("+ \
-           ','.join(['"'+x+'"' for x in noop])+")";
-      dbres=piet.db(qry);
-      if (dbres!=None and len(dbres)>=2):
-        print("dbres="+repr(dbres)+"\n");
-        res=[x[0] for x in dbres[1:]];
-        if (len(res)==1):
-          piet.send(channel_, "hup, een apenstaart voor "+res[0]+"\n");
-        else:
-          piet.send(channel_, "ho, hier moet even wat gefixed worden.\n");
-        piet.op(channel_, res);
+      nicks[x]=False
+  pietnick=piet.nick()
+  if nicks[pietnick]: # piet heeft ops
+    noop = [k for (k,v) in nicks.iteritems() if not v]
+    op_basenames = set(k.strip('_') for k,v in nicks.iteritems() if v)
+    if noop:
+      qry = ("SELECT name FROM auth WHERE auth>=500 AND name IN (" +
+           ','.join(['"'+x+'"' for x in noop])+")")
+      dbres=piet.db(qry)
+      if dbres and len(dbres)>=2:
+        authusers = [x[0] for x in dbres[1:]]
+        newnicks = set(n for n in authusers if n.strip('_') not in op_basenames) # only print message if user not already joined
+        if len(newnicks) == 1:
+          piet.send(channel_, "hup, een apenstaart voor "+list(newnicks)[0]+"\n")
+        elif len(newnicks) > 1:
+          piet.send(channel_, "ho, hier moet even wat gefixed worden.\n")
+        piet.op(channel_, authusers)
   else: # piet niet operator
-    ops=[x for (x,o) in nicks.iteritems() if o];
-    if (bool(ops)):
-      myop=random.choice(ops);
-      msg=random.choice(["mag ik een @?", "toe, doe eens een @?", \
-          "ik wil graag je operatortje zijn, mag ik?", \
-          "kijk, ik heb geen @. fix's?", "een @, ah toe?"]);
-      piet.send(channel_, myop+": "+msg+"\n");
-  checkmessages(channel_);
+    ops=[x for (x,o) in nicks.iteritems() if o]
+    if ops:
+      myop=random.choice(ops)
+      msg=random.choice(["mag ik een @?", "toe, doe eens een @?",
+          "ik wil graag je operatortje zijn, mag ik?",
+          "kijk, ik heb geen @. fix's?", "een @, ah toe?"])
+      piet.send(channel_, myop+": "+msg+"\n")
+  checkmessages(channel_)
 
 if not(vars().has_key("names_delayed_waiting")):
   names_delayed_waiting=0;
