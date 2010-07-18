@@ -239,12 +239,3 @@ std::ostream &operator <<(std::ostream &os_, const python_cmd &pc_)
 	return os_;
 }
 
-python_lock::python_lock(const std::string &/*occasion_*/)
-	: _state(PyGILState_Ensure())
-{
-}
-python_lock::~python_lock()
-{
-	PyGILState_Release(_state);
-}
-

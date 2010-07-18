@@ -3,6 +3,8 @@
 
 #include <Python.h>
 #include <string>
+#include <boost/noncopyable.hpp>
+
 
 struct python_object
 {
@@ -47,17 +49,20 @@ struct python_cmd
 };
 std::ostream &operator <<(std::ostream &os_, const python_cmd &pc_);
 
-struct python_lock
+struct python_lock : public boost::noncopyable
 {
-	python_lock(const std::string &/*occasion_*/);
-	~python_lock();
+	python_lock(const std::string &/*occasion_*/)
+		: d_state(PyGILState_Ensure())
+	{
+	}
 
-	//static pthread_key_t _key;
-	static void global_init(){};
-	static void global_deinit(){};
+	~python_lock()
+	{
+		PyGILState_Release(d_state);
+	}
 
-	//const std::string _occasion;
-	PyGILState_STATE _state;
+protected:
+	PyGILState_STATE d_state;
 };
 
 #endif // __PIET_PYTHON_SUPPORT_H__

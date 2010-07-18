@@ -255,8 +255,6 @@ python_handler::python_handler() :
 	Py_Initialize();
 	PyEval_InitThreads();
 
-	python_lock::global_init();
-
 	_main_thread_state = PyThreadState_Get();
 
 	PyImport_AddModule("piet");
@@ -269,7 +267,6 @@ python_handler::~python_handler()
 {
 	PyEval_AcquireLock();
 	Py_Finalize();
-	python_lock::global_deinit();
 }
 
 std::string mystrerror(int errnum)
