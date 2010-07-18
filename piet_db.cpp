@@ -80,7 +80,6 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 		return NULL;
 	}
 
-	std::cout << "DB: query=" << query << "\n";
 	int nrow,ncolumn;
 	char *err=NULL;
 	char **table=NULL;
@@ -88,6 +87,7 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 		sqlite3_get_table(sqlite_t::instance(), query.c_str(), &table, &nrow, &ncolumn, &err);
 	if (err)
 	{
+		std::cout << "DB: query=" << query << "\n";
 		std::cout << "DB: Error" << err << "\n";
 		PyErr_SetString(PyExc_Exception, (std::string("enge databasemeneer zei: ")+err).c_str());
 		sqlite3_free(err);
@@ -95,6 +95,7 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 	}
 	else if (result!=SQLITE_OK)
 	{
+		std::cout << "DB: query=" << query << "\n";
 		std::cout << "DB: Error: unknown\n";
 		PyErr_SetString(PyExc_Exception, "boehoe, database lezen is mislukt");
 	}
@@ -110,32 +111,29 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 		char **field=table;
 		for (int n=0; n<=nrow; ++n) // one more row, also heading
 		{
-			std::cout << "DB: result: ";
 			python_object subl(PyList_New(ncolumn));
 			assert(subl);
 			for (int m=0; m<ncolumn; ++m, ++field)
 			{
-				if (m>0) std::cout << " | ";
 				python_object fld;
 				if (*field)
 				{
-					std::cout << *field;
 					fld = PyString_FromString(*(field));
 				}
 				else
 				{
-					std::cout << "NULL";
 					Py_INCREF(Py_None); fld=Py_None;
 				}
 				assert(fld);
 				int r=PyList_SetItem(subl, m, fld);
 				assert(r==0);
 			}
-			std::cout << "\n";
 			int r=PyList_SetItem(list, n, subl);
 			assert(r==0);
 		}
-		std::cout << std::flush;
+		PyObject *repr = PyObject_Repr(list);
+		std::cout << "DB: query: " << query << ", result: " << PyString_AsString(repr) << "\n";
+		Py_DECREF(repr);
 		if (table) sqlite3_free_table(table);
 		return list;
 	}
