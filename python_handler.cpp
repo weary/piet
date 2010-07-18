@@ -368,16 +368,11 @@ void python_handler::cleanup()
 	// clean up the corpses
 	
 	if (plist.empty())
-	{
-		std::cout << "GC: nothing to do\n";
 		return;
-	}
-	std::cout << "GC: sequence started\n";
   
   pythonthreadlist_t::iterator i=plist.begin();
   while (i!=plist.end())
   {
-		std::cout << "GC: checking " << (*i)->cmd << "\n";
     if((*i)->ready)
     {
 			std::cout << "GC: - removing " << (*i)->cmd << "\n";
@@ -385,9 +380,12 @@ void python_handler::cleanup()
       i=plist.erase(i);
     }
     else
+		{
+			std::cout << "GC: keeping " << (*i)->cmd << "\n";
       ++i;
+		}
   }
-	std::cout << "GC: finished\n";
+	std::cout << "GC: finished, " << plist.size() << " threads left\n";
 }
 
 void python_handler::killall()

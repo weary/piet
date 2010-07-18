@@ -14,9 +14,7 @@ LDLIBS=-ldl -lcrypt -lpthread -lpython2.6 -lsqlite3 -lboost_regex
 all: .depend pietbot
 
 pietbot: $(OBJS)
-	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
-
-test: test.o
+	$(LINK.o) $^ $(LDLIBS) -o $@
 
 -include $(DEPS)
 
@@ -28,4 +26,7 @@ test: test.o
 
 .depend: $(DEPS)
 	@touch .depend
+
+clean:
+	@rm -fv $(OBJS) $(DEPS) .depend pietbot
 

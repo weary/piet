@@ -25,7 +25,7 @@ bool restart=false;
 void interpret(const std::string &input);
 
 // print the information in the sockaddr
-void printsockaddr(const sockaddr *buf, unsigned int size)
+/*void printsockaddr(const sockaddr *buf, unsigned int size)
 {
   short family=buf->sa_family;
   u_short port=((u_short *)buf->sa_data)[0];
@@ -48,7 +48,7 @@ void printsockaddr(const sockaddr *buf, unsigned int size)
     printf(" %.2x(%d)", b[i], b[i]);
   }
   printf("\n");
-}
+}*/
 
 
 void sighandler(int sig)
