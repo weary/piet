@@ -2488,7 +2488,7 @@ functions = {
     "manbalans":         ("misc", 100, lambda x: pietlib.meervoud("er zijn precies 0 mannen, en %d jongen#s hier" % mannen()), "geeft het aantal mannen op het kanaal"),
     "dw":                ("misc", 100, discw, "dw <speler>, bekijkt de inlog status van <speler> op discworld"),
     "dwho":              ("misc", 100, discwho, "dwho, kijk wie van Taido, Irk, Weary of Szwarts op discworld zijn"),
-    "gps":               ("misc", 100, gps.gps_coord, "gps <adres> Zoekt GPS coordinaten op van adres"),
+    "gps":               ("misc", 100, lambda x: gps.gps_coord(x), "gps <adres> Zoekt GPS coordinaten op van adres"),
     "factor":            ("misc", 100, factor, "factoriseer <nr>"),
 
 # system
