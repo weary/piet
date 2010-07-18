@@ -2,7 +2,7 @@
 CC=g++
 CXX=g++
 CPPFLAGS=-I/usr/include/python2.6
-CXXFLAGS=-O3 -march=pentium2 -ggdb3 -Wall
+CXXFLAGS=-O3 -march=native -ggdb3 -Wall
 LDFLAGS=-ggdb3
 
 SOURCES=$(filter-out test.cpp,$(wildcard *.cpp))
