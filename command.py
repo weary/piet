@@ -101,6 +101,8 @@ def onbekend_commando(param):
     return "ok\n"
   elif split[0]=="wanneer":
     return random.choice(["nog lang niet", "voorlopig niet", "echt geen idee", "met sint juttemis"])
+  elif split[0]=="waar":
+    return random.choice(["daar ergens", "daar ------->", "ginder", "daaro"])
   elif param.startswith("hoe is het met "):
     return random.choice(["goed", "slecht", "matig", "het gaat"])
   elif len(split)>2 and split[0]=="is" and split[1]=="het":
