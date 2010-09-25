@@ -1,64 +1,151 @@
-import re, urllib, time, pietlib, piet
+import re, urllib, time, pietlib, piet, os, sys
 import BeautifulSoup
+
+debugpiet = 'debugpiet' in piet.__dict__
 
 
 class StationsNamen:
 	# class that can translatie station-names to station-accroniems and back
-	# works by retreiving from the net and caching.
-	# note, a short name can have several long names, but we only store one, so
-	# long_to_short(short_to_long(..)) might not return the input
+	# if csv-file 'stationsnamen.txt' exists, use that, otherwise fetch from net on creation
+
+	stations = None # kort -> lang
+	stations_inv = None # lang -> kort
 
 	def __init__(self):
-		self.short = {}
-		self.long = {}
-		
-	def fetch(self, name): # either a long or a short name. returns the short name of the 'best match'
-		name = name.lower().strip()
-		s=pietlib.get_url('http://mobiel.ns.nl/stations.action?station='+urllib.quote(name), headers=[('Accept','text/html')])
-		h3title = re.findall("<h3>([^<]*)</h3>", s)
-		if not h3title or not h3title[0]:
-			return None
-		if h3title[0].lower() != 'list of stations':
-			l = h3title[0].lower()
-			s = re.findall('Abbreviation: <strong>([^<]*)</strong>', s)[0]
-			self.short[s] = l
-			self.long[l] = s
-			return s
-		h3title = h3title[0]
-		namelist = re.findall('action\?station=([^"]*)">([^<]*)', s)
-		if not namelist:
-			return None
-		for (s,l) in namelist:
-			l = l.lower().strip()
-			s = s.lower().strip()
-			self.short[s] = l
-			self.long[l] = s
-		return namelist[0][1].lower().strip()
+		if os.path.exists("stationnamen.txt"):
+			lines = open('stationnamen.txt').read().split('\n')
+			self.stations = dict(l.split(',',1) for l in lines if l)
+		else:
+			self.read_stations()
+		self.stations_inv = dict([(l.lower(),k) for k,l in self.stations.iteritems()])
 
-	def to_short(self, long):
-		long = long.lower()
-		if long in self.long:
-			return self.long[long]
-		if long in self.short:
-			return long # it wasn't long after all
-		return self.fetch(long)
+	def read_stations(self):
+		namen = []
+		for ci in xrange(0, 26):
+			c = chr(ord('A')+ci)
+			dumpname = "namen_%s.txt" % c
+			if debugpiet and os.path.exists(dumpname):
+				page = open(dumpname).read()
+			else:
+				page = pietlib.get_url('http://m.ns.nl/stations.action?key='+c, headers=[('Accept','text/html')])
+				if debugpiet:
+					open(dumpname,'w').write(page)
+			namen = namen + re.findall('<p><a.*?>(.*?)</a> \((.*?)\)</p>', page)
+		self.stations = {}
+		out = open('stationnamen.txt', 'w')
+		for lang,kort in namen:
+			out.write('%s,%s\n' % (kort,lang))
+			self.stations[kort.lower()] = lang
 
-	def to_long(self, short):
-		short = short.lower()
-		if short in self.short:
-			return self.short[short]
-		if short in self.long:
-			return short # it wasn't short after all
-		short = self.fetch(short)
-		if not short:
-			return None
-		return self.short[short]
+	def to_short(self, longname):
+		longname = longname.lower()
+		if longname in self.stations_inv:
+			return self.stations_inv[longname]
+		if longname in self.stations: # ok, het was eigenlijk al kort
+			return longname
+
+		# not found, assume longname is substring of a longname
+		betterlongname = None
+		for l,s in self.stations_inv.iteritems():
+			if l.find(longname)>=0:
+				if not betterlongname or len(betterlongname)>len(l):
+					betterlongname = l
+
+		if betterlongname:
+			 return self.stations_inv.get(betterlongname)
+
+		return None
+			
+	def to_long(self, shortname):
+		shortname = shortname.lower()
+		if shortname in self.stations:
+			return self.stations[shortname]
+		if shortname in self.stations_inv: # ok, het was eigenlijk al lang
+			return shortname
+		return None
 
 
 stations = StationsNamen()
 
+def ns_format_page(page):
+	""" returns (have_found_reisadvies, pagetekst) """
+	reflags = re.DOTALL | re.MULTILINE
+
+	def replace_keywords(text):
+		ns_translation = {
+			'From': 'Van',
+			'to': 'naar',
+			'Departure': 'Vertrek',
+			'D': 'V',
+			'Centraal': 'CS',
+			'Intercity': 'IC',
+			'direction': 'r',
+			'richting': 'r',
+			'platform': 'spoor',
+			'Railway construction work': 'onderhoud',
+			'alleen 2e klas, Geen AVR-NS': '',
+			'NS': '',
+			'Fiets meenemen niet mogelijk': '',
+			'Reserveren mogelijk': '',
+			'Toeslag': '\003Toeslag\003',
+		}
+		regex = '|'.join('\\b%s\\b' % (k,) for k in ns_translation)
+		def repl_word(w):
+			w = w.group()
+			return ns_translation[w]
+		return re.sub(regex, repl_word, text)
+
+	def format_va_block(text):
+		text = text.group().split('\n')
+		van = text[0].lstrip('V ') + ' ' + text[1]
+		naar = text[-2].lstrip('A ') + ' ' + text[-1]
+		rest = ', '.join(text[2:-2])
+		return van + ' -> ' + naar + ', ' + rest
+
+	def format_table(text):
+		if text.find('class="travelPrice">')>0:
+			return (False, '')
+
+		is_reisadvies = text.find('class="travelPrice">')>0
+
+		# lines are terminated by </td>, not by \n
+		text = re.compile('[\n\r]', flags=reflags).sub('', text)
+		text = text.replace('</td>', '\n')
+
+		text = re.compile('<font color="red">(.*?)</font>', flags=reflags).sub('\003\\1\003 ', text)
+		text = re.sub('<[^>]*>', '', text) # remove html tags
+		text = text.replace('&#160;', ' ')
+		text = text.replace('[+]', '')
+		text = text.replace('\003\003', '')
+		text = replace_keywords(text) # replace keywords defined above
+		text = re.compile('[\n\r][\n\r ]*', flags=reflags).sub('\n', text) # remove empty lines
+
+		text = re.sub(r'[ ]+spoor (\d+[abAB]?)', '(\\1)', text)
+		text = re.compile(r'^V .*?^A .*?^.*?$', flags=reflags).sub(format_va_block, text)
+
+
+		text = re.sub('[ \t]+', ' ', text) # remove redundant spaces
+		return (is_reisadvies, text)
+
+	# ---- actual start of function ----
+
+	tables = re.findall('<table.*?</table>', page, flags=reflags)
+	tables = [format_table(t) for t in tables]
+	found_reisadvies = any(t[0] for t in tables)
+	text = '\n'.join(t[1] for t in tables if t[1])
+	return (found_reisadvies, text)
+
+
+# -------------------------
+
+
 def ns(regel, channel):
-	def format_station(x, opmerkingen):
+	def format_station(x_org, opmerkingen):
+		x = {
+			'rtc': 'rtd'
+		}.get(x_org, x_org)
+		if x != x_org:
+			opmerkingen.append((x, x_org))
 		if (x[0]=='"' and x[-1]=='"') or (x[0]=="'" and x[-1]=="'"):
 			x = x[1:-1]
 		y = stations.to_short(x)
@@ -116,110 +203,30 @@ def ns(regel, channel):
 	pietlib.get_url("http://mobiel.ns.nl/planner.action?lang=nl", outcookies=cookies, headers=[('Accept','text/html')])
 	cookies = [ re.sub(';.*', '', c) for c in cookies ]
 
-	def finderr(soup):
-		# find the text in <div id="errors">
-		c = soup.find("div", {"id":"errors"})
-		if not(c): return None
-		c = c.span
-		if not(c): return None
-		return str(c.contents[0])
-	def findwarn(soup):
-		return soup.findAll('', {'class':'warn'})
-
-	ircred = lambda x: re.sub('<font color="red">(.*?)</font>', '\00304\\1\003 ', str(x).replace('<font color="red"></font>', ''))
-	striptags = lambda x: re.sub('<[^>]*>', '', x)
-	notags = lambda x: striptags(ircred(x)).replace('&nbsp;', ' ')
-
 	postdata = {
 		'from':van, 'to':naar, 'via':via,
 		'date':datum, 'time':tijd, 'departure':(tijdtype and 'true' or 'false'),
 		'planroute':'Reisadvies',
 		'hsl':(hsl and 'true' or 'false')}
 
-	werkzaamheden = False	
-	for retrycount in range(5): # try max 5 times to get a correct page
+	for retrycount in range(1): # try max 5 times to get a correct page
 		page = pietlib.get_url("http://mobiel.ns.nl/planner.action", postdata, incookies=cookies, headers=[('Accept','text/html')])
 		open("nsresult.html", "w").write(page)
-		page = page.replace("&#160;", " ")
-		if page.find("Advice changed due to railway construction work")>=0:
-			werkzaamheden = True
-		soup = BeautifulSoup.BeautifulSoup(page)
-		err = finderr(soup)
-		if err:
-			return "najaah, ns-site wil je niet helpen, 't zei: "+err
-		
-		selectfields = soup.select
-		if selectfields:
-			field = str(selectfields['name'])
-			val = str(selectfields.option['value'])
-			piet.send(channel, "ik gebruik '%s' in plaats van '%s'" % (val, postdata[field]))
-			postdata[field] = val
-		else:
-			break # got a correct page
-
-	for warn in soup.findAll('', {'class':'warn'}):
-		tmp = notags(warn).replace('Let op, ', '')
-		piet.send(channel, '\00304%s\003 ' % tmp)
-	if werkzaamheden:
-		piet.send(channel, '\00304let op, werkzaamheden (ja, alweer)\003 ')
-	
-	if not(soup.table):
-		return "de ns site is weer's brak (of ik ben stuk..)"
-
-	# ok, we hebben de goeie pagina, nu het resultaat eruit halen
-	tables = soup.findAll("table")
-	if not tables:
-		piet.send(channel, "geen tabel gevonden op de ns-site")
-	for et in tables[:-1]:
-		for row in et.findAll("tr"):
-			piet.send(channel, notags(row).replace('\n','').replace('\r','').strip())
-			
-	rows = tables[-1].findAll("tr")
-	out = []
-	while len(rows)>=3:
-		# delete additional information lines first (bikes allowed, etc)
-		while len(rows)>3 and not rows[3].img:
-			del rows[2]
-		line = []
-		line.append(rows[0].findAll('td'))
-		line.append(rows[1].findAll('td'))
-		line.append(rows[2].findAll('td'))
-		linestart = striptags(line[0][1].renderContents()).strip()[:1]
-		if linestart != 'V' and linestart !='D':
-			piet.send(channel, "NS-parser weer stuk, regel begon niet met V of D (maar met '%s')" % repr(linestart))
+		reisadvies, page = ns_format_page(page)
+		if reisadvies:
 			break
-
-		vertrektijd = notags(line[0][1].b.string).replace("V ", "").replace("D ", "")
-		vertrekstation = notags(line[0][2].renderContents())
-		beschrijving = notags(line[1][1]) # 'Stoptrein NS richting Hengelo'
-		aankomsttijd = notags(line[2][1].b.string).replace("A ", "")
-		aankomststation = notags(line[2][2])
-		del rows[:4]
-		row = "%s %s, %s %s, %s" % (vertrektijd, vertrekstation, aankomsttijd,
-				aankomststation, beschrijving)
-		#row = row.replace("&nbsp;", " ")
-		row = re.sub(' +', ' ', row)
-		row = re.sub(r" (?:spoor|platform) ([0-9]+[abc]?)", lambda x: "(%s)" % x.group(1), row)
-		row = row.replace("richting", "r").replace("Centraal", "cs").replace("Stoptrein", "boemel").replace("Intercity", "ic").replace("Sneltrein", "sneltrein").replace("NS ", "")
-		row = row.replace("direction", "r")
-		#row = re.sub(" *,", ",", row)
-		out.append(row)
-	if not(out):
-		return "uh, het is me niet gelukt de route uit de pagina te parsen.."
-	if rows:
-		piet.send(channel, "um, regels over gehouden na parsen.")
-	
-	return '\n'.join(out)
-
+	return page
 
 if __name__ == '__main__':
 	import sys
 	piet.send = lambda x,y: sys.stdout.write("%s: %s\n" % (x,y))
-	dotest = lambda cmd: sys.stdout.write("\nTest: %r\n%s\n" % (cmd, ns(cmd, 'channel')))
+	dotest = lambda cmd: sys.stdout.write("\nTest: %r\n%s\n" % (
+				cmd, ns(cmd, 'channel').replace('\003', '!!!')))
 
 	dotest('?')
 	dotest('afko grou')
 	dotest('afk ahpr')
+	dotest('afk eindh')
 	dotest('vb wezep')
 	dotest('van grou naar ahpr aan 21:00')
 	dotest('van enkhuizen naar zevenaar via vss 21:00')
