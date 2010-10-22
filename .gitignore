@@ -1,6 +1,7 @@
 *.o
 *.pyc
-.*.d
+*.d
+.*.swp
 .depend
 log.txt
 piet.db

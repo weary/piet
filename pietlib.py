@@ -7,6 +7,15 @@ import calc
 
 DEFAULTAGENT = "wget/1.1";
 
+class logstream(object):
+	def __init__(self, s):
+		self.stream = s
+
+	def write(self, text):
+		piet.log(self.stream + text)
+
+if not 'debugpiet' in piet.__dict__:
+	sys.stdout = logstream("")
 
 class piet_exception(Exception):
   """ an exception that will be send to the channel. should be used to signal

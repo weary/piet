@@ -55,7 +55,7 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
       where='WHERE channel="' + chan + '" and nick="' + nick + '"'
       dbtijd = piet.db('SELECT tijd FROM logout ' + where)
       piet.db('DELETE FROM logout ' + where)
-      if len(dbtijd) >= 2:
+      if dbtijd and len(dbtijd) >= 2:
         tu = int(time.time()+0.5) - int(dbtijd[1][0])
       else:
         tu = -1
@@ -221,7 +221,7 @@ def check_names_delayed(channel_):
   names_delayed_waiting=0;
   piet.names(channel_);
 
-def do_server(nick_, auth_, channel_, msg_):
+def do_server(channel_, nick_, auth_, msg_):
   global nicks,topic;
   print("do_server("+nick_+", "+str(auth_)+", "+channel_+", "+msg_+")\n");
   command=msg_.split(' ')[0].upper();

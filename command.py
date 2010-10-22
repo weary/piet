@@ -1286,10 +1286,10 @@ def randomnaam(params):
 if not(vars().has_key("remind_threads")):
   remind_threads=0;
 
-def remind_thread(unused1, unused2):
+def remind_thread(channel, nick, auth, args):
   global remind_threads;
-  if (remind_threads>0):
-    print repr(remind_threads)+"th remind thread refusing to start";
+  if remind_threads>0:
+    print repr(remind_threads+1)+"th remind thread refusing to start";
     return;
   remind_threads+=1;
   try:
@@ -2630,7 +2630,7 @@ def parse(param_org, first, magzeg):
 
 prev_command="niets";
 
-def do_command(nick_, auth_, channel_, msg_):
+def do_command(channel_, nick_, auth_, msg_):
   global nick,auth,channel,prev_command;
   nick=nick_;
   auth=int(auth_);

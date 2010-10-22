@@ -109,11 +109,12 @@ def check_pagina(channel, nick, paginas):
 if not(vars().has_key("lastnicklog")):
 	lastnicklog = {};
 
-def do_react(channel, nick, pietnick, auth_, line):
+def do_react(channel, nick, auth_, line):
 	reactfile = "react.txt"
 	loosfile = "loos.txt"
 	logfile = "log.txt"
 
+	pietnick = piet.nick()
 	line = line.replace(pietnick, "piet");
 
 	# ok, alles in een file
