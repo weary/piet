@@ -1,10 +1,6 @@
 
-#include <Python.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <map>
 #include <string>
-#include <list>
+#include <vector>
 
 class c_piet_config // global variable g_config can be used to access this one
 {
@@ -35,7 +31,9 @@ class c_piet_config // global variable g_config can be used to access this one
 };
 extern c_piet_config g_config;
 
-inline std::string unenter(const std::string a)
+extern std::vector<std::string> arg;
+
+/*inline std::string unenter(const std::string a)
 {
   std::string input=a;
   std::string::iterator i=input.begin();
@@ -44,7 +42,7 @@ inline std::string unenter(const std::string a)
     if (*i=='\n') *i=':'; else i++;
   }
   return(input);
-}
+}*/
 
 extern bool initialising;
 extern bool quit;
@@ -52,8 +50,6 @@ extern bool quit;
 void *receiver(void *);
 void *nieuws(void *p);
 
-//void send(const char *fmt, ...);
-//void send_prio(const char *fmt, ...);
 int Authenticate(const std::string &nick, const std::string &email);
 void Feedback(const std::string &nick, int auth, const std::string &channel, const std::string &msg);
 void External(const char *channel, const char *cmd, const char *input);

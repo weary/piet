@@ -221,7 +221,7 @@ def check_names_delayed(channel_):
   names_delayed_waiting=0;
   piet.names(channel_);
 
-def do_server(nick_, auth_, channel_, msg_):
+def do_server(channel_, nick_, auth_, msg_):
   global nicks,topic;
   print("do_server("+nick_+", "+str(auth_)+", "+channel_+", "+msg_+")\n");
   command=msg_.split(' ')[0].upper();

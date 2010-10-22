@@ -1,5 +1,6 @@
 
-#include "python_handler.h"
+#include "piet_py_handler.h"
+#include "privmsg_and_log.h"
 #include "bot.h"
 #include "sender.h"
 #include <boost/algorithm/string/replace.hpp>
@@ -71,7 +72,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
 	using boost::algorithm::iequals;
   std::string msg=msg_in;
   std::string channel=channel_in;
-  printf("Feedback, processing (\"%s\", %d, \"%s\", \"%s\")\n", nick.c_str(), auth, channel.c_str(), msg.c_str());
+  threadlog() << "Feedback, processing (" << nick << ", " << auth << ", " << channel_in << ", \"" << msg_in << "\")";
   
   // feedback kan 2 vormen hebben, persoonlijk, herkenbaar aan:
   //   1. op een kanaal: "NICK: zeg hallo"
@@ -172,7 +173,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
             if (!params.empty())
               sendstr_prio(std::string(":")+g_config.get_nick()+" JOIN "+params);
             else
-              send(":%s PRIVMSG %s :ehm %s, je bent vergeten een channel op te geven\n", g_config.get_nick().c_str(), channel.c_str(), nick.c_str());
+							privmsg(channel) << "ehm " << nick << ", je bent vergeten een channel op te geven";
             break;
           }
         case(COM_CTCPPING):
@@ -183,34 +184,34 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
         case(COM_SHUTUP):
           {
             sender_flush();
-            send(":%s PRIVMSG %s :ok %s\n", g_config.get_nick().c_str(), channel.c_str(), nick.c_str());
+            privmsg(channel) << "ok " << nick;
           }
           break;
         case(COM_BESILENT):
           {
             silent_mode=true;
-            send(":%s PRIVMSG %s :ok %s\n", g_config.get_nick().c_str(), channel.c_str(), nick.c_str());
+            privmsg(channel) << "ok " << nick;
           }
           break;
         case(COM_SILENT):
           {
-            send(":%s PRIVMSG %s :ik probeer me %sstil te houden\n", g_config.get_nick().c_str(), channel.c_str(), (silent_mode?"":"niet "));
+            privmsg(channel) << "ik probeer me " << (silent_mode?"stil":"niet stil") << " te houden";
           }
           break;
         case(COM_UNSILENT):
           {
             silent_mode=false;
-            send(":%s PRIVMSG %s :bladiebladiebladiebla\n", g_config.get_nick().c_str(), channel.c_str());
+            privmsg(channel) << "bladiebladiebladiebla";
           }
           break;
         case(COM_BUSY_ASK):
           {
-						std::list<std::string> threads=python_handler::instance().threadlist();
+						std::list<std::string> threads = py_handler_t::instance().threadlist();
             if (threads.size()==0)
-              send(":%s PRIVMSG %s :ja, koffie is goed\n", g_config.get_nick().c_str(), channel.c_str());
+              privmsg(channel) << "ja, koffie is goed";
             else
             {
-              std::ostringstream res;
+							privmsg res(channel);
 							res << "hmm, ja, koffie, maare, nog ff [";
 							std::list<std::string>::const_iterator i;
               bool first=true;
@@ -222,8 +223,6 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
                 first=false;
               }
               res << "] afmaken, maar daarna koffie\n";
-							std::cout << "BUSY_ASK: " << res.str();
-              send(":%s PRIVMSG %s :%s\n", g_config.get_nick().c_str(), channel.c_str(), res.str().c_str());
             }
           }
           break;
@@ -237,32 +236,39 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
 				case(COM_RESTART):
           {
             send(":% QUIT :ben zo terug (hopelijk)\n", g_config.get_nick().c_str());
-            restart=true;
+						while (sendqueue_size()) sleep(1);
+						std::vector<const char *> arg2;
+						for (std::vector<std::string>::const_iterator i=arg.begin(); i!=arg.end(); ++i)
+							arg2.push_back(i->c_str());
+						arg2.push_back(NULL);
+						threadlog() << "restarting " << arg2[0];
+						int err=execlp(arg2[0], arg2[0], (char *)NULL);
+						if (err==-1) { // this point can only be reached by an error
+							perror("failed to restart");
+						}
+						quit = true;
           }
           break;
 
         case(COM_SERVER):
           {
             msg=msg.substr(7);
-						python_cmd cmd(channel, "do_server", 4);
-						cmd << nick << auth << channel << msg;
-						python_handler::instance().read_and_exec(channel, "server.py", cmd);
+						py_handler_t::instance().read_file_if_changed(channel, "server.py");
+						py_handler_t::instance().exec(channel, nick, auth, "do_server", msg);
           }
 	  break;
       }
     }
     else
 		{
-			python_cmd cmd(channel, "do_command", 4);
-			cmd << nick << auth << channel << msg;
-			python_handler::instance().read_and_exec(channel, "command.py", cmd);
+			py_handler_t::instance().read_file_if_changed(channel, "command.py");
+			py_handler_t::instance().exec(channel, nick, auth, "do_command", msg);
 		}
   } // end personal
   else if ((sendqueue_size()==0)&&(silent_mode==false))
 	{
-		python_cmd cmd(channel, "do_react", 5);
-		cmd << channel << nick << g_config.get_nick() << auth << msg;
-		python_handler::instance().read_and_exec(channel, "react.py", cmd);
+		py_handler_t::instance().read_file_if_changed(channel, "react.py");
+		py_handler_t::instance().exec(channel, nick, auth, "do_react", msg);
 	}
 }
 

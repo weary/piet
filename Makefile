@@ -2,31 +2,22 @@
 CC=g++
 CXX=g++
 CPPFLAGS=-I/usr/include/python2.6
-CXXFLAGS=-O3 -march=native -ggdb3 -Wall
+CXXFLAGS=-MMD -O3 -march=native -ggdb3 -Wall
 LDFLAGS=-ggdb3
 
 SOURCES=$(filter-out test.cpp,$(wildcard *.cpp))
 OBJS:=$(patsubst %.cpp, %.o, $(SOURCES))
-DEPS:=$(patsubst %.o,.%.d,$(OBJS))
+DEPS:=$(patsubst %.o,%.d,$(OBJS))
 
 LDLIBS=-ldl -lcrypt -lpthread -lpython2.6 -lsqlite3 -lboost_regex
 
-all: .depend pietbot
+all: pietbot
 
 pietbot: $(OBJS)
 	$(LINK.o) $^ $(LDLIBS) -o $@
 
--include $(DEPS)
-
-.%.d: %.cpp
-	@echo updating dependencies for $<
-	@$(CC) -MD -E $(CPPFLAGS) $< > /dev/null
-	@mv $(patsubst .%.d,%.d,$@) $@
-
-
-.depend: $(DEPS)
-	@touch .depend
+-include $(wildcard *.d)
 
 clean:
-	@rm -fv $(OBJS) $(DEPS) .depend pietbot
+	@rm -fv $(OBJS) $(DEPS) pietbot
 

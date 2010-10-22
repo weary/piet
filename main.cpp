@@ -1,8 +1,8 @@
+#include "piet_py_handler.h"
 #include "bot.h"
 #include "sender.h"
-#include "python_handler.h"
-#include "atd.h"
 #include "piet_db.h"
+#include "privmsg_and_log.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/format.hpp>
 #include <crypt.h>
@@ -20,7 +20,6 @@
 using boost::format;
 
 bool quit=false;
-bool restart=false;
 
 void interpret(const std::string &input);
 
@@ -117,15 +116,18 @@ static void process_receive(std::string &buf)
 	{
 		std::string line=buf.substr(0, enter);
 		buf.erase(0, enter+1);
-		std::cout << "recv: \"" << line << "\"\n" << std::flush;
+		threadlog() << "recv: \"" << line << "\"";
 		interpret(line);
 	}
 }  
 
 
+std::vector<std::string> arg;
 
 int main(int argc, char *argv[])
 {
+	for (int n=0; n<argc; ++n) arg.push_back(argv[n]);
+
 	try
 	{
 		int sok=connect_to_server(g_config.get_server(), g_config.get_port());
@@ -136,7 +138,6 @@ int main(int argc, char *argv[])
 
 		::signal(SIGINT, sighandler);
 
-		int garbagecollect_count=30;
 		std::string recv_buf;
 		while (!quit)
 		{
@@ -167,43 +168,12 @@ int main(int argc, char *argv[])
 				process_receive(recv_buf);
 			}
 
-			{
-				time_t now;
-				time(&now);
-				atd_entry_list_t atd_list;
-				atd_t::instance().pop_until(now, atd_list);
-				atd_entry_list_t::const_iterator i=atd_list.begin();
-				for (; i!=atd_list.end(); ++i)
-				{
-					python_cmd cmd(i->_channel, i->_command, 2);
-					cmd << i->_channel << i->_param;
-					python_handler::instance().read_and_exec(i->_channel, i->_file, cmd);
-				}
-			}
-
-			if (--garbagecollect_count==0)
-			{
-				collect_garbage();
-				garbagecollect_count=30;
-			}
 		}
 		std::cout << "\n------------------------------------------------------------------------\n";
 		std::cout << "exit't main while(quit=" << quit << "), continuing to quit\n" << std::flush;
 		std::cout << "------------------------------------------------------------------------\n";
 
-		killall();
-
-		join_send_thread();
-
-		if (restart)
-		{
-			printf("restarting %s\n", argv[0]);
-			int err=execlp(argv[0], argv[0], (char *)NULL);
-			if (err==-1) // this point can only be reached by an error
-			{
-				perror("failed to restart");
-			}
-		}
+		py_handler_t::instance().destruct();
 
 	}
 	catch(const std::exception &e)
@@ -242,7 +212,7 @@ void interpret(const std::string &input)
 	std::string command=remainder.substr(0, l);
 	std::string params=remainder.substr((l==std::string::npos?l:l+1));
 
-  printf("interpret(\"%s\", \"%s\", \"%s\")\n", sender.c_str(), command.c_str(), params.c_str());
+  //printf("interpret(\"%s\", \"%s\", \"%s\")\n", sender.c_str(), command.c_str(), params.c_str());
  
 	std::string channel = g_config.get_channel();
 	std::string::size_type spacepos = channel.find(' ');

@@ -9,9 +9,11 @@
 #include <netdb.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <map>
+#include <list>
+#include <string>
 #include "sender.h"
 #include "bot.h"
+#include "privmsg_and_log.h"
 
 
 typedef std::list<std::string> stringlist;
@@ -52,6 +54,8 @@ static void add_to_sendlist(const std::string header, const std::string textline
 {
   if (textline.empty()) return;
 
+	threadlog() << "SEND" << (high_prio ? "(PRIO)" : "") << ": " << textline;
+
   pthread_mutex_lock(&sendqueue_mutex);
   if (high_prio)
     send_list.push_front(header+textline+'\n');
@@ -64,8 +68,6 @@ static void add_to_sendlist(const std::string header, const std::string textline
 // header and high_prio are just passed through
 static void send_one_line(const std::string header, std::string text, bool high_prio)
 {
-  printf("SEND: send_one_line(\"%.45s\", \"%.45s\", %s)\n", unenter(header).c_str(), unenter(text).c_str(), (high_prio?"TRUE":"FALSE"));
-
   while (!text.empty())
   {
 		std::string::size_type sendlen=text.length();
@@ -88,7 +90,7 @@ static void send_one_line(const std::string header, std::string text, bool high_
 // this list of text fields is then added to the send-queue
 void sendstr(const std::string msg, bool high_prio)
 {
-  printf("SEND: send(\"%s\", %s)\n", unenter(msg).c_str(), (high_prio?"TRUE":"FALSE"));
+  //printf("SEND: send(\"%s\", %s)\n", unenter(msg).c_str(), (high_prio?"TRUE":"FALSE"));
 
   std::string header;
   std::string alltext;
@@ -151,14 +153,26 @@ static void *sender(void *vsi)
     if (counter<8) 
 		  ++counter;
 
+		std::string data;
     pthread_mutex_lock(&sendqueue_mutex);
-    while ((send_list.size()>0) && (counter>=2))
+    while (!send_list.empty() && counter>=2)
     {
-      send(sok, send_list.front().c_str(), send_list.front().length(), 0);
-      counter-=2;
+			data += send_list.front();
       send_list.pop_front();
+      counter-=2;
     }
     pthread_mutex_unlock(&sendqueue_mutex);
+
+		while (!data.empty()) {
+			ssize_t r = ::write(sok, data.data(), data.size());
+			if (r<=0)
+			{
+				printf("Send-thread failure, %s\n", strerror(errno));
+				quit = true;
+				break;
+			}
+			data = data.substr(r);
+		}
   }
   pthread_mutex_destroy(&sendqueue_mutex);
   return(NULL);
