@@ -69,13 +69,13 @@ struct GIL_lock : public boost::noncopyable
 	std::string d_occasion;
 };
 
-struct intern_lock_t // simple lock-wrapper
+struct lock_guard_t // simple lock-wrapper
 {
-	intern_lock_t() : d_locked_mutex(&g_mutex)
+	lock_guard_t() : d_locked_mutex(&g_mutex)
  	{
 		pthread_mutex_lock(d_locked_mutex);
 	}
-	~intern_lock_t() { unlock(); }
+	~lock_guard_t() { unlock(); }
 
 	void unlock() {
 		if (d_locked_mutex) {
@@ -108,7 +108,7 @@ struct py_thread_t
 	py_thread_t(const std::string &channel_, const std::string &nick_, uint32_t auth_, const std::string &cmd_, const std::string &args_) :
 		d_channel(channel_), d_nick(nick_), d_auth(auth_), d_cmd(cmd_), d_args(args_), d_count(g_count++)
 	{
-		intern_lock_t guard;
+		lock_guard_t guard;
 		g_threads.push_back(this);
 
 		int result = pthread_create(&d_thread, NULL, &py_thread_t::staticrun, this);
@@ -122,7 +122,7 @@ struct py_thread_t
 	}
 	~py_thread_t()
 	{
-		intern_lock_t guard;
+		lock_guard_t guard;
 		g_threads.remove(this);
 	}
 
@@ -199,7 +199,7 @@ void py_handler_t::destruct()
 		sighandler_t oldhandler = signal(SIGTERM, sigtermhandler);
 
 		{
-			intern_lock_t guard;
+			lock_guard_t guard;
 			for(threadlist_t::iterator i = g_threads.begin(); i != g_threads.end(); ++i)
 				(*i)->kill();
 		}
@@ -207,7 +207,7 @@ void py_handler_t::destruct()
 		while (1) // wait until threads actually finished
 	 	{
 			{
-				intern_lock_t guard;
+				lock_guard_t guard;
 				if (g_threads.empty()) break;
 			}
 			usleep(100);
@@ -241,7 +241,7 @@ void py_handler_t::read_file_if_changed(const std::string &channel_, const std::
 	}
 	else
 	{
-		intern_lock_t guard1;
+		lock_guard_t guard1;
 		modification_map_t::iterator i = g_modification_map.find(filename_);
 		bool readit=false;
 		if (i == g_modification_map.end())
@@ -285,7 +285,7 @@ void py_handler_t::exec(const std::string &channel_, const std::string &nick_, u
 std::list<std::string> py_handler_t::threadlist() const
 {
 	std::list<std::string> result;
-	intern_lock_t guard;
+	lock_guard_t guard;
 	for (threadlist_t::const_iterator i = g_threads.begin(); i!=g_threads.end(); ++i)
 		result.push_back((*i)->str());
 	return result;
