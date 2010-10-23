@@ -61,7 +61,7 @@ int connect_to_server(const std::string &addr, int port)
 	if (!h)
 	{
 		printf("could not find host \"%s\"\n", addr.c_str());
-		throw;
+		throw std::runtime_error("could not find host \"" + addr + "\"");
 	}
 
 	printf("connecting to %u.%u.%u.%u:%u\n",
@@ -74,7 +74,7 @@ int connect_to_server(const std::string &addr, int port)
 	if (sok == -1)
 	{
 		printf("failed to create socket\n");
-		throw;
+		throw std::runtime_error("failed to create socket");
 	}
 
 	struct sockaddr_in sin;
@@ -85,8 +85,9 @@ int connect_to_server(const std::string &addr, int port)
 	int result=connect(sok, (sockaddr *)&sin, sizeof(sin));
 	if (result!=0)
 	{
-		printf("connection failed (%s)", strerror(errno));
-		throw;
+		std::string errmsg = strerror(errno);
+		printf("connection failed (%s)", errmsg.c_str());
+		throw std::runtime_error("connection failed ("+errmsg+")");
 	}
 
 	return sok;
