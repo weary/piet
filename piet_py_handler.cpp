@@ -109,14 +109,16 @@ struct py_thread_t
 		d_channel(channel_), d_nick(nick_), d_auth(auth_), d_cmd(cmd_), d_args(args_), d_count(g_count++)
 	{
 		lock_guard_t guard;
-		g_threads.push_back(this);
 
 		int result = pthread_create(&d_thread, NULL, &py_thread_t::staticrun, this);
 		if (result)
 		{
-			printf("ERROR: failed to create thread, error code %d\n", result);
+			threadlog() << "ERROR: failed to create thread, error code " << result << " (" << mystrerror(result) << ")";
 			delete this;
+			return;
 		}
+
+		g_threads.push_back(this);
 
 		pthread_detach(d_thread);
 	}
