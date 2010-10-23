@@ -112,11 +112,8 @@ struct py_thread_t
 
 		int result = pthread_create(&d_thread, NULL, &py_thread_t::staticrun, this);
 		if (result)
-		{
-			threadlog() << "ERROR: failed to create thread, error code " << result << " (" << mystrerror(result) << ")";
-			delete this;
-			return;
-		}
+			throw std::runtime_error("failed to create thread, error code " + boost::lexical_cast<std::string>(result) + " "
+					"(" + mystrerror(result) + ")");
 
 		g_threads.push_back(this);
 
@@ -281,7 +278,14 @@ void py_handler_t::read_file_if_changed(const std::string &channel_, const std::
 void py_handler_t::exec(const std::string &channel_, const std::string &nick_, uint32_t auth_, const std::string &cmd_, const std::string &args_)
 {
 	assert(!destructed);
-	new py_thread_t(channel_, nick_, auth_, cmd_, args_);
+	try
+	{
+		new py_thread_t(channel_, nick_, auth_, cmd_, args_);
+	}
+	catch(const std::exception &e)
+	{
+		threadlog() << "ERROR: " << e.what();
+	}
 }
 
 std::list<std::string> py_handler_t::threadlist() const
@@ -321,7 +325,7 @@ void *py_thread_t::run()
 	locmap["tid"] = to_str(d_count);
 	threadlog() << "thread started\n";
 	{
-		GIL_lock guard(boost::lexical_cast<std::string>(d_count)+":");
+		GIL_lock guard(__func__);// boost::lexical_cast<std::string>(d_count)+":");
 
 		PyThreadState *threadstate = PyThreadState_New(g_main_thread_state->interp);
 		assert(threadstate);
