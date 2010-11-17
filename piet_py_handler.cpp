@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <map>
+#include <signal.h>
 
 namespace piet_py_intern
 {
