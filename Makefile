@@ -19,5 +19,5 @@ pietbot: $(OBJS)
 -include $(wildcard *.d)
 
 clean:
-	@rm -fv $(OBJS) $(DEPS) pietbot
+	@rm -fv $(OBJS) $(DEPS) *.pyc *.pyo pietbot
 
