@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
+from htmlentitydefs import name2codepoint as n2cp
 
 import sys, string, random, re, os, time, crypt, socket, urllib, types
 import traceback, datetime, stat, telnetlib, calendar, math, inspect, shlex
@@ -2413,6 +2414,56 @@ def utc(regel):
 			return "sorry, ik snap je tijd niet"
 		return "%s is in utc: %d" % (pietlib.format_localtijd(t, tz), t)
 
+def substitute_entity(match):
+    ent = match.group(3)
+    
+    if match.group(1) == "#":
+        if match.group(2) == '':
+            return unichr(int(ent))
+        elif match.group(2) == 'x':
+            return unichr(int('0x'+ent, 16))
+    else:
+        cp = n2cp.get(ent)
+
+        if cp:
+            return unichr(cp)
+        else:
+            return match.group()
+
+def decode_htmlentities(string):
+    entity_re = re.compile(r'&(#?)(x?)(\d{1,5}|\w{1,8});')
+    return entity_re.subn(substitute_entity, string)[0]
+
+def imdb(query):
+    google_text = pietlib.get_url('http://www.google.com/search?q=' + urllib.quote(query + ' site:imdb.com'), agent='Mozilla/5.0')
+    google_result = re.search('/title/tt(\d+)/"', google_text, re.S);
+    if not google_result: return "NIKS!"
+
+    result = ''
+    imdb_url = 'http://www.imdb.com/title/tt' + google_result.group(1)
+    imdb_result = pietlib.get_url(imdb_url)
+
+    title_match = re.search('<title>(.*) - IMDb</title>', imdb_result, re.S)
+    if title_match: result += title_match.group(1);
+    else: result += "N/A"
+    result += ' - ' + imdb_url
+
+    plot_match = re.search('<p>\n<p>(.*?)(?:</p>)?\n.*?</p>', imdb_result, re.S)
+    if plot_match: result += '\n' + plot_match.group(1) 
+    cast_match = re.search('<meta name="description" content="(.*?)" />', imdb_result, re.S)
+    if cast_match: result += '\n' + cast_match.group(1)
+
+    result += '\nRating: '
+    rating_match = re.search('<span class="rating-rating">([.\d]*)<span>/10', imdb_result, re.S)
+    if rating_match: result += rating_match.group(1)
+    else: result += 'N/A'
+
+    result += ' Genre: '
+    genres = re.findall('<a href="/genre/.{0,100}?">(.*?)</a>', imdb_result, re.S)
+    if len(genres) > 0: result += ', '.join(genres)
+    else: result += 'N/A'
+
+    return decode_htmlentities(result)
 
 
 functions = {
@@ -2439,6 +2490,7 @@ functions = {
     "url":               ("loos", 100, commando_url, "geef willekeurige oude url"),
     #"tv":                ("loos", 100, tv_nuenstraks, "geef overzicht van wat er op tv is"),
     "tv":                ("loos", 100, lambda x: "weer niks", "geef overzicht van wat er op tv is"),
+    "imdb":		 ("loos", 100, imdb, "zoek een film op"),
     "trigram":           ("loos", 1000, trigram, "praat nonsens"),
     "bash":              ("loos", 100, bash.bash, "Geef bash quote <nummer> terug of een random bashquote bij gebrek aan nummer"),
     "sentence":          ("loos", 100, random_sentence, "sentence, geef een willekeurige engelse zin"),
