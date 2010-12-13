@@ -129,6 +129,8 @@ int main(int argc, char *argv[])
 {
 	for (int n=0; n<argc; ++n) arg.push_back(argv[n]);
 
+	setlinebuf(stdout); // make stdout linebuffered (otherwise, when writing to pipe, it will be block-buffered)
+
 	try
 	{
 		int sok=connect_to_server(g_config.get_server(), g_config.get_port());

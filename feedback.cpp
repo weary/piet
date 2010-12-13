@@ -95,7 +95,8 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
 		}
 	}
 
-  printf("DEBUG: nick = \"%s\", channel = \"%s\", on_channel = %s, personal = %s\n", nick.c_str(), channel.c_str(), (on_channel?"TRUE":"FALSE"), (personal?"TRUE":"FALSE"));
+  //threadlog() << "DEBUG: nick = \"" << nick << "\", channel = \"" << channel << "\", "
+  //"on_channel = " << (on_channel?"TRUE":"FALSE") << ", personal = " << (personal?"TRUE":"FALSE") << "\n";
   if (!on_channel)
   { // fix for correct return path
     channel=nick;
@@ -111,12 +112,12 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
         if (*i=='`')
         {
           *i='\'';
-          printf("DEBUG: due to invalid backquote string is now \"%s\"\n", msg.c_str());
+          threadlog() << "DEBUG: due to invalid backquote string is now \"" << msg << "\"\n";
         }
         else if (*i==';')
         {
           *i=':';
-          printf("DEBUG: due to invalid ; string is now \"%s\"\n", msg.c_str());
+          threadlog() << "DEBUG: due to invalid ; string is now \"" << msg << "\"\n";
         }
       }
     }
@@ -125,7 +126,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
   if (personal)
   {
 		boost::algorithm::trim(msg);
-		std::cout << "This is a personal message, msg = \"" << msg << "\"\n";
+		//threadlog() << "This is a personal message, msg = \"" << msg << "\"\n";
 
     // commando opzoeken in de tabel
     int com_index=-1;
@@ -141,13 +142,11 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
 		boost::algorithm::trim(params);
 
 		if (com_index>=0)
-			std::cout << "command: \"" << commands[com_index].name << ", requires auth: " << 
-				commands[com_index].auth << ", you have: " << auth << "\n";
+			threadlog() << "command: \"" << commands[com_index].name << ", requires auth " << 
+				commands[com_index].auth << ", you have " << auth << ", params: \"" << params << "\"\n";
     // it is a build in command
     if ((com_index>=0)&&(auth>=commands[com_index].auth))
     {
-			std::cout << "Command: \"" << commands[com_index].name << "\", Params: \"" << params << "\"\n";
-    
       switch(commands[com_index].command)
       {
         case(COM_QUIT):
