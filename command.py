@@ -808,13 +808,15 @@ def zoekvrouw(params):
   return result;
 
 def vertaal(regel):
-	aliassen = dict((
+	namen = ((
 			("dutch", "nl"),("nederlands", "nl"),
 			("english", "en"),("engels", "en"),
 			("spanish", "es"),("spaans", "es"),
 			("german", "de"),("duits", "de"),
 			("french", "fr"),("frans", "fr"),
-			("arabic", "ar"),("arabic", "ar")))
+			("arabic", "ar"),("arabisch", "ar")))
+	aliassen = dict(namen)
+	revaliassen = dict([v,k] for k,v in namen)
 	talen = 'auto ar bg ca cs da de el en es fi fr hi hr id it iw ja ko lt lv nl no pl pt ro ru sk sl sr sv tl uk vi zh-CN zh-TW'.split(' ')
 	talenre = '|'.join(aliassen.keys()+talen)
 	reresult = re.match('\s*(?:(%s)\s+)?(?:(%s)\s+)?(.*)' % (talenre,talenre), regel)
@@ -845,34 +847,43 @@ def vertaal(regel):
 		regel = regel2
 	
 	form = { 'client':'t', 'text':regel, 'sl':bron, 'tl':doel }
-	url = """http://translate.google.com/translate_a/t?""" + urllib.urlencode(form)
+	form = { 'key':'AIzaSyAsmIJ0qRIc9U8g-qfiGDzTLLJYDQKGcB4', 'q':regel, 'target':doel }
+	if bron != "auto":
+		form['source'] = bron
+	url = 'https://www.googleapis.com/language/translate/v2?' + urllib.urlencode(form)
 	result = pietlib.get_url(url, agent="Mozilla/5.0").strip()
 	if not result:
 		return "ik heb helemaal niks teruggekregen, sorry"
-	result = simplejson.loads(result.replace(',,',',null,')) # replace because simplejson does not accept [[],,[]]
+	result = simplejson.loads(result) # replace because simplejson does not accept [[],,[]]
+	if 'data' not in result:
+		return "pff, google bakt weer's niks van het protocol"
+	result = result['data']
 
-	bron = result[-1]
-	
-	out = []
-	out.append(result[0][0][0])
-	if result[0][0][2]:
-		out.append(result[0][0][2])
-	seen = set()
-	if result[1]:
-		for d in result[1]:
-			pos = d[0]
-			pos = {'noun':'znw','verb':'werkwoord','adjective':'bijv.nw'}.get(pos,pos)
-			out.append('als %s: %s' % (pos, pietlib.make_list(d[1], sep="of")))
-			for t in d[1]:
-				seen.add(t)
-	if 'sentences' in result:
-		sentence = ''
-		for d in result['sentences']:
-			if d['trans'] not in seen:
-				sentence = sentence + d['trans']
-		if sentence:
-			out.append('in een zin: %s' % sentence)
-	return "%s->%s, %s" % (bron, doel, pietlib.make_list(out))
+	if 'translations' not in result:
+		return "doe het lekker zelf"
+	result = result['translations']
+
+	if not result:
+		return "dat is niet te vertalen"
+
+	lines = []
+	if len(result)>1:
+		lines.append('dat kan op meerdere manieren vertaald worden!')
+
+	for res in result:
+		line = ''
+		if 'detectedSourceLanguage' in res:
+			l = res['detectedSourceLanguage']
+			if l in revaliassen:
+				l = revaliassen[l]
+			line = line + 'vanuit het ' + l + ': '
+		if 'translatedText' in res:
+			line = line + res['translatedText']
+		else:
+			line = line + 'whuh? geen tekst?'
+		lines.append(line)
+
+	return '\n'.join(lines)
 
 def dvorak2qwerty(params):
   params = string.strip(parse(params, False, True));
