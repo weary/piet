@@ -1,15 +1,15 @@
 
 CC=g++
 CXX=g++
-CPPFLAGS=-I/usr/include/python2.6
-CXXFLAGS=-MMD -O3 -march=native -ggdb3 -Wall
+CPPFLAGS=-I/usr/include/python2.7
+CXXFLAGS=-MMD -march=native -ggdb3 -Wall
 LDFLAGS=-ggdb3
 
 SOURCES=$(filter-out test.cpp,$(wildcard *.cpp))
 OBJS:=$(patsubst %.cpp, %.o, $(SOURCES))
 DEPS:=$(patsubst %.o,%.d,$(OBJS))
 
-LDLIBS=-ldl -lcrypt -lpthread -lpython2.6 -lsqlite3 -lboost_regex
+LDLIBS=-ldl -lcrypt -lpthread -lpython2.7 -lsqlite3
 
 all: pietbot
 

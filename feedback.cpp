@@ -6,7 +6,6 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/regex.hpp>
 #include <boost/format.hpp>
 #include <crypt.h>
 #include <netdb.h>
