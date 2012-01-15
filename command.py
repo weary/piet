@@ -1849,10 +1849,24 @@ def find_xml_block(page, tag):
 	return page[begin+len(tag)+2:end]
 
 def temp3(params):
+	def parse_tijdwaarschuwing(tijd):
+		if tijd == '1970-01-01 00:00:00 +0000':
+			return ', weet niet wanneer'
+
+		tijd = time.strptime(tijd, "%Y-%m-%d %H:%M:%S +0000")
+		tijd = calendar.timegm(tijd) # now in secs since epoch
+		now = time.time()
+		if now-tijd > 15*60:
+			return ", %s geleden" % pietlib.format_tijdsduur(now-tijd,1)
+		return ''
+
 	form = { 'hl':'nl', 'weather':params.strip() }
 	page = pietlib.get_url('http://www.google.com/ig/api?' + urllib.urlencode(form))
 
-	info = find_xml_block(page, "forecast_information")
+	try:
+		info = find_xml_block(page, "forecast_information")
+	except:
+		return "het is ongetwijfeld erg mooi weer daar"
 	dinfo = dict(re.findall('<([^ ]*) data="([^"]*)"/>', info))
 
 	cur = find_xml_block(page, "current_conditions")
@@ -1860,16 +1874,30 @@ def temp3(params):
 
 	city = dinfo['city'].split(',')[0]
 	tijd = dinfo['current_date_time']
-	tijd = time.strptime(tijd, "%Y-%m-%d %H:%M:%S +0000")
-	tijd = calendar.timegm(tijd) # now in secs since epoch
-	now = time.time()
-	tijdswaarschuwing = ''
-	if now-tijd > 15*60:
-		tijdswaarschuwing = ", %s geleden" % pietlib.format_tijdsduur(now-tijd,1)
+	tijdswaarschuwing = parse_tijdwaarschuwing(tijd)
 
-	humidity = d['humidity'].split()[-1]
-	wind = d['wind_condition'].split(': ')[-1]
-	r = "%s%s: %s, %s graden, wind %s, vochtigheid %s" % (city, tijdswaarschuwing, d['condition'], d['temp_c'], wind, humidity)
+	r = []
+	try:
+		cond = d['condition']
+		if cond:
+			r.append(cond)
+	except:
+		pass
+	try:
+		r.append("%s graden" % (d['temp_c'],))
+	except:
+		pass
+	try:
+		r.append("wind %s" % (d['wind_condition'].split(': ')[-1],))
+	except:
+		pass
+	try:
+		r.append("vochtigheid %s" % (d['humidity'].split()[-1],))
+	except:
+		pass
+	if not r:
+		return repr(d)
+	r = "%s%s: %s" % (city, tijdswaarschuwing, ', '.join(r))
 	return r.lower()
 
 
