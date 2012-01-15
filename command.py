@@ -5,6 +5,7 @@ from htmlentitydefs import name2codepoint as n2cp
 import sys, string, random, re, os, time, crypt, socket, urllib, types
 import traceback, datetime, stat, telnetlib, calendar, math, inspect, shlex
 import simplejson
+import subprocess
 
 import piet
 sys.path.append(".")
@@ -705,12 +706,10 @@ def afk_source1(woord):
   return [];
 
 def changelog(params):
-  command=\
-    "darcs cha --last=5 | "+\
-    "sed -e '/^$/d;N;s/\\n//g;s/<[a-zA-Z]\\+@[a-zA-Z\\.]\\+>//;s/[\\t\\ ]\\+/ /g'";
-  inp = os.popen(command);
-  result=inp.read();
-  inp.close();
+  howmany = 5
+  if params:
+    howmany = int(params)
+  result = subprocess.check_output(['git', 'log', '--oneline', '-n', str(howmany)])
   return "echt veel is er niet veranderd...\n"+result;
 
 def spell_int(woorden, lang):
