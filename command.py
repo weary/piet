@@ -2155,26 +2155,24 @@ def geoip(params):
         return "syntax is X.X.X.X met 0<=X<=255"
     except:
       return "syntax ip adres is X.X.X.X"
-  cmd="echo ipaddresses="+params[0]+" | lynx -post_data http://www.ip2location.com/free.asp"
+  cmd="echo ipAddress="+params[0]+" | lynx -post_data http://www.ip2location.com/free.asp"
   inp,outp,stderr = os.popen3(cmd);
   result = outp.read();
   outp.close();
   inp.close();
   stderr.close();
-  i=result.find("Map")
-  i=result.find("\n",i)
-  while result[i:i+1]==" ":
-    i+=1
-  n=result.find("These results",i)
-  result=result[i:n]
-  returnvalue=""
-  t=0
-  for x in result.split(" "):
-    if x!="" and x!=" " and x[0:1]!="[":
-      t+=1
-      if t!=2:
-        returnvalue+=x+" "
-  return returnvalue.lower().strip()
+  i=result.find("IP Address")
+  i=result.find("IP Address", i+1)
+  if i<0 :
+    return "Niet in de database, of geen geldig ip, of niet op aarde"
+  i=result.find("Location", i)
+  i=result.find("png]",i)+4
+  j=result.find("\n",i)
+  location = result[i:j].lower().strip()
+  i=result.find("Connection through",i)+19
+  j=result.find("\n",i)
+  connection = result[i:j].lower().strip()
+  return "Location: "+location+" Via: "+connection
 
 def opme(params):
   piet.names(channel);
