@@ -1,5 +1,4 @@
-import re, urllib, time, pietlib, piet, os, sys
-import BeautifulSoup
+import re, time, pietlib, piet, os, sys
 
 debugpiet = 'debugpiet' in piet.__dict__
 
@@ -112,7 +111,7 @@ def ns_format_page(page):
 		text = re.compile('[\n\r]', flags=reflags).sub('', text)
 		text = text.replace('</td>', '\n')
 
-		text = re.compile('<font color="red">(.*?)</font>', flags=reflags).sub('\003\\1\003 ', text)
+		text = re.compile('<font color="red">(.*?)</font>', flags=reflags).sub('\003 \\1\003 ', text)
 		text = re.sub('<[^>]*>', '', text) # remove html tags
 		text = text.replace('&#160;', ' ')
 		text = text.replace('[+]', '')
@@ -129,11 +128,12 @@ def ns_format_page(page):
 
 	# ---- actual start of function ----
 
+	errors = re.findall('<span class="warn">(.*?)</span>', page, flags=reflags)
 	tables = re.findall('<table.*?</table>', page, flags=reflags)
 	tables = [format_table(t) for t in tables]
 	found_reisadvies = any(t[0] for t in tables)
 	text = '\n'.join(t[1] for t in tables if t[1])
-	return (found_reisadvies, text)
+	return (found_reisadvies, text, errors)
 
 
 # -------------------------
@@ -141,7 +141,7 @@ def ns_format_page(page):
 
 def ns(regel, channel):
 	def format_station(x_org, opmerkingen):
-		x = {
+		x = {  # common typo's
 			'rtc': 'rtd'
 		}.get(x_org, x_org)
 		if x != x_org:
@@ -212,9 +212,11 @@ def ns(regel, channel):
 	for retrycount in range(1): # try max 5 times to get a correct page
 		page = pietlib.get_url("http://mobiel.ns.nl/planner.action", postdata, incookies=cookies, headers=[('Accept','text/html')])
 		open("nsresult.html", "w").write(page)
-		reisadvies, page = ns_format_page(page)
-		if reisadvies:
+		reisadvies, page, errors = ns_format_page(page)
+		if reisadvies or errors:
 			break
+	if errors:
+		return '\n'.join(errors)
 	return page
 
 if __name__ == '__main__':
