@@ -111,7 +111,7 @@ def ns_format_page(page):
 		text = re.compile('[\n\r]', flags=reflags).sub('', text)
 		text = text.replace('</td>', '\n')
 
-		text = re.compile('<font color="red">(.*?)</font>', flags=reflags).sub('\003 \\1\003 ', text)
+		text = re.compile('<font color="red">(.*?)</font>', flags=reflags).sub('\0034 \\1\003 ', text)
 		text = re.sub('<[^>]*>', '', text) # remove html tags
 		text = text.replace('&#160;', ' ')
 		text = text.replace('[+]', '')
