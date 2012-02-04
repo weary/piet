@@ -158,8 +158,9 @@ def ns(regel, channel):
 	pietlib.timezone_reset()
 
 	if regel == "?":
-		result = pietlib.get_url_soup("http://mobiel.ns.nl/mobiel/storingen.action")
+		result = pietlib.get_url_soup("http://mobiel.ns.nl/storingen.action")
 		storingen = [ str(i.contents[0]) for i in result.body.findAll('h4') ]
+		storingen = [ i for i in storingen if i !='Disruptions (in Dutch)' ]
 		if storingen:
 			return "er zijn storingen op:\n  " + "\n  ".join(storingen)
 		else:
