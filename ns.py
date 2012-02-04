@@ -161,8 +161,12 @@ def ns(regel, channel):
 		result = pietlib.get_url_soup("http://mobiel.ns.nl/storingen.action")
 		storingen = [ str(i.contents[0]) for i in result.body.findAll('h4') ]
 		storingen = [ i for i in storingen if i !='Disruptions (in Dutch)' ]
-		if storingen:
-			return "er zijn storingen op:\n  " + "\n  ".join(storingen)
+		if len(storingen) > 8:
+			return "het is weer's helemaal stuk, met %d gemelde storingen: %s" % (
+					len(storingen), pietlib.make_list(storingen))
+		elif storingen:
+			return "er zijn %d storingen op:\n  %s" % (
+					len(storinger) + "\n  ".join(storingen))
 		else:
 			return "er zijn geen storingen"
 
