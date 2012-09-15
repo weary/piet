@@ -837,6 +837,7 @@ def calcM(param):
   money=[("euro","EUR"), ("dollar","USD"), ("pond","GBP"), ("gbp","GBP"),
   ("britsepond","GBP"), ("britishpound","GBP"), ("eur","EUR"), ("usd","usd"),
   ("gbp","GBP"), ("a$","AUD"), ("$a","AUD"), ("aud","AUD"),
+  ("$sg","SGD"), # singaporese dollar
   ("cur_bzd","BZD"),
   ("australischedollar","AUD"), ("$c","CAD"), ("c$","CAD"),
   ("canadiandollar","CAD"), ("canadeesedollar","CAD"), ("cad","CAD"),
