@@ -142,7 +142,8 @@ def ns_format_page(page):
 def ns(regel, channel):
 	def format_station(x_org, opmerkingen):
 		x = {  # common typo's
-			'rtc': 'rtd'
+			'rtc': 'rtd',
+			'utc': 'ut'
 		}.get(x_org, x_org)
 		if x != x_org:
 			opmerkingen.append((x, x_org))
