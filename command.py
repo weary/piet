@@ -1861,11 +1861,24 @@ def temp3(params):
 		return ''
 
 	form = { 'hl':'nl', 'weather':params.strip() }
-	page = pietlib.get_url('http://www.google.com/ig/api?' + urllib.urlencode(form))
+	url = 'http://www.google.com/ig/api?' + urllib.urlencode(form)
+	page = pietlib.get_url(url)
 
-	try:
-		info = find_xml_block(page, "forecast_information")
-	except:
+	succes = False
+	for i in range(0, 4):
+		try:
+			info = find_xml_block(page, "forecast_information")
+			succes = True
+		except:
+			msg = [
+		"moment, even de gordijnen open doen",
+		"gordijnen werken niet mee, momentje nog",
+		"eigenlijk wil ik de gordijnen helemaal niet open",
+		"ga anders lekker zelf kijken ofzo"][i]
+			piet.send(channel, msg)
+			piet.log("failed to find 'forecast_information' in '%s'" % url)
+			time.sleep(2)
+	if not succes:
 		return "het is ongetwijfeld erg mooi weer daar"
 	dinfo = dict(re.findall('<([^ ]*) data="([^"]*)"/>', info))
 
@@ -1899,6 +1912,79 @@ def temp3(params):
 		return repr(d)
 	r = "%s%s: %s" % (city, tijdswaarschuwing, ', '.join(r))
 	return r.lower()
+
+def temp4(regel):
+	reload(Distance)
+	def fail(reason):
+		print "openweathermap request FAILED:"
+		print " - url: %s" % url
+		print " - %s" % reason
+
+	try:
+		regel = regel.strip()
+		lat, lng = Distance.location(regel)
+		print "temp4(%s, %s)" % (lat, lng)
+	except Distance.PietLookupFailure:
+		return "sorry, maar '%s' kan ik niet vinden op mijn kaart" % regel
+
+	args = { 'lat':lat, 'lon':lng, 'cnt':1 }
+	url = 'http://openweathermap.org/data/2.0/find/city?' + urllib.urlencode(args)
+	print url
+	try:
+		result = simplejson.loads(pietlib.get_url(url, maxsize=10*1024*1024))
+	except Exception, e:
+		fail("exception: %r" % e)
+		return "meester, ik heb gefaald. je zult zelf moeten gaan kijken"
+
+	print "openweathermap result:"
+	from pprint import pprint
+	pprint(result)
+
+	try:
+		entries = result['list'][0]
+		dt = entries['dt']
+		main = entries['main']
+		temp = main['temp']
+		stationname = entries['name']
+		rain = entries['rain']
+		wind = entries['wind']
+		humidity = main['humidity']
+	except KeyError, e:
+		fail("missing %s" % str(e))
+		return "moeilijk weer, ik snap het niet.."
+
+	prefix = u"in %s om %s" % (
+			stationname, pietlib.format_localtijd(dt))
+	result = []
+	if temp > 0:
+		result.append(u"%.1f\xb0" % (temp - 273.15,))
+	
+	for duration, amount in rain.iteritems():
+		if amount > 0:
+			print "DEBUG: rainwaarde: %r" % rain
+			piet.send("weary", "check debug log voor regenwaarde!")
+			piet.send("weary", repr(rain))
+
+	windstr = "het waaide %.1f mps" % wind['speed']
+	if 'deg' in wind:
+		deg = (wind['deg'] + 180.0) % 360
+		for i in xrange(0, 8):
+			if deg <= 22.5 + 45 * i:
+				break
+		direc = [
+				'noordelijk',
+				'noordoostelijk',
+				'oostelijk',
+				'zuidoostelijk',
+				'zuidelijk',
+				'zuidwestelijk',
+				'westelijk',
+				'noordwestelijk'][i % 8]
+		windstr = windstr + " uit %se richting" % direc
+	result.append(windstr)
+	
+	result.append("luchtvochtigheid was %.1f%%" % humidity)
+	return ("%s: %s" % (prefix, pietlib.make_list(result))).encode('UTF-8')
 
 
 def commando_tijd(regel):
@@ -2592,8 +2678,8 @@ functions = {
     "was":               ("handig", 300, lambda x: remind("%s %s: je was is weer's klaar" % (x, nick)), ""),
     "reken":             ("handig", 0, lambda x: calc.supercalc(x), "reken uit <expressie> rekent iets uit via de internal piet-processer\nvoor help doe reken help"),
     "calc":              ("handig", 0, lambda x: calc.supercalc(x), ""),
-    "temp":              ("handig", 0, temp3, "temp, de temperatuur van sommige plaatsen in de wereld"), 
-    "temp2":             ("handig", 0,temp2, "temp, nog een poging om een temperatuur-commando te maken"), 
+    "temp_stuk":         ("handig", 0, temp3, "temp, de temperatuur van sommige plaatsen in de wereld"), 
+    "temp":              ("handig", 0, temp4, "temp, nog een poging om een temperatuur-commando te maken"), 
     "datum":             ("handig", 100, datum, "geef de datum van vandaag"),
     "tijd":              ("handig", 0, commando_tijd, "tijd, geeft aan hoe laat het is in Sydney en Amsterdam"),
     "utc":               ("handig", 100, utc, "utc <secs>|<tijd>, reken van/naar utc"),

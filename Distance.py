@@ -1,26 +1,31 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import pietlib, shlex, simplejson, urllib, re, gps, traceback
+import pietlib, shlex, simplejson, urllib, re, gps
+
+class PietLookupFailure(Exception):
+	pass
 
 def maps_lookup(van, naar):
+	def fail(reason):
+		print "google maps request FAILED:"
+		print " - url: %s" % url
+		print " - %s" % reason
+		raise PietLookupFailure("could not fetch")
 	google_args = { 'origin' : van, 'destination' : naar,
 	 	'sensor' : 'false', 'mode' : 'walking', 'language' : 'nl' }
 	url = """http://maps.google.nl/maps/api/directions/json?""" + urllib.urlencode(google_args)
 	try:
 		result = simplejson.loads(pietlib.get_url(url,maxsize=10*1024*1024))
 	except Exception, e:
-		print "google maps request FAILED:"
-		print " - url: %s" % url
-		print " - exception: %r" % e
-		raise Exception("could not fetch")
+		fail("fetch exception %r" % e)
 	
 	status = result.get('status', 'geen status').lower()
 	if status == 'zero_results':
 		return 'dat kan geen mens lopen, en kraaien vinden het vast ook maar niks'
 	if status != "ok" or not result.get('routes'):
 		print "google maps returned %s, url: %s" % (status,url)
-		raise Exception("not found")
+		raise PietLookupFailure("not found")
 	try:
 		loopafstand = result['routes'][0]['legs'][0]['distance']['text']
 		vancoords = result['routes'][0]['legs'][0]['start_location']
@@ -28,10 +33,7 @@ def maps_lookup(van, naar):
 		vancoords = (vancoords['lat'], vancoords['lng'])
 		naarcoords = (naarcoords['lat'], naarcoords['lng'])
 	except Exception, e:
-		print "google maps FAILED:"
-		print " - url: %s" % url
-		print " - exception: %r" % e
-		raise Exception("could not parse")
+		fail("parse exception %r" % e)
 	
 	try:
 		vanplaats = result['routes'][0]['legs'][0]['start_address']
@@ -46,6 +48,31 @@ def maps_lookup(van, naar):
 	naarplaats = naarplaats.replace(', Nederland', '')
 	return (vanplaats, vancoords, naarplaats, naarcoords, loopafstand)
 
+
+def location(address):
+	def fail(reason):
+		print "google location request FAILED:"
+		print " - url: %s" % url
+		print " - %s" % reason
+		raise PietLookupFailure("could not fetch location")
+
+	google_args = { 'address':address, 'sensor':'false', 'region':'nl' }
+	url = "http://maps.google.com/maps/api/geocode/json?" + urllib.urlencode(google_args)
+	try:
+		result = simplejson.loads(pietlib.get_url(url, maxsize=10*1024*1024))
+	except Exception, e:
+		fail("exception: %r" % e)
+	if result["status"] != "OK":
+		fail("status: %r" % result["status"])
+	if "results" not in result:
+		fail("no results in response")
+	if len(result["results"]) < 1:
+		fail("not enough results")
+	if "geometry" not in result["results"][0]:
+		fail("no geometry in result")
+	location = result["results"][0]["geometry"]["location"]
+
+	return location['lat'], location['lng']
 
 def Distance(params):
 	args = shlex.split(params.strip())
