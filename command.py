@@ -1950,17 +1950,46 @@ def temp4(regel):
 		dt = entries['dt']
 		main = entries['main']
 		temp = main['temp']
+		try:
+			rain = entries['rain']
+		except KeyError, e:
+			rain = entries.get('snow', dict())
 		stationname = entries['name']
-		rain = entries['rain']
 		wind = entries['wind']
 		humidity = main['humidity']
+		weathers = entries['weather']
 	except KeyError, e:
 		fail("missing %s" % str(e))
 		return "moeilijk weer, ik snap het niet.."
 
+	# debug, for gathering all descriptions
+	try:
+		with open("openweathermaps_descriptions.txt", "r") as f:
+			knowndescs = f.read().split('\n')
+			knowndescs = dict(line.split('|', 1) for line in knowndescs if line)
+	except IOError:
+		knowndescs = dict()
+	for weather in weathers:
+		knowndescs[weather['main']] = weather['description']
+	with open("openweathermaps_descriptions.txt", "w") as f:
+		f.write('\n'.join('%s|%s' % v for v in knowndescs.iteritems()))
+		f.write('\n')
+
+	result = []
+	for weather in weathers:
+		main = weather['main']
+		fallback = weather['description']
+		result.append({
+			'Mist': 'mistig',
+			'Rain': 'regenachtig',
+			'Clouds': 'bewolkt',
+			'Snow': 'sneeuw',
+			'Haze': 'wazig (zon achter de bewolking misschien?)',
+			'Clear': 'blauwe lucht'
+			}.get(main, fallback))
+
 	prefix = u"in %s om %s" % (
 			stationname, pietlib.format_localtijd(dt))
-	result = []
 	if temp > 0:
 		result.append(u"%.1f\xb0" % (temp - 273.15,))
 	
