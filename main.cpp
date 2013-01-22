@@ -23,33 +23,6 @@ bool quit=false;
 
 void interpret(const std::string &input);
 
-// print the information in the sockaddr
-/*void printsockaddr(const sockaddr *buf, unsigned int size)
-{
-  short family=buf->sa_family;
-  u_short port=((u_short *)buf->sa_data)[0];
-  port=ntohs(port);
-
-  switch(family)
-  {
-    case(PF_INET): printf("ipv4 address"); break;
-    case(PF_INET6): printf("ipv6 address"); break;
-    default: printf("unknown address"); break;
-  }
-  printf(" for port %d, address ", port);
-
-  const unsigned char *b=(const unsigned char *)buf->sa_data+sizeof(u_short);
-  unsigned int s=size-sizeof(short)-sizeof(u_short);
-  if (family==PF_INET) s-=8;
-  if (family==PF_INET6) b+=4, s-=8;
-  for (unsigned int i=0; i<s; i++)
-  {
-    printf(" %.2x(%d)", b[i], b[i]);
-  }
-  printf("\n");
-}*/
-
-
 void sighandler(int sig)
 {
 	quit = true;
