@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import string,random,os,math,re,sys,datetime;
+import string, random, os, math, re, datetime
+import pietlib
 
 def addcalc(param_org):
   param_org=string.strip(param_org)
@@ -839,6 +840,7 @@ def calcM(param):
   ("gbp","GBP"), ("a$","AUD"), ("$a","AUD"), ("aud","AUD"),
   ("$sg","SGD"), # singaporese dollar
   ("cur_bzd","BZD"),
+  ("colones", "CRC"), ("colon", "CRC"),
   ("australischedollar","AUD"), ("$c","CAD"), ("c$","CAD"),
   ("canadiandollar","CAD"), ("canadeesedollar","CAD"), ("cad","CAD"),
   ("ukp","GBP"), ("yen","JPY"), ("jpy","JPY"), ("$nz","NZD"), ("nz$","NZD"),
@@ -860,13 +862,9 @@ def calcM(param):
         endpos+=1
       if name=="EUR":
         return("",(1,0),param[endpos:],"$^1",1,1)
-      cmd = "echo -e \"Amount=1&From=EUR&To="+name+"\"";
-      cmd += " | lynx -post_data http://www.xe.com/ucc/convert.cgi";
-      inp,outp,stderr = os.popen3(cmd);
-      result = outp.read();
-      outp.close();
-      inp.close();
-      stderr.close();
+      page = pietlib.get_url('http://www.xe.com/ucc/convert.cgi', postdata={
+        'Amount':1, 'From':'EUR', 'To':name})
+      result = re.subn('<[^>]*>', '', page)[0].replace('&nbsp;', ' ')
       val = float(re.findall("1 EUR = ([0-9.]+)", result)[0])
       return("",(1/val,0),param[endpos:],"$^1",1,1)
 
