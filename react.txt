@@ -426,6 +426,7 @@ de BOM!#0.5#de rode draad! niet de blauwe!
 de BOM!#1.0#um, wiens moeder bedoel je precies?
 llu #1.0#ACTION hoopt dat je een PRIu64 gaat gebruiken
 %llu#1.0#ACTION hoopt dat je een %"PRIu64" gaat gebruiken
+dnek het#ACTION dnekt lekker mee
 da39a3ee5e6b4b0d3255bfef95601890afd80709#1.0#ACTION denkt even diep na en roept dan: lege string!
 6af5a2bfa9c5935b9952a65d2df5d1b82a0588ec#1.0#ACTION denkt even diep na en roept dan: woot
 ff2f8089face79fa9e04021d89bd763da7c5f166#1.0#ACTION denkt even diep na en roept dan: woot!

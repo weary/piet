@@ -3,7 +3,7 @@
 from htmlentitydefs import name2codepoint as n2cp
 
 import sys, string, random, re, os, time, crypt, socket, urllib, types
-import traceback, datetime, stat, telnetlib, calendar, math, inspect, shlex
+import traceback, stat, telnetlib, calendar, math, inspect, shlex
 import simplejson
 import subprocess
 
@@ -604,18 +604,23 @@ def zeg(params):
   return "";
 
 def rot_nr(cmd):
-  if not (cmd[:1]>"0" and cmd[:1] <= "9"):
-    return onbekend_commando("rot"+cmd)
-  n,y=string.split(cmd, " ", 1);
-  n=int(n)%26;
-  y=string.strip(parse(y, False, True));
-  def rot_char(x):
-    if not(x.isalpha()): return x;
-    p=ord(x.lower())-ord('a');
-    assert(p>=0 and p<26);
-    p2=(p+n)%26;
-    return chr(ord(x)-p+p2);
-  return string.join(map(rot_char,y), '');
+	if not cmd[:1].isdigit():
+		return onbekend_commando("rot"+cmd)
+	n, y = cmd.split(' ', 1)
+	y = parse(y, False, True)
+	if n == '47':
+		return rot_47(y)
+	n = int(n) % 26
+	rotstr = lambda x: x[n:] + x[:n]
+	trans = string.maketrans(
+			string.lowercase + string.uppercase,
+			rotstr(string.lowercase) + rotstr(string.uppercase))
+	return string.translate(y, trans)
+
+def rot_47(cmd):
+	from_ = ''.join(map(chr, xrange(ord('!'), ord('~') + 1)))
+	to_ = from_[47:] + from_[:47]
+	return string.translate(cmd, string.maketrans(from_, to_))
 
 # make sure every entry occurs only once
 def unique(l):
