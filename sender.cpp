@@ -147,19 +147,33 @@ static void *sender(void *vsi)
 
   int counter=8;
   pthread_mutex_init(&sendqueue_mutex, NULL);
+  int ping_timer = 60;
   while (!quit)
   {
     sleep(1);
     if (counter<8) 
-		  ++counter;
+      ++counter;
 
-		std::string data;
+    std::string data;
     pthread_mutex_lock(&sendqueue_mutex);
-    while (!send_list.empty() && counter>=2)
+    if (send_list.empty())
     {
-			data += send_list.front();
-      send_list.pop_front();
-      counter-=2;
+      --ping_timer;
+      if (ping_timer == 0)
+      {
+        ping_timer = 60;
+        data = "PING aap\n";
+      }
+    }
+    else
+    {
+      ping_timer = 60;
+      while (!send_list.empty() && counter>=2)
+      {
+        data += send_list.front();
+        send_list.pop_front();
+        counter-=2;
+      }
     }
     pthread_mutex_unlock(&sendqueue_mutex);
 
