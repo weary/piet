@@ -518,11 +518,10 @@ def SydWeer(params):
   return fresult;
 
 def nlweer(woord):
-	all = pietlib.get_url('http://api.twitter.com/1/statuses/user_timeline/buienradarnl.xml')
-	text = re.findall('<text>(.*?)</text>', all)
-	for i in text:
-		if i[:1]!='@':
-			return i
+	stream = pietlib.get_url("https://mobile.twitter.com/buienradarnl")
+	for elem in re.findall('<div class="tweet-text".*?><div.*?>\s*(.*?)<', stream):
+		if elem:
+			return elem
 	return "geen idee, kijk eens naar buiten ofzo.."
 
 def itaweer(woord):
