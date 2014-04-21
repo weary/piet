@@ -9,3 +9,8 @@ quote.txt
 zontijden/
 pietbot
 result.txt
+/CMakeCache.txt
+/CMakeFiles
+/cmake_install.cmake
+/Makefile
+/old

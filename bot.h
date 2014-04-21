@@ -1,6 +1,9 @@
+#ifndef __PIET_BOT_H__
+#define __PIET_BOT_H__
 
 #include <string>
 #include <vector>
+#include <boost/lexical_cast.hpp>
 
 class c_piet_config // global variable g_config can be used to access this one
 {
@@ -30,30 +33,12 @@ class c_piet_config // global variable g_config can be used to access this one
 		std::string _nick;
 };
 extern c_piet_config g_config;
-
-extern std::vector<std::string> arg;
-
-/*inline std::string unenter(const std::string a)
-{
-  std::string input=a;
-  std::string::iterator i=input.begin();
-  while (i!=input.end())
-  {
-    if (*i=='\n') *i=':'; else i++;
-  }
-  return(input);
-}*/
-
-extern bool initialising;
-extern bool quit;
-
-void *receiver(void *);
-void *nieuws(void *p);
+extern bool g_restart;
 
 int Authenticate(const std::string &nick, const std::string &email);
 void Feedback(const std::string &nick, int auth, const std::string &channel, const std::string &msg);
-void External(const char *channel, const char *cmd, const char *input);
-void collect_garbage();
-void killall();
 
+template<typename T>
+std::string to_str(const T&t_) { return boost::lexical_cast<std::string,T>(t_); }
 
+#endif // __PIET_BOT_H__

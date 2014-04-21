@@ -48,7 +48,7 @@ std::string py_str(PyObject *obj_)
 	Py_XDECREF(s);
 	return r;
 }
-#define to_str(x) boost::lexical_cast<std::string>(x)
+
 void print_traceback(PyObject *tb_)
 {
 	assert(PyTraceBack_Check(tb_));

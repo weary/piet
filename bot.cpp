@@ -1,5 +1,3 @@
-
-
 #include "bot.h"
 #include <fstream>
 #include <iostream>

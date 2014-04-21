@@ -9,9 +9,6 @@ void join_send_thread();
 // remove all pending items from send-queue
 void sender_flush();
 
-// return how many messages remain unsend
-unsigned int sendqueue_size();
-
 // call send, with normal priority
 void send(const char *fmt, ...);
 
@@ -24,5 +21,7 @@ void send(const char *fmt, ...);
 void sendstr(const std::string msg, bool high_prio);
 
 inline void sendstr_prio(const std::string msg) { sendstr(msg, true); }
+
+void quit();
 
 #endif // __PIET_SENDER_H__

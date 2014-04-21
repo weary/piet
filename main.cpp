@@ -1,153 +1,40 @@
 #include "piet_py_handler.h"
+#include "privmsg_and_log.h"
 #include "bot.h"
 #include "sender.h"
 #include "piet_db.h"
-#include "privmsg_and_log.h"
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/format.hpp>
-#include <crypt.h>
-#include <errno.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <stdarg.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/poll.h>
-#include <iostream>
-#include <unistd.h>
+#include "sslclient.h"
 #include <signal.h>
+#include <iostream>
 
-using boost::format;
-
-bool quit=false;
+boost::shared_ptr<pietsocket_t> g_socket;
+bool g_restart = false;
 
 void interpret(const std::string &input);
 
 void sighandler(int sig)
 {
-	quit = true;
+	quit();
 }
-
-int connect_to_server(const std::string &addr, int port)
-{
-	struct hostent *h = gethostbyname(addr.c_str());
-	if (!h)
-	{
-		printf("could not find host \"%s\"\n", addr.c_str());
-		throw std::runtime_error("could not find host \"" + addr + "\"");
-	}
-
-	printf("connecting to %u.%u.%u.%u:%u\n",
-			((unsigned char *)(h->h_addr))[0],
-			((unsigned char *)(h->h_addr))[1],
-			((unsigned char *)(h->h_addr))[2],
-			((unsigned char *)(h->h_addr))[3], port);
-
-	int sok = socket(AF_INET, SOCK_STREAM, 0);
-	if (sok == -1)
-	{
-		printf("failed to create socket\n");
-		throw std::runtime_error("failed to create socket");
-	}
-
-	struct sockaddr_in sin;
-	memset(&sin, 0, sizeof(sin));
-	sin.sin_family = AF_INET;
-	memcpy(&sin.sin_addr, h->h_addr, 4);
-	sin.sin_port = htons((unsigned short)port);
-	int result=connect(sok, (sockaddr *)&sin, sizeof(sin));
-	if (result!=0)
-	{
-		std::string errmsg = strerror(errno);
-		printf("connection failed (%s)", errmsg.c_str());
-		throw std::runtime_error("connection failed ("+errmsg+")");
-	}
-
-	return sok;
-}
-
-
-static std::string receive(int sok)
-{
-	char buf[65536];
-	int len=recv(sok, buf, 65536, 0);
-	if (len<=0)
-	{
-		std::cout << "ERROR: recv failed\n" << std::flush;
-		quit=true;
-		return "";
-	}
-	else
-		return std::string(buf, buf+len);
-}
-
-static void process_receive(std::string &buf)
-{
-	boost::algorithm::replace_all(buf, "\r", "");
-
-	std::string::size_type enter;
-	while (enter=buf.find('\n'), enter!=std::string::npos)
-	{
-		std::string line=buf.substr(0, enter);
-		buf.erase(0, enter+1);
-		threadlog() << "recv: \"" << line << "\"";
-		interpret(line);
-	}
-}  
-
-
-std::vector<std::string> arg;
 
 int main(int argc, char *argv[])
 {
-	for (int n=0; n<argc; ++n) arg.push_back(argv[n]);
-
 	setlinebuf(stdout); // make stdout linebuffered (otherwise, when writing to pipe, it will be block-buffered)
 
 	try
 	{
-		int sok=connect_to_server(g_config.get_server(), g_config.get_port());
-
-		create_send_thread(sok);
-
-		sendstr_prio(std::string("pass somepass\nnick ")+g_config.get_nick()+"\nuser "+g_config.get_nick()+" b c d\n");
+		g_socket.reset(new pietsocket_t(g_config.get_server(), to_str(g_config.get_port())));
+		sendstr("pass somepass\n", false);
+		sendstr("nick " + g_config.get_nick() + "\n", false);
+		sendstr("user " + g_config.get_nick() + " b c d\n", false);
 
 		::signal(SIGINT, sighandler);
 
-		std::string recv_buf;
-		while (!quit)
-		{
-			pollfd polls[1];
-			polls[0].fd=sok; polls[0].events=POLLIN|POLLPRI; polls[0].revents=0;
-			int n=poll(polls, 1, 1000/*ms*/);
-			if (n<0 && errno==EINTR)
-				continue;
-			else if (n<0)
-			{ // error
-				int e=errno;
-				char buf[1024];
-				if (strerror_r(e, buf, 1024)!=0)
-					strcpy(buf, "no message");
-				std::cout << "poll failed, " << e << ", " << buf << "\n" << std::flush;
-			}
-			else if (n==0)
-			{ // timeout
-			}
-			else if (polls[0].revents&(POLLERR|POLLHUP|POLLNVAL))
-			{
-				std::cout << "something happened to the socked, revents=" << polls[0].revents << ", doei!\n";
-				quit=true;
-			}
-			else if (polls[0].revents&(POLLIN|POLLPRI))
-			{ // something to receive on sok
-				recv_buf+=receive(sok);
-				process_receive(recv_buf);
-			}
+		g_socket->run();
 
-		}
-		std::cout << "\n------------------------------------------------------------------------\n";
-		std::cout << "exit't main while(quit=" << quit << "), continuing to quit\n" << std::flush;
-		std::cout << "------------------------------------------------------------------------\n";
+		std::cout << "\n------------------------\n";
+		std::cout << "Dropped out of main loop\n" << std::flush;
+		std::cout << "------------------------\n";
 
 		py_handler_t::instance().destruct();
 
@@ -161,6 +48,18 @@ int main(int argc, char *argv[])
 	{
 		printf("terminated through exception\n");
 		return(-1);
+	}
+
+	if (g_restart)
+	{
+		std::vector<const char *> arg(argv+0, argv+argc);
+		arg.push_back(NULL);
+		threadlog() << "restarting " << arg[0];
+		int err = execlp(arg[0], arg[0], (char *)NULL);
+		if (err==-1)
+		{ // this point can only be reached by an error
+			perror("failed to restart");
+		}
 	}
 }
 
@@ -196,7 +95,7 @@ void interpret(const std::string &input)
 		channel.erase(spacepos, std::string::npos);
   if (command=="PING")
   {
-    sendstr_prio(std::string("PONG ")+params);
+		sendstr_prio("PONG " + params);
   }
   /*else if ((command=="NICK")&&(sender==g_config.get_nick()))
   {

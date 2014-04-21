@@ -234,17 +234,8 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
 				case(COM_RESTART):
           {
             send(":% QUIT :ben zo terug (hopelijk)\n", g_config.get_nick().c_str());
-						while (sendqueue_size()) sleep(1);
-						std::vector<const char *> arg2;
-						for (std::vector<std::string>::const_iterator i=arg.begin(); i!=arg.end(); ++i)
-							arg2.push_back(i->c_str());
-						arg2.push_back(NULL);
-						threadlog() << "restarting " << arg2[0];
-						int err=execlp(arg2[0], arg2[0], (char *)NULL);
-						if (err==-1) { // this point can only be reached by an error
-							perror("failed to restart");
-						}
-						quit = true;
+						g_restart = true;
+						quit();
           }
           break;
 
@@ -263,7 +254,7 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
 			py_handler_t::instance().exec(channel, nick, auth, "do_command", msg);
 		}
   } // end personal
-  else if ((sendqueue_size()==0)&&(silent_mode==false))
+  else if (!silent_mode)
 	{
 		py_handler_t::instance().read_file_if_changed(channel, "react.py");
 		py_handler_t::instance().exec(channel, nick, auth, "do_react", msg);
