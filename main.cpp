@@ -6,6 +6,7 @@
 #include "pietconnection.h"
 #include <signal.h>
 #include <iostream>
+#include <boost/make_shared.hpp>
 
 boost::shared_ptr<pietconnection_t> g_socket;
 bool g_restart = false;
@@ -23,7 +24,11 @@ int main(int argc, char *argv[])
 
 	try
 	{
-		g_socket.reset(new pietconnection_t(g_config.get_server(), to_str(g_config.get_port())));
+		g_socket = boost::make_shared<pietconnection_t>();
+		if (g_config.use_ssl())
+			g_socket->connect_ssl(g_config.get_server(), to_str(g_config.get_port()), g_config.ssl_server_certificate());
+		else
+			g_socket->connect(g_config.get_server(), to_str(g_config.get_port()));
 		sendstr("pass somepass\n", false);
 		sendstr("nick " + g_config.get_nick() + "\n", false);
 		sendstr("user " + g_config.get_nick() + " b c d\n", false);

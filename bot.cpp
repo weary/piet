@@ -4,13 +4,22 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-std::string trimquotes(const std::string &inp_)
+static std::string trimquotes(const std::string &inp_)
 {
 	if (inp_.size()<2)
 		return inp_;
 	if (inp_[0]=='"' && inp_[inp_.size()-1]=='"')
 		return inp_.substr(1, inp_.size()-2);
 	return inp_;
+}
+
+static bool parse_bool(const std::string &value)
+{
+	if (boost::algorithm::iequals(value, "true") || value == "0")
+		return true;
+	if (boost::algorithm::iequals(value, "false") || value == "1")
+		return false;
+	throw std::runtime_error("invalid boolean value '" + value + "'");
 }
 
 c_piet_config::c_piet_config() :
@@ -21,6 +30,7 @@ c_piet_config::c_piet_config() :
 	{
 		std::ifstream i("piet.conf");
 		char line[1024];
+		bool have_ssl_config;
 		while (i.getline(line, 1024))
 		{
 			char *p=strchr(line, '=');
@@ -47,9 +57,19 @@ c_piet_config::c_piet_config() :
 				else if (boost::algorithm::iequals(key, "channel"))
 					_channel=value;
 				else if (boost::algorithm::iequals(key, "channelkey"))
-					_key=value;
+					_channel_key=value;
+				else if (boost::algorithm::iequals(key, "use_ssl"))
+				{
+					have_ssl_config=true;
+					_use_ssl=parse_bool(value);
+				}
+				else if (boost::algorithm::iequals(key, "ssl_server_cert"))
+					_ssl_server_cert = value;
 			}
 		}
+
+		if (!have_ssl_config)
+			_use_ssl = _port==6697;
 
 		_nick=_initial_nick;
 		assert(!_nick.empty() || !"need an initail nick");

@@ -1,39 +1,30 @@
 #include "pietconnection.h"
+#include "piet_socket.h"
 #include "privmsg_and_log.h"
 #include <boost/bind.hpp>
 
-pietconnection_t::pietconnection_t(
-		const std::string &host,
-		const std::string &service,
-		const std::string &servercert) :
+pietconnection_t::pietconnection_t() :
 	d_stopped(false),
-	d_ssl_ctx(ssl::context::sslv23),
-	d_ssl_socket(d_io_service, d_ssl_ctx),
 	d_send_counter(8),
 	d_ping_timer(60),
 	d_sectimer(d_io_service, boost::posix_time::seconds(1))
+{}
+
+void pietconnection_t::connect(
+		const std::string &host,
+		const std::string &service)
 {
-	if (!servercert.empty())
-	{
-		d_ssl_ctx.load_verify_file(servercert.c_str());
-		d_ssl_socket.set_verify_mode(ssl::verify_peer);
-	}
-	else
-		d_ssl_socket.set_verify_mode(ssl::verify_none);
-
-	tcp::resolver resolver(d_io_service);
-	tcp::resolver::query query(host, service);
-	boost::asio::connect(d_ssl_socket.lowest_layer(), resolver.resolve(query));
-	d_ssl_socket.lowest_layer().set_option(tcp::no_delay(true));
-
-	d_ssl_socket.set_verify_callback(ssl::rfc2818_verification(host));
-	d_ssl_socket.handshake(ssl::stream<tcp::socket>::client);
+	d_socket = std::make_shared<plainsocket_t>(
+			d_io_service, host, service);
 }
 
-pietconnection_t::~pietconnection_t()
+void pietconnection_t::connect_ssl(
+		const std::string &host,
+		const std::string &service,
+		const std::string &servercert)
 {
-	if (!d_stopped)
-		d_ssl_socket.shutdown();
+	d_socket = std::make_shared<sslsocket_t>(
+			d_io_service, host, service, servercert);
 }
 
 void pietconnection_t::run()
@@ -59,8 +50,9 @@ void pietconnection_t::send(const std::string &line, bool prio)
 
 void pietconnection_t::start_read()
 {
-	boost::asio::async_read_until(d_ssl_socket, d_input_buffer, '\n',
-			boost::bind(&pietconnection_t::handle_read, this, _1));
+	d_socket->async_read_until_newline(d_input_buffer,
+			boost::bind(&pietconnection_t::handle_read, this, 
+				boost::asio::placeholders::error));
 }
 
 void pietconnection_t::handle_read(const boost::system::error_code& ec)
@@ -101,12 +93,12 @@ void pietconnection_t::write_loop(const boost::system::error_code& ec)
 	if (d_send_counter < 8) 
 		++d_send_counter;
 
-	std::string data;
+	d_writebuffer.clear();
 	if (d_send_list.empty())
 	{
 		if (d_stopped)
 		{
-			d_ssl_socket.shutdown();
+			d_socket.reset();
 			return;
 		}
 
@@ -114,7 +106,7 @@ void pietconnection_t::write_loop(const boost::system::error_code& ec)
 		if (d_ping_timer == 0)
 		{
 			d_ping_timer = 60;
-			data = "PING aap\n";
+			d_writebuffer = "PING aap\n";
 		}
 	}
 	else
@@ -123,19 +115,21 @@ void pietconnection_t::write_loop(const boost::system::error_code& ec)
 		//unsigned oldsize = d_send_list.size();
 		while (!d_send_list.empty() && d_send_counter >= 2)
 		{
-			data += d_send_list.front();
+			d_writebuffer += d_send_list.front();
 			d_send_list.pop_front();
 			d_send_counter  -= 2;
 		}
 	}
 
-	if (!data.empty())
-		boost::asio::async_write(
-				d_ssl_socket,
-				boost::asio::buffer(data),
+	if (!d_writebuffer.empty())
+	{
+		boost::asio::const_buffers_1 buf = boost::asio::buffer(d_writebuffer);
+		d_socket->async_write(
+				buf,
 				boost::bind(
 					&pietconnection_t::write_wait, this,
 					boost::asio::placeholders::error));
+	}
 	else
 		write_wait(boost::system::error_code());
 }

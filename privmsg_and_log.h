@@ -41,7 +41,7 @@ struct privmsg_t : public piet_intern::line_based_ostream_lookalike_t<privmsg_t>
 
 private:
 	void send_one_line(const std::string &s_);
-	friend class piet_intern::line_based_ostream_lookalike_t<privmsg_t>;
+	friend struct piet_intern::line_based_ostream_lookalike_t<privmsg_t>;
 	std::string d_channel;
 };
 typedef privmsg_t privmsg;
@@ -54,7 +54,7 @@ struct threadlog_t : public piet_intern::line_based_ostream_lookalike_t<threadlo
 
 private:
 	void send_one_line(const std::string &s_);
-	friend class piet_intern::line_based_ostream_lookalike_t<threadlog_t>;
+	friend struct piet_intern::line_based_ostream_lookalike_t<threadlog_t>;
 };
 typedef threadlog_t threadlog;
 

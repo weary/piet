@@ -24,6 +24,7 @@ add_executable(pietbot
 	privmsg_and_log.cpp
 	sender.cpp
 	pietconnection.cpp
+	piet_socket.cpp
 	)
 target_link_libraries(pietbot 
 	${PYTHON_LIBRARIES}

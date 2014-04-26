@@ -2,11 +2,8 @@
 #define __PIET_PIETSOCKET_H__
 
 #include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 #include <list>
-
-using boost::asio::ip::tcp;
-namespace ssl = boost::asio::ssl;
+#include "piet_socket.h"
 
 // all lines read are passed to this function
 extern void interpret(const std::string &line);
@@ -14,15 +11,17 @@ extern void interpret(const std::string &line);
 class pietconnection_t
 {
 public:
-	pietconnection_t(
+	pietconnection_t();
+	~pietconnection_t() {}
+
+	void connect(
+			const std::string &host,
+			const std::string &service);
+	void connect_ssl(
 			const std::string &host,
 			const std::string &service,
 			const std::string &servercert = std::string());
-
-	~pietconnection_t();
-
 	void run();
-
 	void stop();
 
 	// line must include \n
@@ -40,15 +39,16 @@ protected:
 
 	bool d_stopped;
 	boost::asio::io_service d_io_service;
-	ssl::context d_ssl_ctx;
-	ssl::stream<tcp::socket> d_ssl_socket;
 
 	boost::asio::streambuf d_input_buffer;
+
+	std::shared_ptr<base_socket_t> d_socket;
 
 	// send + throtling
 	std::list<std::string> d_send_list;
 	unsigned d_send_counter;
 	unsigned d_ping_timer;
+	std::string d_writebuffer;
 
 	boost::asio::deadline_timer d_sectimer;
 };
