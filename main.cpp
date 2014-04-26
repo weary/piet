@@ -3,11 +3,11 @@
 #include "bot.h"
 #include "sender.h"
 #include "piet_db.h"
-#include "sslclient.h"
+#include "pietconnection.h"
 #include <signal.h>
 #include <iostream>
 
-boost::shared_ptr<pietsocket_t> g_socket;
+boost::shared_ptr<pietconnection_t> g_socket;
 bool g_restart = false;
 
 void interpret(const std::string &input);
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 
 	try
 	{
-		g_socket.reset(new pietsocket_t(g_config.get_server(), to_str(g_config.get_port())));
+		g_socket.reset(new pietconnection_t(g_config.get_server(), to_str(g_config.get_port())));
 		sendstr("pass somepass\n", false);
 		sendstr("nick " + g_config.get_nick() + "\n", false);
 		sendstr("user " + g_config.get_nick() + " b c d\n", false);

@@ -1,8 +1,8 @@
-#include "sslclient.h"
+#include "pietconnection.h"
 #include "privmsg_and_log.h"
 #include <boost/bind.hpp>
 
-pietsocket_t::pietsocket_t(
+pietconnection_t::pietconnection_t(
 		const std::string &host,
 		const std::string &service,
 		const std::string &servercert) :
@@ -30,13 +30,13 @@ pietsocket_t::pietsocket_t(
 	d_ssl_socket.handshake(ssl::stream<tcp::socket>::client);
 }
 
-pietsocket_t::~pietsocket_t()
+pietconnection_t::~pietconnection_t()
 {
 	if (!d_stopped)
 		d_ssl_socket.shutdown();
 }
 
-void pietsocket_t::run()
+void pietconnection_t::run()
 {
 	start_read();
 	write_loop(boost::system::error_code());
@@ -44,12 +44,12 @@ void pietsocket_t::run()
 	d_io_service.run();
 }
 
-void pietsocket_t::stop()
+void pietconnection_t::stop()
 {
 	d_stopped = true;
 }
 
-void pietsocket_t::send(const std::string &line, bool prio)
+void pietconnection_t::send(const std::string &line, bool prio)
 {
 	if (prio)
 		d_send_list.push_front(line);
@@ -57,13 +57,13 @@ void pietsocket_t::send(const std::string &line, bool prio)
 		d_send_list.push_back(line);
 }
 
-void pietsocket_t::start_read()
+void pietconnection_t::start_read()
 {
 	boost::asio::async_read_until(d_ssl_socket, d_input_buffer, '\n',
-			boost::bind(&pietsocket_t::handle_read, this, _1));
+			boost::bind(&pietconnection_t::handle_read, this, _1));
 }
 
-void pietsocket_t::handle_read(const boost::system::error_code& ec)
+void pietconnection_t::handle_read(const boost::system::error_code& ec)
 {
 	if (ec)
 		throw std::runtime_error("Read failed with: " + ec.message());
@@ -81,18 +81,18 @@ void pietsocket_t::handle_read(const boost::system::error_code& ec)
 	start_read();
 }
 
-void pietsocket_t::write_wait(const boost::system::error_code& e)
+void pietconnection_t::write_wait(const boost::system::error_code& e)
 {
 	d_sectimer.expires_from_now(boost::posix_time::seconds(1));
 	d_sectimer.async_wait(
 			boost::bind(
-				&pietsocket_t::write_loop,
+				&pietconnection_t::write_loop,
 				this,
 				boost::asio::placeholders::error)
 			);
 }
 
-void pietsocket_t::write_loop(const boost::system::error_code& ec)
+void pietconnection_t::write_loop(const boost::system::error_code& ec)
 {
 	if (ec)
 		throw std::runtime_error("Write failed with: " + ec.message());
@@ -134,7 +134,7 @@ void pietsocket_t::write_loop(const boost::system::error_code& ec)
 				d_ssl_socket,
 				boost::asio::buffer(data),
 				boost::bind(
-					&pietsocket_t::write_wait, this,
+					&pietconnection_t::write_wait, this,
 					boost::asio::placeholders::error));
 	else
 		write_wait(boost::system::error_code());

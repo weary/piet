@@ -14,9 +14,9 @@
 #include "sender.h"
 #include "bot.h"
 #include "privmsg_and_log.h"
-#include "sslclient.h"
+#include "pietconnection.h"
 
-extern boost::shared_ptr<pietsocket_t> g_socket;
+extern boost::shared_ptr<pietconnection_t> g_socket;
 
 
 // split text into 450-character pieces and add it to the send queue

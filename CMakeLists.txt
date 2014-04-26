@@ -23,7 +23,7 @@ add_executable(pietbot
 	piet_py_handler.cpp
 	privmsg_and_log.cpp
 	sender.cpp
-	sslclient.cpp
+	pietconnection.cpp
 	)
 target_link_libraries(pietbot 
 	${PYTHON_LIBRARIES}

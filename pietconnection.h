@@ -1,5 +1,5 @@
-#ifndef __PIET_SSLCLIENT_H__
-#define __PIET_SSLCLIENT_H__
+#ifndef __PIET_PIETSOCKET_H__
+#define __PIET_PIETSOCKET_H__
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -11,15 +11,15 @@ namespace ssl = boost::asio::ssl;
 // all lines read are passed to this function
 extern void interpret(const std::string &line);
 
-class pietsocket_t
+class pietconnection_t
 {
 public:
-	pietsocket_t(
+	pietconnection_t(
 			const std::string &host,
 			const std::string &service,
 			const std::string &servercert = std::string());
 
-	~pietsocket_t();
+	~pietconnection_t();
 
 	void run();
 
@@ -54,4 +54,4 @@ protected:
 };
 
 
-#endif // __PIET_SSLCLIENT_H__
+#endif // __PIET_PIETSOCKET_H__
