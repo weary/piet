@@ -104,40 +104,47 @@ def meervoud(line):
 # een absolute tijd, zie format_localtijd voor absolute tijd, items geeft de
 # precisie
 def format_tijdsduur(secs, items=2):
+  assert(items > 0)
+
   secs = int(round(float(secs)));
-  if (secs == 0):
-    return "geen tijd";
-  
-  tijd = [];
-  (dagen, secs) = divmod(secs, 86400);
-  (uren, secs) = divmod(secs, 3600);
-  (minuten, secs) = divmod(secs, 60);
-  if (dagen == 1):
-    tijd.append("een dag");
-  elif (dagen>1 or dagen<0):
-    tijd.append(str(dagen)+" dagen");
-    
-  if (uren == 1):
-    tijd.append("een uur");
-  elif (uren>1 or uren<0):
-    tijd.append(str(uren)+" uren");
-    
-  if (minuten == 1):
-    tijd.append("een minuut");
-  elif (minuten>1 or minuten<0):
-    tijd.append(str(minuten)+" minuten");
-    
-  if (secs == 1):
-    tijd.append("een seconde");
-  elif (secs>1 or secs<0):
-    tijd.append(str(secs)+" secs");
 
-  tijd = tijd[:items];
+  if secs == 0:
+    return "nu"
 
-  if (len(tijd) == 0):
-    return "tijd verprutst";
+  sign = secs < 0
+  if sign:
+    secs = -secs
 
-  return make_list(tijd);
+  units = ((365*86400, "jaren", "jaar"),
+          (7*86400, "weken", "week"),
+          (86400, "dagen", "dag"),
+          (3600, "uren", "uur"),
+          (60, "minuten", "minuut"),
+          (1, "secs", "seconde"))
+
+  out = []
+  for multiply, manyword, oneword in units:
+    if secs >= multiply:
+      amount, secs = divmod(secs, multiply)
+      out.append([amount, multiply, manyword, oneword])
+      if secs == 0:
+        break
+
+  if len(out) > items:
+    if out[items][0] >= (out[items-1][1]/2): # round up
+      out[items-1][0] += 1
+    out = out[:items]
+
+    # fix overflow caused by rounding
+    for i in xrange(items-1, 0, -1):
+      if out[i][0] >= out[i][1]:
+        out[i-1][0] += 1
+
+  words = lambda x: x[0] == 1 and ("een %s" % x[3]) or ("%s %s" % (x[0], x[2]))
+  out = pietlib.make_list(words(x) for x in out)
+  if sign:
+    return "min " + out
+  return out
 
 
 # copy-paste from http://docs.python.org/lib/datetime-tzinfo.html
