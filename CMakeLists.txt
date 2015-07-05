@@ -3,13 +3,13 @@ cmake_minimum_required (VERSION 2.8)
 project(pietbot)
 
 find_package(Boost COMPONENTS system REQUIRED)
-find_package(PythonLibs 2.7.5 EXACT REQUIRED)
+#find_package(PythonLibs 3.4 EXACT REQUIRED)
 find_package(OpenSSL)
 find_library(SQLITE3 NAMES sqlite3)
 find_package(Threads)
 
 add_definitions(-Wall)
-add_definitions(-std=gnu++0x)
+add_definitions(-std=gnu++11)
 add_definitions(-march=native)
 add_definitions(-pthread)
 

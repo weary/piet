@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-import sys, random, re, time, BeautifulSoup, traceback, urllib;
+import sys, random, re, time, traceback, urllib.request, urllib.parse, urllib.error;
+from bs4 import BeautifulSoup
 sys.path.append(".");
 import piet;
 import pietlib;
@@ -20,7 +21,7 @@ def get_url_title(channel, url):
 	tinyurl="dat ding";
 	if len(url)>60:
 		apiurl = "http://tinyurl.com/api-create.php?url=";
-		tinyurl = urllib.urlopen(apiurl + url).read();
+		tinyurl = urllib.request.urlopen(apiurl + url).read();
 
 	try:
 		soup = BeautifulSoup.BeautifulSoup(url_input)
@@ -30,9 +31,9 @@ def get_url_title(channel, url):
 		piet.send(channel, "de titel van "+tinyurl+" is: "+title+"\n")
 		if url.find('divx.com'):
 			value = dict(soup.input.attrs)['value']
-			value = urllib.unquote(value)
+			value = urllib.parse.unquote(value)
 			value = value.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"')
-			print repr(value)
+			print(repr(value))
 			soup2 = BeautifulSoup.BeautifulSoup(value)
 			movieurl = dict(soup2.embed.attrs)['src']
 			piet.send(channel, "maar eigenlijk is dit het filmpje: " + movieurl + "\n")
@@ -106,7 +107,7 @@ def check_pagina(channel, nick, paginas):
   except:
     traceback.print_exc();
 
-if not(vars().has_key("lastnicklog")):
+if not("lastnicklog" in vars()):
 	lastnicklog = {};
 
 def do_react(channel, nick, auth_, line):
@@ -125,7 +126,7 @@ def do_react(channel, nick, auth_, line):
 
 	ready=False;
 
-	if lastnicklog.has_key(nick) and lastnicklog[nick]==line:
+	if nick in lastnicklog and lastnicklog[nick]==line:
 		r=random.choice([
 				"ja, zeg het vooral nog's",
 				"spannend hoor, zo'n herhaling",
@@ -198,7 +199,7 @@ def do_react(channel, nick, auth_, line):
 	if not(ready):
 		r=random.random();
 		if (r<=0.06):
-			if globals().has_key("geordi") and (random.random()<0.08):
+			if "geordi" in globals() and (random.random()<0.08):
 				n=random.randint(1,4000);
 				time.sleep(n);
 				result=geordi("bla");

@@ -109,7 +109,7 @@ void interpret(const std::string &input)
 			std::string pietnick=params;
       if (pietnick[0]==':') pietnick.erase(0,1);
       printf("NICKCHANGE!\n");
-      send(":%s PRIVMSG %s :server roept dat ik nu %s heet, het zal wel\n", pietnick.c_str(), channel.c_str(), pietnick.c_str());
+      send("PRIVMSG %s :server roept dat ik nu %s heet, het zal wel\n", channel.c_str(), pietnick.c_str());
 			g_config.set_nick(pietnick);
     }
   }
@@ -128,24 +128,24 @@ void interpret(const std::string &input)
 				boost::lexical_cast<std::string>(auth)+")");
 
     if (auth>otherauth)
-      send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, %s heeft 't niet meer nodig lijkt me\n", g_config.get_nick().c_str(), channel.c_str(), auth, newnick.c_str(), sender.c_str());
+      send("PRIVMSG %s :authenticatie %d nu naar %s overgezet, %s heeft 't niet meer nodig lijkt me\n", channel.c_str(), auth, newnick.c_str(), sender.c_str());
     else if ((auth<otherauth)&&(auth>0))
-      send(":%s PRIVMSG %s :authenticatie %d nu naar %s overgezet, niet nickchangen om hogere auth te krijgen\n", g_config.get_nick().c_str(), channel.c_str(), auth, newnick.c_str(), sender.c_str());
+      send("PRIVMSG %s :authenticatie %d nu naar %s overgezet, niet nickchangen om hogere auth te krijgen\n", channel.c_str(), auth, newnick.c_str(), sender.c_str());
   }*/
   else if (command=="433")
   { // recv: ":irc.nl.uu.net 433 piet simon :Nickname is already in use."
-    send(":%s PRIVMSG %s :server roept dat die naam al in gebruik is!\n", g_config.get_nick().c_str(), channel.c_str());
+    send("PRIVMSG %s :server roept dat die naam al in gebruik is!\n", channel.c_str());
   }
   else if (command=="432")
   {
-    send(":%s PRIVMSG %s :server roept dat ik een ongeldige nick probeer te gebruiken!\n", g_config.get_nick().c_str(), channel.c_str());
+    send("PRIVMSG %s :server roept dat ik een ongeldige nick probeer te gebruiken!\n", channel.c_str());
   }
   else if (command=="422" || command=="376")
   {
     if (g_config.get_channel_key().empty())
-      send(":%s JOIN %s\n", g_config.get_nick().c_str(), g_config.get_channel().c_str());
+      send("JOIN %s\n", g_config.get_channel().c_str());
     else
-      send(":%s JOIN %s %s\n", g_config.get_nick().c_str(), g_config.get_channel().c_str(), g_config.get_channel_key().c_str());
+      send("JOIN %s %s\n", g_config.get_channel().c_str(), g_config.get_channel_key().c_str());
   }
   else if (command=="PRIVMSG")
   {

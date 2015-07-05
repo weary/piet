@@ -1,6 +1,6 @@
-import os, time, re, urllib, sys, datetime, calendar
+import os, time, re, urllib.request, urllib.parse, urllib.error, sys, datetime, calendar
 sys.path.append(".")
-import BeautifulSoup
+from bs4 import BeautifulSoup
 import traceback
 import piet
 import calc
@@ -31,32 +31,36 @@ class piet_exception(Exception):
     return self._text
 
 
-def get_url(url, postdata=None, agent=DEFAULTAGENT, incookies=[], outcookies=[], maxsize=100000, headers=[]):
-  class PietUrlOpener(urllib.FancyURLopener):
+def get_url(url, postdata=None, agent=DEFAULTAGENT, incookies=[],
+        outcookies=[], maxsize=100000, headers=[],
+        expected_encoding='utf-8'):
+  class PietUrlOpener(urllib.request.FancyURLopener):
     version = agent
   
   # incookies should be ['label=value', 'label2=value2']
   # outcookies will be appended with ['label=value; path=/', 'label2=value2; path=/; ..']
+
+  req = urllib.request.Request(url)
   
-  oldopener = urllib._urlopener
-  urllib._urlopener = PietUrlOpener()
-  for name,val in headers:
-    urllib._urlopener.addheader(name, val)
+  for name, val in headers:
+    req.add_header(name, val)
   if incookies:
-    urllib._urlopener.addheader('Cookie', '; '.join(incookies))
+    req.add_header('Cookie', '; '.join(incookies))
+  if postdata:
+    if type(postdata)==dict:
+      postdata = urllib.parse.urlencode(postdata)
+    req.data = postdata
   try:
-    if not(postdata):
-      urlobj = urllib.urlopen(url)
-    else:
-      if (type(postdata)==dict):
-        postdata = urllib.urlencode(postdata)
-      urlobj = urllib.urlopen(url, postdata)
-    tmp = urlobj.read(maxsize)
-    outcookies.extend(urlobj.info().getheaders('set-cookie'))
+    res = urllib.request.urlopen(req)
   except:
     raise piet_exception("die stomme site reageert niet, andere keer misschien")
-  urllib._urlopener = oldopener
-  return tmp
+
+  # very simple cookie parser
+  outcookies.extend(
+          val.split(';')[0].split('=',1)
+          for name, val in res.headers.items()
+          if name.lower() == "set-cookie")
+  return res.read(maxsize).decode(expected_encoding)
 
 
 def get_url_soup(url, postdata=None, agent=DEFAULTAGENT):
@@ -82,10 +86,9 @@ def make_list(items, sep="en"):
 #  2 hashes: lo#op#pen -> single 'loop', plural 'lopen'
 def meervoud(line):
 	words = line.split(' ')
-	for i in xrange(1,len(words)):
+	for i in range(1,len(words)):
 		if '#' in words[i] and words[i-1].isalnum():
 			parts = words[i].split('#')
-			print repr(parts)
 			if (len(parts)!=2 and len(parts)!=3) or not words[i-1].isdigit():
 				continue
 			val = int(words[i-1])
@@ -136,7 +139,7 @@ def format_tijdsduur(secs, items=2):
     out = out[:items]
 
     # fix overflow caused by rounding
-    for i in xrange(items-1, 0, -1):
+    for i in range(items-1, 0, -1):
       if out[i][0] >= out[i][1]:
         out[i-1][0] += 1
 
@@ -183,7 +186,7 @@ def nogroups(x):
 	return re.sub("[(]([^?])", "(?:\\1", x)
 
 DATEREGEX = \
-	"(\d{1,2})[-/ ](\d{1,2}|"+"|".join(calc.monthmap.keys())+")[-/ ](\d{4})|" \
+	"(\d{1,2})[-/ ](\d{1,2}|"+"|".join(list(calc.monthmap.keys()))+")[-/ ](\d{4})|" \
 	"(vandaag|morgen|overmorgen)"
 
 # only absolute time is matched
@@ -212,7 +215,7 @@ unitaliasses={
 	"seconden": 1}
 
 # match one element from "5 jaren 10 dagen"
-RELTIMEELEM = "([\d,.]+)\s*(%s)" % '|'.join([u+"(?:\\b|\\Z)" for u in unitaliasses.keys()])
+RELTIMEELEM = "([\d,.]+)\s*(%s)" % '|'.join([u+"(?:\\b|\\Z)" for u in list(unitaliasses.keys())])
 
 RELTIMEREGEX = "%s(?:[\s]+%s)*" % (nogroups(RELTIMEELEM), nogroups(RELTIMEELEM))
 

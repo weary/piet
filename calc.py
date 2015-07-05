@@ -1,20 +1,19 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
 
-import string, random, os, math, re, datetime
-import pietlib
+import random, os, math, re, datetime
 
 def addcalc(param_org):
-  param_org=string.strip(param_org)
+  param_org=param_org.strip()
   if (param_org[:1]>="0" and param_org[:1]<="9") or (param_org[:1]=="(") or (param_org[:1]=="[") or (param_org[:1]=="-") or (param_org[:1]=="|") or (param_org[:4]=="det(")  or (param_org[:5]=="sqrt(") or (param_org[:5]=="ceil(") or (param_org[:4]=="abs(") or (param_org[:6]=="floor(") or (param_org[:4]=="exp(") or (param_org[:4]=="log(") or (param_org[:6]=="log10(") or (param_org[:5]=="acos(") or (param_org[:5]=="asin(") or (param_org[:5]=="atan(") or (param_org[:4]=="cos(") or (param_org[:4]=="sin(") or (param_org[:4]=="tan(") or (param_org[:1]=="I" and param_org[1:2]>="0" and param_org[1:2]<="9") or (param_org[:6]=="gauss("):
     param_org="calc "+param_org;
   return param_org
 
 def unitinvertcheck(unit1,unit2):
   for i in ["1","2","3","4","5","6","7","8","9"]:
-    unit1=string.replace(unit1,"^"+i,"^+"+i)
-  unit1=string.replace(unit1,"^-","^")
-  unit1=string.replace(unit1,"^+","^-")
+    unit1=str.replace(unit1,"^"+i,"^+"+i)
+  unit1=str.replace(unit1,"^-","^")
+  unit1=str.replace(unit1,"^+","^-")
   return unit1==unit2
 
 def calcS(param):
@@ -211,11 +210,11 @@ def unifyunits(unit,unit2,op):
       unitlist2=[]
       newunitlist=[]
       if unit!="":
-        for item in string.split(unit,"*"):
-          i=string.find(item,"^")
+        for item in str.split(unit,"*"):
+          i=str.find(item,"^")
           unitlist1+=[(item[:i],int(item[i+1:]))]
-      for item in string.split(unit2,"*"):
-        i=string.find(item,"^")
+      for item in str.split(unit2,"*"):
+        i=str.find(item,"^")
         unitlist2+=[(item[:i],int(item[i+1:]))]
       for (unit1,value1) in unitlist1:
         i=-1
@@ -234,7 +233,7 @@ def unifyunits(unit,unit2,op):
         if value2!=0:
           newunitlist+=[unit2+"^"+str(-value2)]
       newunitlist.sort(lambda x,y: cmp(x,y))
-      unit=string.join(newunitlist,"*")
+      unit=str.join(newunitlist,"*")
     elif unit=="":
       unit=unit2;
   else:
@@ -244,11 +243,11 @@ def unifyunits(unit,unit2,op):
       unitlist2=[]
       newunitlist=[]
       if unit!="":
-        for item in string.split(unit,"*"):
-          i=string.find(item,"^")
+        for item in str.split(unit,"*"):
+          i=str.find(item,"^")
           unitlist1+=[(item[:i],int(item[i+1:]))]
-      for item in string.split(unit2,"*"):
-        i=string.find(item,"^")
+      for item in str.split(unit2,"*"):
+        i=str.find(item,"^")
         unitlist2+=[(item[:i],int(item[i+1:]))]
       for (unit1,value1) in unitlist1:
         i=-1
@@ -267,7 +266,7 @@ def unifyunits(unit,unit2,op):
         if value2!=0:
           newunitlist+=[unit2+"^"+str(value2)]
       newunitlist.sort(lambda x,y: cmp(x,y))
-      unit=string.join(newunitlist,"*")
+      unit=str.join(newunitlist,"*")
     elif unit=="":
       unit=unit2;
   return unit
@@ -292,14 +291,14 @@ def calcP(param):
         unit="W"
       else:
         if math.floor(abs(result2))==abs(result2):
-          i=string.find(unit,"^")
+          i=str.find(unit,"^")
           while i>=0:
-            n=string.find(unit,"*",i)
+            n=str.find(unit,"*",i)
             if n<0:
               n=len(unit)
             value=int(unit[i+1:n])*int(result2)
             unit=unit[:i+1]+str(value)+unit[n:]
-            i=string.find(unit,"^",i+1)
+            i=str.find(unit,"^",i+1)
         else:
           unit="W"
     result**=result2
@@ -612,7 +611,7 @@ def calcM(param):
     datestring=digitscheck.group()
     day=int(re.compile('[0-9]+').match(datestring).group())
     month=re.compile(months).search(param).group()
-    i=string.find(param,month)
+    i=str.find(param,month)
     year=int(re.compile('[0-9]+').search(datestring[i:]).group())
     month=monthmap[month]
     try:
@@ -672,7 +671,7 @@ def calcM(param):
       param=param[len(complexpart)+1:]
       if param[:1]=="_":
         param=param[1:]
-      print param
+      print(param)
       return ("",(0,complexvalue),param,"",1,1)
   digits=re.compile('[0-9]+\:[0-9]+(\:[0-9]+(\.[0-9]+)?)?') # time format
   digitscheck= digits.match(param)
@@ -680,9 +679,9 @@ def calcM(param):
     value=0.0
     # in time format... parse that
     timestring=digitscheck.group()
-    i1=string.find(timestring,":")
+    i1=str.find(timestring,":")
     value+=int(timestring[:i1])*60
-    i2=string.find(timestring,":",i1+1)
+    i2=str.find(timestring,":",i1+1)
     if (i2>0):
       value+=int(timestring[i1+1:i2])
       value*=60
@@ -723,7 +722,7 @@ def calcM(param):
   digitscheck= digits.match(param)
   if digitscheck:
     value=float(digitscheck.group())
-    param=string.strip(param[digitscheck.end():])
+    param=str.strip(param[digitscheck.end():])
     chars=re.compile('[a-z]|\(|[0-9]|\$')
     if chars.match(param):
       (error,(value2,imag),left,unit,dimx,dimy)=calcP(param)
@@ -862,6 +861,7 @@ def calcM(param):
         endpos+=1
       if name=="EUR":
         return("",(1,0),param[endpos:],"$^1",1,1)
+      import pietlib  # circular import
       page = pietlib.get_url('http://www.xe.com/ucc/convert.cgi', postdata={
         'Amount':1, 'From':'EUR', 'To':name})
       result = re.subn('<[^>]*>', '', page)[0].replace('&nbsp;', ' ')
@@ -916,7 +916,7 @@ def calcM(param):
   return (nametype+" unknown",(1,0),param,unit,1,1)
 
 def supercalc(toparse):
-  if string.find(toparse.lower()," celcius")>0:
+  if str.find(toparse.lower()," celcius")>0:
     return "/nick Anders_Celsius; Heet geen Celcius!;/nick piet"
   if toparse[:4]=="help":
     x1=toparse[4:].find(" ")
@@ -940,29 +940,29 @@ def supercalc(toparse):
     toparse=toparse[4:];
   elif toparse[len(toparse)-4:]==" uit":
     toparse=toparse[:len(toparse)-4];
-  toparse=string.lower(string.strip(toparse))
-  toparse=string.replace(toparse," aud"," $a")
-  toparse=string.replace(toparse,"$hk"," cur_hkd")
-  toparse=string.replace(toparse,"hk$"," cur_hkd")
-  toparse=string.replace(toparse,"gbp"," ukp")
-  toparse=string.replace(toparse," a$"," $a")
-  toparse=string.replace(toparse," b$"," cur_bzd")
-  toparse=string.replace(toparse," $b"," cur_bzd")
-  toparse=string.replace(toparse," in ","_in_")
-  toparse=string.replace(toparse,"\\bi ","i_")
+  toparse=str.lower(str.strip(toparse))
+  toparse=str.replace(toparse," aud"," $a")
+  toparse=str.replace(toparse,"$hk"," cur_hkd")
+  toparse=str.replace(toparse,"hk$"," cur_hkd")
+  toparse=str.replace(toparse,"gbp"," ukp")
+  toparse=str.replace(toparse," a$"," $a")
+  toparse=str.replace(toparse," b$"," cur_bzd")
+  toparse=str.replace(toparse," $b"," cur_bzd")
+  toparse=str.replace(toparse," in ","_in_")
+  toparse=str.replace(toparse,"\\bi ","i_")
 
   # if time after date change space to _ so it doesn't get lost
   digits=re.compile('[0-9]+(\-|\ )?'+months+'(\-|\ )?[0-9]+(\ )+[0-9]+\:')
   digitscheck= digits.search(toparse)
   while digitscheck:
-    i=string.rfind(toparse[:digitscheck.end()-1]," ")
+    i=str.rfind(toparse[:digitscheck.end()-1]," ")
     toparse=toparse[:i]+"_"+toparse[i+1:]
     digitscheck= digits.search(toparse)
 
-  toparse=string.replace(toparse," per ","/")
-  toparse=string.replace(toparse," ","")
-  toparse=string.replace(toparse,"kilo)","kg)")
-  toparse=string.replace(toparse,"kilo_","kg_")
+  toparse=str.replace(toparse," per ","/")
+  toparse=str.replace(toparse," ","")
+  toparse=str.replace(toparse,"kilo)","kg)")
+  toparse=str.replace(toparse,"kilo_","kg_")
   if toparse[len(toparse)-4:]=="kilo":
     toparse=toparse[:len(toparse)-4]+"kg"
   (error,(result,imag),left,unit,dimx,dimy)= calcS(toparse)
@@ -1018,20 +1018,20 @@ def supercalc(toparse):
       else:
         pref=""
       s100=str(result)
-      if string.find(s100,"e-")>0:
+      if str.find(s100,"e-")>0:
         return pref+s100+" sec"
-      if string.find(s100,"e")>0:
+      if str.find(s100,"e")>0:
         s100=""
       else:
-        s100=s100[string.find(s100,".")+1:]
+        s100=s100[str.find(s100,".")+1:]
       hours=math.floor(result/3600)
       result-=hours*3600
-      hours=string.replace(str(hours),".0","")
+      hours=str.replace(str(hours),".0","")
       min=math.floor(result/60)
       result-=min*60
-      min=string.replace(str(min),".0","")
+      min=str.replace(str(min),".0","")
       sec=math.floor(result)
-      sec=string.replace(str(sec),".0","")
+      sec=str.replace(str(sec),".0","")
       if s100=="0":
         s100=""
       else:
@@ -1053,7 +1053,7 @@ def supercalc(toparse):
         return pref+sec+s100+" sec"
     result=str(result)
     imag=str(imag)
-    if (string.find(unit,"DW^")>=0 and unit!="DW^1"):
+    if (str.find(unit,"DW^")>=0 and unit!="DW^1"):
       return "Operations on days of week are not allowed"
     if unit=="DW^1":
       try:
@@ -1068,14 +1068,14 @@ def supercalc(toparse):
     if unit=="W":
       unit=random.choice(["Quantum fluctuations","Random distortions","Hyper Wave-entanglements","Chrono particle inductions","Parallel Chi","meta Universe inhibitors","Semi Nuclear Helices","Thaume bubbles"])
     else:
-      unit=string.replace(unit,"s^","sec^")
-      unit=string.replace(unit,"m^","meter^")
-      unit=string.replace(unit,"g^","gram^")
-      unit=string.replace(unit,"$^","Euro^")
-      unit=string.replace(unit,"a^","Ampere^")
-      unit=string.replace(unit,"b^","byte^")
-      unit=string.replace(unit,"cd^","candela^")
-    unit=string.replace(unit,"^1","")
+      unit=str.replace(unit,"s^","sec^")
+      unit=str.replace(unit,"m^","meter^")
+      unit=str.replace(unit,"g^","gram^")
+      unit=str.replace(unit,"$^","Euro^")
+      unit=str.replace(unit,"a^","Ampere^")
+      unit=str.replace(unit,"b^","byte^")
+      unit=str.replace(unit,"cd^","candela^")
+    unit=str.replace(unit,"^1","")
     if imag!="0":
       if result=="0":
         result=""
@@ -1089,8 +1089,8 @@ def supercalc(toparse):
           if imag=="1":
              result="i"
     result+=" "+unit
-    result=string.replace(result,"+1i","+i")
-    result=string.replace(result,"-1i","-i")
+    result=str.replace(result,"+1i","+i")
+    result=str.replace(result,"-1i","-i")
     return result
   else:
     if (unit[0]=="D^1"):
@@ -1104,20 +1104,20 @@ def supercalc(toparse):
       if (len(result)>3):
         result=result[3]
         s100=str(result)
-        if string.find(s100,"e-")>0:
+        if str.find(s100,"e-")>0:
           return s100+" sec"
-        if string.find(s100,"e")>0:
+        if str.find(s100,"e")>0:
           s100=""
         else:
-          s100=s100[string.find(s100,".")+1:]
+          s100=s100[str.find(s100,".")+1:]
         hours=math.floor(result/3600)
         result-=hours*3600
-        hours=string.replace(str(hours),".0","")
+        hours=str.replace(str(hours),".0","")
         min=math.floor(result/60)
         result-=min*60
-        min=string.replace(str(min),".0","")
+        min=str.replace(str(min),".0","")
         sec=math.floor(result)
-        sec=string.replace(str(sec),".0","")
+        sec=str.replace(str(sec),".0","")
         if s100=="0":
           s100=""
         else:
@@ -1151,14 +1151,14 @@ def supercalc(toparse):
         if unit[x+(y*dimx)]=="W":
           unit[x+(y*dimx)]="Weird"
         else:
-          unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"s^","sec^")
-          unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"m^","meter^")
-          unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"g^","gram^")
-          unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"$^","Euro^")
-          unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"a^","Ampere^")
-          unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"b^","byte^")
-          unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"cd^","candela^")
-          unit[x+(y*dimx)]=string.replace(unit[x+(y*dimx)],"^1","")
+          unit[x+(y*dimx)]=str.replace(unit[x+(y*dimx)],"s^","sec^")
+          unit[x+(y*dimx)]=str.replace(unit[x+(y*dimx)],"m^","meter^")
+          unit[x+(y*dimx)]=str.replace(unit[x+(y*dimx)],"g^","gram^")
+          unit[x+(y*dimx)]=str.replace(unit[x+(y*dimx)],"$^","Euro^")
+          unit[x+(y*dimx)]=str.replace(unit[x+(y*dimx)],"a^","Ampere^")
+          unit[x+(y*dimx)]=str.replace(unit[x+(y*dimx)],"b^","byte^")
+          unit[x+(y*dimx)]=str.replace(unit[x+(y*dimx)],"cd^","candela^")
+          unit[x+(y*dimx)]=str.replace(unit[x+(y*dimx)],"^1","")
         if (len((str(result[x+(y*dimx)])+" ").replace(".0 "," "))-1+len(unit[x+(y*dimx)]) > maxlen):
           maxlen=len((str(result[x+(y*dimx)])+" ").replace(".0 "," "))-1+len(unit[x+(y*dimx)])
 
@@ -1268,7 +1268,7 @@ units+=[("mm",1.0e-3,"m^1"),("dm",1e-1,"m^1"),("cm",1e-2,"m^1"),("km",1e+3,"m^1"
 #depcrecated exchange rates:
 units+=[("gulden",0.45378021609,"$^1"),("guldens",0.45378021609,"$^1"),("nlg",0.45378021609,"$^1")]
 
-units.sort(lambda (x1,x2,x3), (y1,y2,y3): cmp(len(y1),len(x1)))
+units.sort(key=lambda x: len(x[0]))
 
 monthmap={
   "jan":1, "januari":1, "january":1, "feb":2, "februari":2, "february":2,
@@ -1277,7 +1277,7 @@ monthmap={
   "jul":7, "juli":7, "july":7, "aug":8, "augustus":8, "august":8,
   "sep":9, "september":9, "oct":10, "okt":10, "oktober":10, "october":10,
   "nov":11, "november":11, "dec":12, "december":12}
-months = '(%s)' % ('|'.join(monthmap.keys()))
+months = '(%s)' % ('|'.join(list(monthmap.keys())))
 selectmonth={1:"Jan", 2:"Feb", 3:"Mar", 4:"Apr", 5:"May", 6:"Jun", 7:"Jul", 8:"Aug", 9:"Sep", 10:"Oct", 11:"Nov", 12:"Dec"}
 daysofweek=["Monday","Tuesday","Wednesday","Thursday","Friday","Saterday","Sunday"]
 daysofweek+=["Maandag","Dinsdag","Woensdag","Donderdag","Vrijdag","Zaterdag","Zondag"]

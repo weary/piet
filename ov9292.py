@@ -1,10 +1,10 @@
-import urllib, re, time, os, sys;
+import urllib.request, urllib.parse, urllib.error, re, time, os, sys;
 sys.path.append(".");
 import pietlib, piet;
 
 ov9292url="http://www.9292mobiel.nl/";
 
-if not(vars().has_key("ovresults")):
+if not("ovresults" in vars()):
     ovresults={}; # data structure to store old results
     
 
@@ -34,7 +34,7 @@ def findselectbox(form):
 
 def do_fetch(action, actionpath, q):
     if len(q)>0:
-        q="?"+urllib.urlencode(q);
+        q="?"+urllib.parse.urlencode(q);
     else:
         q="";
     url=ov9292url+actionpath+action+q;
@@ -111,7 +111,7 @@ def ov9292(param,nick,channel):
         else:
             nr=ord(nr)-ord('A');
         
-        if not(ovresults.has_key(nick)):
+        if not(nick in ovresults):
             return "maar ik heb helemaal geen reizen opgeslagen voor jou, "+nick;
         results=ovresults[nick];
         if nr>=len(results):
@@ -141,7 +141,7 @@ def ov9292(param,nick,channel):
         except:
             return 'De datum+tijd '+tijdstr+' snap ik niet, sorry';
    
-    print("ov van \""+van+"\" naar \""+naar+"\" om "+str(tijd));
+    print(("ov van \""+van+"\" naar \""+naar+"\" om "+str(tijd)));
 
     # get frontpage
     print("ov 1");

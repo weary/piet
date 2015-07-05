@@ -71,9 +71,9 @@ def check_sleep_time(nick_, auth_, channel_, command_, msg_):
         
       reply = "ACTION presenteert: %s, %s %s" % (nick, titel, subtitel)
 
-      nicks_stripped = set(n.strip('_') for n in nicks.keys())
+      nicks_stripped = set(n.strip('_') for n in list(nicks.keys()))
       if nick.strip('_') in nicks_stripped:
-        print "user %s was al gejoined, geen groet" % nick
+        print("user %s was al gejoined, geen groet" % nick)
       elif tu>0:
         reply = reply + ", weer terug na " + pietlib.format_tijdsduur(tu, 2)
         try:
@@ -159,7 +159,7 @@ def nickchange(nick_, auth_, channel_, newnick):
       piet.send(channel_, "authenticatie "+str(auth[1])+" nu naar "+newnick+
           " overgezet, niet nickchangen om hogere auth te krijgen\n")
   
-  if nicks.has_key(nick_):
+  if nick_ in nicks:
     nicks[newnick]=nicks[nick_];
     del nicks[nick_];
   check_names_delayed(channel_);
@@ -185,8 +185,8 @@ def check_names(nick_, channel_, msg_):
       nicks[x]=False
   pietnick=piet.nick()
   if nicks[pietnick]: # piet heeft ops
-    noop = [k for (k,v) in nicks.iteritems() if not v]
-    op_basenames = set(k.strip('_') for k,v in nicks.iteritems() if v)
+    noop = [k for (k,v) in list(nicks.items()) if not v]
+    op_basenames = set(k.strip('_') for k,v in list(nicks.items()) if v)
     if noop:
       qry = ("SELECT name FROM auth WHERE auth>=500 AND name IN (" +
            ','.join(['"'+x+'"' for x in noop])+")")
@@ -200,7 +200,7 @@ def check_names(nick_, channel_, msg_):
           piet.send(channel_, "ho, hier moet even wat gefixed worden.\n")
         piet.op(channel_, authusers)
   else: # piet niet operator
-    ops=[x for (x,o) in nicks.iteritems() if o]
+    ops=[x for (x,o) in list(nicks.items()) if o]
     if ops:
       myop=random.choice(ops)
       msg=random.choice(["mag ik een @?", "toe, doe eens een @?",
@@ -209,7 +209,7 @@ def check_names(nick_, channel_, msg_):
       piet.send(channel_, myop+": "+msg+"\n")
   checkmessages(channel_)
 
-if not(vars().has_key("names_delayed_waiting")):
+if not("names_delayed_waiting" in vars()):
   names_delayed_waiting=0;
 
 def check_names_delayed(channel_):
@@ -262,7 +262,7 @@ def do_server(channel_, nick_, auth_, msg_):
       if delay>3*60*60 and topic[-1][1]!=newtopic:
         piet.send(channel_, "\002oude\002 topic van \002%s\002 geleden: %s" % (pietlib.format_tijdsduur(delay,1), topic[-1][1]));
     topic.append((nu, newtopic))
-    print "topic lijst bevat nu:", repr(topic)
+    print("topic lijst bevat nu:", repr(topic))
   if command in ["MODE"] and auth_>0:
     if ((msg_.find(' +o')>=0) or (msg_.find(' -o')>=0)):
       check_names_delayed(channel_);

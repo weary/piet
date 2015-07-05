@@ -153,30 +153,33 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
             if (params.empty())
 						{
 							if (commands[com_index].name==std::string("sterf"))
-								send(":%s QUIT :helaas geen natuurlijke dood gestorven\n", g_config.get_nick().c_str());
+								send("QUIT :helaas geen natuurlijke dood gestorven\n");
 							else
-								send(":%s QUIT :off to a better life in oblivion\n", g_config.get_nick().c_str());
+								send("QUIT :off to a better life in oblivion\n");
 						}
             else 
-              send(":%s QUIT :%s\n", g_config.get_nick().c_str(), params.c_str());
+              send("QUIT :%s\n", params.c_str());
             break;
           }
         case(COM_LEAVE):
           {
-            sendstr_prio(std::string(":")+g_config.get_nick()+" PART "+(params.empty()?channel:params));
+            sendstr_prio("PART "+(params.empty()?channel:params));
             break;
           }
         case(COM_JOIN):
           {
             if (!params.empty())
-              sendstr_prio(std::string(":")+g_config.get_nick()+" JOIN "+params);
+						{
+              //sendstr_prio("JOIN "+params);
+              sendstr_prio("JOIN "+params);
+						}
             else
 							privmsg(channel) << "ehm " << nick << ", je bent vergeten een channel op te geven";
             break;
           }
         case(COM_CTCPPING):
           {
-            sendstr_prio(std::string(":")+g_config.get_nick()+" NOTICE "+channel+" :"+msg);
+            sendstr_prio("NOTICE "+channel+" :"+msg);
           }
           break;
         case(COM_SHUTUP):
@@ -226,14 +229,14 @@ void Feedback(const std::string &nick, int auth, const std::string &channel_in, 
           break;
         /*case(COM_RENICK):
           {
-            send(":%s PRIVMSG %s :ik zal de server eens vragen of dat mag\n", g_config.get_nick().c_str(), channel.c_str());
-            send(":%s NICK :%s\n", g_config.get_nick().c_str(), params.c_str());
+            send("PRIVMSG %s :ik zal de server eens vragen of dat mag\n", channel.c_str());
+            send("NICK :%s\n", params.c_str());
           }
           break;*/
 
 				case(COM_RESTART):
           {
-            send(":% QUIT :ben zo terug (hopelijk)\n", g_config.get_nick().c_str());
+            send("QUIT :ben zo terug (hopelijk)\n");
 						g_restart = true;
 						quit();
           }

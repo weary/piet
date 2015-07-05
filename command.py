@@ -1,15 +1,16 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-1 -*-
-from htmlentitydefs import name2codepoint as n2cp
+from html.entities import name2codepoint as n2cp
 
-import sys, string, random, re, os, time, crypt, socket, urllib, types
+import sys, string, random, re, os, time, crypt, socket, urllib.request, urllib.parse, urllib.error, types
 import traceback, stat, telnetlib, calendar, math, inspect, shlex
 import simplejson
 import subprocess
+import importlib
 
 import piet
 sys.path.append(".")
-import BeautifulSoup
+from bs4 import BeautifulSoup
 import pietlib
 import calc, Distance, pistes, ov9292, kookbalans, bash, gps, ns, vandale
 
@@ -83,7 +84,7 @@ def error_handler(typ, value, tb):
 sys.excepthook=error_handler;
 
 def parse(param, first, magzeg):
-  print "HELP! PIET STUK\n";
+  print("HELP! PIET STUK\n");
   return "";
 
 
@@ -92,10 +93,10 @@ def leeg(param):
 
 
 def onbekend_commando(param):
-  param=string.strip(param);
+  param=param.strip();
   groeten=["hoi", "goeiemorgen", "goedemorgen", "mogge", "hallo", "middag"];
 
-  split=string.split(param);
+  split=param.split()
   if len(split)>=2 and any(x in nicks for x in split[1:]):
     return emote(split[0],split[1:]);
 
@@ -173,7 +174,7 @@ def change_auth(params):
   localauth=auth;
   newauth=0;
   par=[];
-  if (len(params)>0): par=string.split(params, ' ');
+  if (len(params)>0): par=params.split(' ');
   parcount=len(par);
   if (parcount!=0 and parcount!=2 and parcount!=3):
     return "auth [<newauth> <nick> [<password>]]";
@@ -228,7 +229,7 @@ def change_auth(params):
 
   if (parcount==3):
     encrypted=crypt.crypt(par[2], "AB");
-    print "AUTH: encrypted ww = \""+encrypted+"\"\n";
+    print("AUTH: encrypted ww = \""+encrypted+"\"\n");
     if (encrypted=="ABVBPZGw0mmyg"):
       # user can give authorization as-if his authorisation was 1000
       localauth=max(localauth, 1000);
@@ -261,7 +262,7 @@ def change_auth(params):
   return "bogus"; # never reached, i think
 
 
-if not(vars().has_key("boottime")):
+if not("boottime" in vars()):
   boottime=time.time();
 
 def hex2dec(params):
@@ -284,7 +285,7 @@ def hex2dec(params):
       result+=", en soms ook als -"+str(2**64-val)
     return result
   try:
-    print "converting \""+params+"\""
+    print("converting \""+params+"\"")
     val=int(params)
   except:
     traceback.print_exc()
@@ -421,7 +422,7 @@ def kies(params):
 		return "ACTION kiest voor zichzelf"
 	try:
 		choices = shlex.split(params)
-	except Exception, e:
+	except Exception as e:
 		return "sja, wat denk je er zelf van, wat zou JIJ kiezen? ik ben van mening dat " + str(e)
 	choice = random.choice(choices)
 	if not choice:
@@ -460,12 +461,12 @@ def urban(params):
      '</soapenv:Body>' \
   '</soapenv:Envelope>';
 
-  a=string.replace(body, "%SEARCHWORD%", params);
+  a=body.replace("%SEARCHWORD%", params);
   s=socket.socket(socket.AF_INET, socket.SOCK_STREAM);
   s.connect(("api.urbandictionary.com", 80));
   fs=s.makefile();
   s.sendall(header+str(len(a))+"\r\n\r\n"+a);
-  x='<?xml'+string.split(fs.read(), '<?xml')[1]; #read only the part after <?xml
+  x='<?xml'+fs.read().split('<?xml')[1]; #read only the part after <?xml
 
   import libxml2
   import libxslt
@@ -491,9 +492,9 @@ def urban(params):
   style.freeStylesheet();
   doc.freeDoc();
   result.freeDoc();
-  lines=string.replace(lines, "\n", " ");
-  lines=string.replace(lines, "\r", "");
-  lines=string.replace(lines, "LINEBREAKHIER", ".\n");
+  lines=lines.replace("\n", " ");
+  lines=lines.replace("\r", "");
+  lines=lines.replace("LINEBREAKHIER", ".\n");
   return lines;
 
 def makeenterfromnull(inp):
@@ -509,12 +510,12 @@ def SydWeer(params):
   inp.close();
   outp.close();
   stderr.close();
-  i=string.find(result,"tate Sum")+22;
-  j=string.find(result,"___",i);
-  result=string.split(string.strip(result[i:j]),'\n');
+  i=result.find("tate Sum")+22;
+  j=result.find("___",i);
+  result=result[i:j].strip().split('\n');
   fresult="";
   for s in result:
-    fresult+=string.strip(s)+" ";
+    fresult+=s.strip()+" ";
   return fresult;
 
 def nlweer(woord):
@@ -535,10 +536,10 @@ def itaweer(woord):
   inp.close();
   outp.close();
   stderr.close();
-  return string.strip(result); 
+  return result.strip(); 
 
 def weer(woord):
-  woord=string.lower(woord);
+  woord=woord.lower()
   if (woord[:3]=="syd"):
     return SydWeer(woord);
   elif (woord=="nl") or woord=="":
@@ -550,16 +551,16 @@ def weer(woord):
   return "'%s' ken ik niet hoor, hier is het nederlandse weer:\n%s" %\
     (woord,nlweer(""));
 
-if not(vars().has_key("zeghisttijd")):
+if not("zeghisttijd" in vars()):
   zeghisttijd=0;
   zeghistnicks=[];
-assert(vars().has_key("zeghisttijd") and vars().has_key("zeghistnicks"));
+assert("zeghisttijd" in vars() and "zeghistnicks" in vars());
 
 def zeg(params):
   global nicks,zeghisttijd,zeghistnicks;
   tegen="";
   kanaal=channel;
-  split=string.split(params, " ");
+  split=params.split(" ");
   if len(split)>=3 and split[0]=="tegen":
     tegen=split[1];
     split=split[2:];
@@ -578,10 +579,10 @@ def zeg(params):
   if kanaal!=channel and tegen!="":
     return "tegen en op tegelijk? dit wordt te ingewikkeld voor mij hoor.."
   
-  txt=string.join(split, " ");
+  txt=" ".join(split)
     
   if tegen!="":
-    if (nicks.has_key(tegen)):
+    if (tegen in nicks):
       return tegen+", ehm, "+txt;
     elif (auth>100):
       txt=txt.replace("'", "''");
@@ -611,15 +612,15 @@ def rot_nr(cmd):
 		return rot_47(y)
 	n = int(n) % 26
 	rotstr = lambda x: x[n:] + x[:n]
-	trans = string.maketrans(
-			string.lowercase + string.uppercase,
-			rotstr(string.lowercase) + rotstr(string.uppercase))
-	return string.translate(y, trans)
+	trans = str.maketrans(
+			string.ascii_lowercase + string.ascii_uppercase,
+			rotstr(string.ascii_lowercase) + rotstr(string.ascii_uppercase))
+	return y.translate(trans)
 
 def rot_47(cmd):
-	from_ = ''.join(map(chr, xrange(ord('!'), ord('~') + 1)))
+	from_ = ''.join(map(chr, range(ord('!'), ord('~') + 1)))
 	to_ = from_[47:] + from_[:47]
-	return string.translate(cmd, string.maketrans(from_, to_))
+	return cmd.translate(cmd, str.maketrans(from_, to_))
 
 # make sure every entry occurs only once
 def unique(l):
@@ -627,7 +628,7 @@ def unique(l):
     u = {}
     for x in l:
       u[x.lower()] = x
-    return u.values()
+    return list(u.values())
   except:
     traceback.print_exc();
 
@@ -720,25 +721,25 @@ def spell_int(woorden, lang):
   outp, inp = os.popen2("aspell -a --lang="+lang);
   outp.write(woorden);
   outp.close();
-  result=string.split(inp.read(), '\n');
+  result=inp.read().split('\n');
   result=[re.sub("& (\w+) \d+ \d+:", "\\1: ", i)
       for i in result[1:]
       if (i!="*") and (i!="")];
   if len(result)==0:
     return "dat is goed gespeld\n";
   else:
-    return string.join(result, '\n')+"\n";
+    return '\n'.join(result)+"\n";
 
 def spell_nl(woorden):
-  woorden = string.strip(parse(woorden, False, True));
+  woorden = parse(woorden, False, True).strip();
   return spell_int(woorden, "nl");
 
 def spell_de(woorden):
-  woorden = string.strip(parse(woorden, False, True));
+  woorden = parse(woorden, False, True).strip();
   return spell_int(woorden, "de");
   
 def spell_en(woorden):
-  woorden = string.strip(parse(woorden, False, True));
+  woorden = parse(woorden, False, True).strip();
   return spell_int(woorden, "en_GB-only");
 
 
@@ -755,9 +756,9 @@ def random_sentence(params):
 def command_help(param):
 	param = param.strip()
 	if not param:
-		categories = dict([ (tup[0], 0) for (_, tup) in functions.iteritems() ]).keys()
+		categories = list(dict([ (tup[0], 0) for (_, tup) in functions.items() ]).keys())
 		for cat in categories:
-			r = [ fun for (fun, tup) in functions.iteritems() if tup[0] == cat and tup[3] ]
+			r = [ fun for (fun, tup) in functions.items() if tup[0] == cat and tup[3] ]
 			if r:
 				r.sort()
 				cmds = len(r)
@@ -776,16 +777,16 @@ def command_help(param):
 def alias(params):
   r=[b for b in functions if (functions[b][3]=="") and (functions[b][1]<=auth)];
   r.sort();
-  return string.join(r, ', ')+"\n";
+  return ', '.join(r)+"\n";
 
 def spreuk(params):
   inf = open("ol.txt");
-  lines = string.split(inf.read(), '\n');
+  lines = inf.read().split('\n');
   inf.close();
   return random.choice(lines)+"\n";
 
 def ping(woord):
-  a=string.split(woord, ' ');
+  a=woord.split(' ');
   if len(a)!=1 or len(a[0])==0 or a[0]=='?':
     return nick+": pong\n";
   else:
@@ -803,7 +804,7 @@ def zoekvrouw(params):
   cmd+="sed -n '/Resultaten 1 tot en met/,/^[[:blank:]]*$/p' | ";
   cmd+="sed -n '/naam/{s/^.*]//;h};/Leeftijd/{s/.*: /, /;H};/Lokregel/{s/.*: /: /;H;g;s/\\n//g;p}'";
   inp = os.popen(cmd);
-  vrouwen = string.split(inp.read(), '\n');
+  vrouwen = inp.read().split('\n');
   inp.close();
   result = random.choice(vrouwen) + '\n';
   result+= random.choice(vrouwen) + '\n';
@@ -821,7 +822,7 @@ def vertaal(regel):
 	aliassen = dict(namen)
 	revaliassen = dict([v,k] for k,v in namen)
 	talen = 'auto ar bg ca cs da de el en es fi fr hi hr id it iw ja ko lt lv nl no pl pt ro ru sk sl sr sv tl uk vi zh-CN zh-TW'.split(' ')
-	talenre = '|'.join(aliassen.keys()+talen)
+	talenre = '|'.join(list(aliassen.keys())+talen)
 	reresult = re.match('\s*(?:(%s)\s+)?(?:(%s)\s+)?(.*)' % (talenre,talenre), regel)
 	if not reresult:
 		return "beetje onwaarschijnlijk dat dit gebeurd, maar ik snap je vraag niet"
@@ -853,7 +854,7 @@ def vertaal(regel):
 	form = { 'key':'AIzaSyAsmIJ0qRIc9U8g-qfiGDzTLLJYDQKGcB4', 'q':regel, 'target':doel }
 	if bron != "auto":
 		form['source'] = bron
-	url = 'https://www.googleapis.com/language/translate/v2?' + urllib.urlencode(form)
+	url = 'https://www.googleapis.com/language/translate/v2?' + urllib.parse.urlencode(form)
 	result = pietlib.get_url(url, agent="Mozilla/5.0").strip()
 	if not result:
 		return "ik heb helemaal niks teruggekregen, sorry"
@@ -889,25 +890,25 @@ def vertaal(regel):
 	return '\n'.join(lines)
 
 def dvorak2qwerty(params):
-  params = string.strip(parse(params, False, True));
-  t=string.maketrans(
+  params = parse(params, False, True).strip();
+  t=str.maketrans(
       "anihdyujgcvpmlsrxo;kf.,bt/weqANIHDYUJGCVPMLSRXO:KF><BT?WEQ",
       "abcdefghijklmnopqrstuvwxyz,.'ABCDEFGHIJKLMNOPQRSTUVWXYZ<>\"");
   return params.translate(t);
 
 def qwerty2dvorak(params):
-  params = string.strip(parse(params, False, True));
-  t=string.maketrans(
+  params = parse(params, False, True).strip();
+  t=str.maketrans(
       """axje.uidchtnmbrl'poygk,qf;wv-AXJE>UIDCHTNMBRL"POYGK<QF:WV_ """,
       """abcdefghijklmnopqrstuvwxyz,.'ABCDEFGHIJKLMNOPQRSTUVWXYZ<>" """);
   return params.translate(t);
 
 def reverse(params):
-  params = string.strip(parse(params, False, True));
+  params = parse(params, False, True).strip();
   return params[-1::-1]
 
 def last(params):
-  params = string.strip(params)
+  params = params.strip()
   if params[0] == '-':
     params = params[1:]
   try:
@@ -919,24 +920,24 @@ def last(params):
   return(result);
 
 def leet(params):
-  params = string.strip(parse(params, False, True));
-  t=string.maketrans("eilatbosgEILATBOSG", "311478059311478059");
+  params = parse(params, False, True).strip();
+  t=str.maketrans("eilatbosgEILATBOSG", "311478059311478059");
   return params.translate(t);
  
 def unleet(params):
-  params = string.strip(parse(params, False, True));
-  t=string.maketrans("311478059", "eilatbosg");
+  params = parse(params, False, True).strip();
+  t=str.maketrans("311478059", "eilatbosg");
   return params.translate(t);
 
 def todo(params):
   if (params==""):
     inf = open(todofile);
-    lines = [a for a in string.split(inf.read(), '\n') if a!=""];
+    lines = [a for a in inf.read().split('\n') if a!=""];
     inf.close();
     if (len(lines)>0):
       for i in range(0, len(lines)):
         lines[i]=str(i)+". "+lines[i];
-      return string.join(lines, '\n');
+      return '\n'.join(lines);
     else:
       return "helemaal niks meer te doen!";
   else:
@@ -969,39 +970,39 @@ def simon(params):
     return "nee, nog niet";
 
 def galgje(regel):
-  a=string.split(regel, ' ');
+  a=regel.split(' ');
   if (len(a)<0):
     return "doe eens galgje start ofzo\n";
   else:
-    i1 = string.lower(string.strip(a[0]));
+    i1 = a[0].strip().lower();
     if (i1 == "start"):
       gf = open("list.txt");
-      lines = [a for a in string.split(gf.read(), '\n') if a!=""];
+      lines = [a for a in gf.read().split('\n') if a!=""];
       gf.close();
       index = random.randint(0,len(lines)-1);
       word = lines[index];
-      blind = string.join(['-' for a in word]);
+      blind = ' '.join('-' for a in word)
       towrite = blind+"\n"+str(index)+"\n7\n \n";
       outf = open("galgjetemp"+channel+".txt","w");
       outf.write(towrite);
       outf.close();
-      print "ik heb een nieuw woord bedacht, ga maar raden";
+      print("ik heb een nieuw woord bedacht, ga maar raden");
       return blind+" 7";
     elif (i1 == "raad"):
       if (len(a)<2):
         return "je moet een letter raden\n";
       else:
         tempf = open("galgjetemp"+channel+".txt");
-        lines = [i for i in string.split(tempf.read(), '\n') if i!=""];
+        lines = [i for i in tempf.read().split('\n') if i!=""];
         blind=lines[0];
         index=lines[1];
         times=int(lines[2]);
         gehad=lines[3];
         tempf.close();
         gf = open("list.txt");
-        lines = [i for i in string.split(gf.read(), '\n') if i!=""];
+        lines = [i for i in gf.read().split('\n') if i!=""];
         gf.close();
-        word=string.lower(lines[int(index)]);
+        word=lines[int(index)].lower();
         j=-2;
         nblind = "";
         for i in word:
@@ -1016,7 +1017,7 @@ def galgje(regel):
             gehad = a[1];
           else:
             gehad = gehad + ", " + a[1];
-        if (string.find(nblind,"-")==-1):
+        if (nblind.find("-")==-1):
           return nick+": heel goed. Het was idd "+word;
         if (times==0):
           return "dood, het was: "+word;
@@ -1031,35 +1032,35 @@ def galgje(regel):
 
 def citaat(params):
   inf = open(logfile);
-  lines = string.split(inf.read(), '\n');
+  lines = inf.read().split('\n');
   inf.close();
   result=random.choice(lines);
   return(result);
 
 def nmblookup(regel):
-  host=string.split(regel, ' ')[0];
+  host=regel.split(' ')[0];
   inp = os.popen("nmblookup "+host);
-  temp = string.split(inp.read(), '\n');
+  temp = inp.read().split('\n');
   if (len(temp)!=3):
     return("arg! help! nmblookup doet raar!\n");
   else:
-    lines = string.split(temp[1], ' ');
+    lines = temp[1].split(' ');
     if (lines[1]==host+"<00>"):
       result=host+" is vandaag te vinden op "+lines[0]+"\n";
     elif (lines[1]=="failed"):
       inp = os.popen("nmblookup -U 130.89.1.108 -R "+host);
-      temp = string.split(inp.read(), '\n');
+      temp = inp.read().split('\n');
       if (len(temp)!=3):
         return("arg! help! nmblookup doet raar!\n");
       else:
-        lines = string.split(temp[1], ' ');
+        lines = temp[1].split(' ');
       if (lines[1]==host+"<00>"):
         result=host+" is vandaag te vinden op "+lines[0]+"\n";
       elif (lines[1]=="failed"):
         result="ik denk dat "+host+" uitstaat, kan 'm niet vinden\n";
     else:
       result="oei, iets mis met nmblookup, ik kreeg \"%s\"\n" %\
-              string.join(lines, ' ');
+              ' '.join(lines);
     return(result);
 
 def wat_is(regel):
@@ -1095,9 +1096,9 @@ def context(regel):
   cmd="grep -B2 -A2 \""+regel+"\" log.txt";
   inp = os.popen(cmd);
   result=inp.read();
-  result=string.split(result, "\n--\n");
+  result=result.split("\n--\n");
   result.reverse();
-  result=string.join(result, "\n--\n");
+  result="\n--\n".join(result)
   return(result);
 
 def watis(regel):
@@ -1107,22 +1108,22 @@ def watis(regel):
   return(result);
 
 def anagram(regel):
-  params=string.split(regel, ' ');
+  params=regel.split(' ');
   if (len(params)<1) or (len(params[0])==0):
     return "_niks_ is al een anagram van zichzelf\n";
   else:
-    woord=string.lower(string.strip(string.join(params,"")));
-    if (string.lower(string.strip(params[0])) != "en"):
+    woord="".join(params).strip().lower()
+    if params[0].strip().lower() != "en":
       c = "wget -O - -q";
       c = c+" \"http://www.ssynth.co.uk/~gay/cgi-bin/nph-an?line=";
       c = c+woord;
       c = c+"&words=1&dict=dutch&doai=on\"";
       outp = os.popen(c);
       result = outp.read();
-      i1 = string.rfind(result,"<pre>");
-      i2 = string.rfind(result,"</pre>");
+      i1 = result.rfind("<pre>");
+      i2 = rfind(result,"</pre>");
       result=result[i1+5:i2];
-      result=string.split(result, '\n');
+      result=result.split('\n');
       if (len(result)>1):
         index = random.randint(0,len(result)-2);
         return result[index];
@@ -1132,26 +1133,26 @@ def anagram(regel):
       c = c+"&words=2&dict=dutch&doai=on\"";
       outp = os.popen(c);
       result = outp.read();
-      i1 = string.rfind(result,"<pre>");
-      i2 = string.rfind(result,"</pre>");
+      i1 = result.rfind("<pre>");
+      i2 = result.rfind("</pre>");
       result=result[i1+5:i2];
-      result=string.split(result, '\n');
+      result=result.split('\n');
       if (len(result)>1):
         index = random.randint(0,len(result)-2);
         return result[index];
     else:
       params=params[1:];
-      woord=string.lower(string.strip(string.join(params,"")));
+      woord="".join(params).strip().lower()
     c = "wget -O - -q";
     c = c+" \"http://www.ssynth.co.uk/~gay/cgi-bin/nph-an?line=";
     c = c+woord;
     c = c+"&words=1&dict=antworthp&doai=on\"";
     outp = os.popen(c);
     result = outp.read();
-    i1 = string.rfind(result,"<pre>");
-    i2 = string.rfind(result,"</pre>");
+    i1 = result.rfind("<pre>");
+    i2 = result.rfind("</pre>");
     result=result[i1+5:i2];
-    result=string.split(result, '\n');
+    result=result.split('\n');
     if (len(result)>1):
       index = random.randint(0,len(result)-2);
       return result[index];
@@ -1161,17 +1162,17 @@ def anagram(regel):
     c = c+"&words=2&dict=antworthp&doai=on\"";
     outp = os.popen(c);
     result = outp.read();
-    i1 = string.rfind(result,"<pre>");
-    i2 = string.rfind(result,"</pre>");
+    i1 = result.rfind("<pre>");
+    i2 = result.rfind("</pre>");
     result=result[i1+5:i2];
-    result=string.split(result, '\n');
+    result=result.split('\n');
     if (len(result)>1):
       index = random.randint(0,len(result)-2);
       return result[index];
     return "sorry ik kan niks bedenken";
 
 def discw(regel):
-  params=string.split(regel, ' ');
+  params=regel.split(' ');
   if (len(params)<1) or (len(params[0])==0):
     return "gebruik dw <speler> met <speler> een spelersnaam op dw\n";
   else:
@@ -1181,13 +1182,13 @@ def discw(regel):
     tn.read_until("to finger?");
     tn.write(params[0]+"\n");
     result=tn.read_until("Press enter to continue");
-    i=string.find(result,"On since");
+    i=result.find("On since");
     if (i>0):
-      j=string.find(result,".",i);
-      j=string.find(result,".",j+1);
+      j=result.find(".",i);
+      j=result.find(".",j+1);
       return result[i:j];
-    i=string.find(result,"Last logged o");
-    j=string.find(result,".",i);    
+    i=result.find("Last logged o");
+    j=result.find(".",i);    
     return result[i:j];
    
 def discwho(params):
@@ -1256,19 +1257,19 @@ def randomnaam(params):
     tn.read_until("generated names:");
     tn.write("g\n");
     result=tn.read_until("Your choice?");
-    result=string.split(result, '\n');
+    result=result.split('\n');
     categorynum=random.randint(1, 8);
     category=result[categorynum+1][4:];
-    n=string.find(category, "(");
+    n=category.find("(");
     if (n!=-1):
-      category=string.strip(category[:n-1]);
+      category=category[:n-1].strip();
   
     tn.write(string.digits[categorynum]);
     tn.write("\n");
     result=tn.read_until("Your choice?");
     tn.close();
-    result=string.split(result, '\n');
-    naam=string.strip(result[random.randint(1, 9)][4:]);
+    result=result.split('\n');
+    naam=result[random.randint(1, 9)][4:].strip();
     #print("\nnaam \""+naam+"\" uit category \""+category+"\"\n");
   else:
     #http://www.ruf.rice.edu/~pound/ naam
@@ -1279,13 +1280,13 @@ def randomnaam(params):
     outp.close();
     inp.close();
     stderr.close();
-    result = string.split(result, '\n');
+    result = result.split('\n');
     line = random.choice(result);
-    i1 = string.rfind(line, "=\"");
-    i2 = string.rfind(line, "\">");
+    i1 = line.rfind("=\"");
+    i2 = line.rfind("\">");
     url = "http://www.ruf.rice.edu/~pound/"+line[i1+2:i2];
-    i1 = string.find(line, "\">");
-    i2 = string.find(line, "</a>");
+    i1 = line.find("\">");
+    i2 = line.find("</a>");
     category=line[i1+2:i2];
     cmd = "wget -q -O - "+url;
     inp,outp,stderr = os.popen3(cmd);
@@ -1293,48 +1294,48 @@ def randomnaam(params):
     outp.close();
     inp.close();   
     stderr.close();
-    result = string.split(result, '\n');
+    result = result.split('\n');
     naam=random.choice(result);
   return ("NICK %s\nik heb deze keer gekozen voor een naam uit de "+
       "categorie \"%s\"\n") % (naam, category);
 
-if not(vars().has_key("remind_threads")):
+if not("remind_threads" in vars()):
   remind_threads=0;
 
 def remind_thread(channel, nick, auth, args):
   global remind_threads;
   if remind_threads>0:
-    print repr(remind_threads+1)+"th remind thread refusing to start";
+    print(repr(remind_threads+1)+"th remind thread refusing to start");
     return;
   remind_threads+=1;
   try:
     while True:
       now=int(round(time.time()));
-      print "remind thread: calculating sleep time (now="+repr(now)+")";
+      print("remind thread: calculating sleep time (now="+repr(now)+")");
       next=now+(5*60);
       try:
         tijd=min(next,
             int(float(piet.db("SELECT MIN(tijd) from reminds")[1][0])));
       except:
-        print "remind thread: geen reminds meer";
+        print("remind thread: geen reminds meer");
         break;
-      print "remind thread: finished calculating sleep time";
+      print("remind thread: finished calculating sleep time");
 
       wachttijd=tijd-now;
       if (wachttijd>0):
-        print "remind thread slaapt voor "+pietlib.format_tijdsduur(wachttijd);
+        print("remind thread slaapt voor "+pietlib.format_tijdsduur(wachttijd));
         time.sleep(wachttijd);
       else:
-        print "remind thread slaapt niet";
+        print("remind thread slaapt niet");
 
-      print "remind thread: checking messages";
+      print("remind thread: checking messages");
       try:
         now=int(round(time.time()));
         msgs=piet.db("SELECT channel,nick,msg,tijd FROM reminds "+
             "WHERE tijd<="+repr(now+1))[1:];
         for m in msgs:
           if (len(m)!=4):
-            print "WARNING: malformed db response in remind: "+repr(m);
+            print("WARNING: malformed db response in remind: "+repr(m));
           if m[2][:4]=="zeg ":
             channel = m[0]
             zeg(m[2])
@@ -1349,19 +1350,19 @@ def remind_thread(channel, nick, auth, args):
       except:
         #traceback.print_exc();
         pass;
-      print "remind thread: finished checking messages";
+      print("remind thread: finished checking messages");
 
   except:
     traceback.print_exc();
-    print "onverwachte remind error: "+repr(sys.exc_info()[0]);
+    print("onverwachte remind error: "+repr(sys.exc_info()[0]));
   
-  print "remind_thread terminating";
+  print("remind_thread terminating");
   remind_threads-=1;
 
 def remind(regel):
 	try:
 		if (regel[0:4]=="list"):
-			return list_reminds(string.strip(regel[5:]))
+			return list_reminds(regel[5:].strip())
 	except:
 		traceback.print_exc()
 		return "frop"
@@ -1383,15 +1384,15 @@ def remind(regel):
 	if (tijd<5*60 and tijd>=0):
 		chan = channel
 		time.sleep(tijd)
-		piet.send(chan, string.strip(parse(result, False, True)))
+		piet.send(chan, parse(result, False, True).strip())
 		return ""
 
 	# meer dan 5 min, stop in db
 	# CREATE TABLE reminds (channel string, nick string, msg string, tijd int)
 	piet.db("INSERT INTO reminds VALUES(\""+
-			string.replace(channel, '"', '""')+"\",\""+
-			string.replace(nick, '"', '""')+"\",\""+
-			string.replace(result, '"', '""')+"\","+
+			channel.replace('"', '""')+"\",\""+
+			nick.replace('"', '""')+"\",\""+
+			result.replace('"', '""')+"\","+
 			repr(now+tijd)+");")
 	piet.thread(channel, "remind_thread", "") # make sure a thread is running
 	return ""
@@ -1421,7 +1422,7 @@ def list_reminds(regel):
   return "";
 
 def verklaar(regel):
-  params=string.split(regel, ' ');
+  params=regel.split(' ');
   if (len(params)<1) or (len(params[0])==0):
     return "zou eens een parameter toevoegen aan het commando"; 
   cmd = "lynx -dump \"http://www.googlism.com/index.htm?ism="+params[0]+"&type=1\" | grep -A 5000 Googlism\ for: | grep -B 5000 Travel\ \&\ Transportation | grep -v Googlism\ for: | grep -v Travel\ \&\ Transportation | head -n 6";
@@ -1430,16 +1431,16 @@ def verklaar(regel):
   outp.close();
   inp.close();
   stderr.close();
-  i = string.find(result,"[10]");
+  i = result.find("[10]");
   if i<0:
-    i=string.find(result,"[7]");
+    i=result.find("[7]");
   if i>=0:
     return "zelfs het internet weet niet wat dat is";
   return result;
 
 #emote functions
 def mep(regel):
-  params=string.split(regel,' ');
+  params=regel.split(' ');
   if (len(params)<1) or (len(params[0])==0):
     return "ACTION mept er lustig op los";
   if (params[0]=="piet" or params[0]==piet.nick() or params[0]=="jezelf" or params[0]=="zichzelf"):
@@ -1454,7 +1455,7 @@ def mep(regel):
   return "ACTION mept "+params[0]
 
 def geef(regel):
-  params=string.split(regel,' ');
+  params=regel.split(' ');
   if (len(params)<1) or (len(params[0])==0):
     return "ACTION geeft "+nick+" een blik van verstandhouding";
   before="";
@@ -1465,7 +1466,7 @@ def geef(regel):
       line=before;
   if (line!=""):
     return "ACTION geeft "+before;
-  return "ACTION deelt "+params[0]+" "+string.join(params[1:],' ')+" uit";
+  return "ACTION deelt "+params[0]+" "+' '.join(params[1:])+" uit";
 
 def dum(params):
   if len(params)>0:
@@ -1474,38 +1475,38 @@ def dum(params):
   if (r<=0.2):
     return "die dum dum";
   if (r<=0.5):
-    print "piet: verklaar dum"
+    print("piet: verklaar dum")
     return "piet: verklaar dum\n"+verklaar("dum");
   return "dat jij je verveelt is ok, maar dan hoef je mij nog niet er mee te vermoeien";
 
 def docommand(cmd):
   inp,outp = os.popen2(cmd);
-  result = string.split(outp.read(), '\n');
+  result = outp.read().split('\n');
   outp.close();
   inp.close();
   return result;
 
 
 def tempwereld(regel):
-  regel=string.lower(regel)
-  regel=string.replace(regel,"\"new york\"","new_york");
-  regel=string.replace(regel,"'new york'","new_york");
-  regel=string.replace(regel,"new york","new_york");
-  regel=string.replace(regel,"\"den haag\"","den_haag");
-  regel=string.replace(regel,"'den haag'","den_haag");
-  regel=string.replace(regel,"den haag","den_haag");
-  regel=string.replace(regel,"\"zhong guo\"","hong_kong");
-  regel=string.replace(regel,"'zhong guo'","hong_kong");
-  regel=string.replace(regel,"zhong guo","hong_kong");
-  regel=string.replace(regel,"\"hong kong\"","hong_kong");
-  regel=string.replace(regel,"'hong kong'","hong_kong");
-  regel=string.replace(regel,"hong kong","hong_kong");
-  params=string.split(regel, ' ');
+  regel=regel.lower()
+  regel=regel.replace("\"new york\"","new_york");
+  regel=regel.replace("'new york'","new_york");
+  regel=regel.replace("new york","new_york");
+  regel=regel.replace("\"den haag\"","den_haag");
+  regel=regel.replace("'den haag'","den_haag");
+  regel=regel.replace("den haag","den_haag");
+  regel=regel.replace("\"zhong guo\"","hong_kong");
+  regel=regel.replace("'zhong guo'","hong_kong");
+  regel=regel.replace("zhong guo","hong_kong");
+  regel=regel.replace("\"hong kong\"","hong_kong");
+  regel=regel.replace("'hong kong'","hong_kong");
+  regel=regel.replace("hong kong","hong_kong");
+  params=regel.split(' ');
   if (len(params)<1) or (len(params[0])==0):
-    params=string.split("enschede sydney",' ');
+    params="enschede sydney".split()
   result="";
   for City in params:
-    City=string.replace(City,"\"","'");
+    City=City.replace("\"","'");
     if (City=="e'de" or City=="enschede" or City=="twente" or City=="twenthe"):
       City="Enschede";
     elif (City=="r'dam" or City=="rotterdam"):
@@ -1566,51 +1567,51 @@ def tempwereld(regel):
     inp,outp,err=os.popen3(cmd);
     webresult=outp.read();
     inp.close(); outp.close(); err.close();
-    i=string.find(webresult,"Your Lat")
+    i=webresult.find("Your Lat")
     error=0
     templine="";
     if (i<=0):
       error=1
     else:
-      i=string.rfind(webresult[:i],"rowW");
+      i=webresult[:i].rfind("rowW");
       if (i<=0):
         error=2
     if (error==0):
-      i=string.find(webresult,"<td",i)+3;
-      i=string.find(webresult,">",i)+1;
-      j=string.find(webresult,"</td",i);
+      i=webresult.find("<td",i)+3;
+      i=webresult.find(">",i)+1;
+      j=webresult.find("</td",i);
       tijd=webresult[i:j]+" "+timezone
       if (i<=0):
         error=3
     if (error==0):
-      i=string.find(webresult,"<nobr",i)+1;
-      i=string.find(webresult,"<nobr",i);
+      i=webresult.find("<nobr",i)+1;
+      i=webresult.find("<nobr",i);
       if (i<=0):
         error=4
     if (error==0):
-      i=string.find(webresult,"<b>",i)+3;
-      j=string.find(webresult,"<",i);
+      i=webresult.find("<b>",i)+3;
+      j=webresult.find("<",i);
       if (i<=0 or j<i):
         error=5
     if (error==0):
       templine=tijd+" "+City+", temp: "+webresult[i:j]+"°C, luchtvochtigheid: ";
-      j=string.find(webresult,"%",j);
-      j=string.rfind(webresult[:j],">")+1
+      j=webresult.find("%",j);
+      j=webresult[:j].rfind(">")+1
       if (j<=0):
         error=6
     if (error==0):
       templine+=webresult[j:j+2]+"%, wind: ";
-      i=string.rfind(webresult[:j],"km/h")-1;
-      i=string.rfind(webresult[:i],"km/h");
-      i=string.rfind(webresult[:i],"<nobr>")+6
+      i=webresult[:j].rfind("km/h")-1;
+      i=webresult[:i].rfind("km/h");
+      i=webresult[:i].rfind("<nobr>")+6
       if (i<=0):
         error=7
     if (error==0):
       if (webresult[i:i+4]=="Calm"):
         templine+="rustig"
       else:
-        i=string.find(webresult,"<b>",i)+3
-        j=string.find(webresult,"<",i)
+        i=webresult.find("<b>",i)+3
+        j=webresult.find("<",i)
         templine+=webresult[i:j]+"km/h"
     if (error==0):
       result+="\n"+templine
@@ -1619,7 +1620,7 @@ def tempwereld(regel):
   return result;
 
 def tempnl(params):
-  plaats=string.lower(params);
+  plaats=params.lower();
   if plaats in ("h'sum", "hilversum", "arnhem"):
     plaats="de bilt";
   elif (plaats=="r'dam"):
@@ -1632,17 +1633,17 @@ def tempnl(params):
   cmd = "lynx -dump http://www.knmi.nl/actueel/ | sed -n '/Waarnemingen /,${s/[[:blank:]]\+/\t/g;s/^\t//;/\(\t.*\)\{4\}/p}'"
   cmd += "| sed 's/Den\tHelder/Den Helder/;s/De\tBilt/De Bilt/'";
   outp = os.popen(cmd);
-  result=string.split(outp.read(), '\n');
+  result=outp.read().split('\n');
   outp.close();
-  result=[string.split(t, '\t') for t in result if len(t)>0];
+  result=[t.split('\t') for t in result if len(t)>0];
   eenmap={};
   for a in result[1:]:
-    eenmap[string.lower(a[0])]=a;
+    eenmap[a[0].lower()]=a;
   
   myline=eenmap[plaats]; # gooit exceptie als plaats niet bestaat
   
-  line="op "+string.join(result[0][1:], ' ')+" in "+string.lower(myline[0]);
-  line+=": "+string.join(myline[1:][:-6])+" en "+myline[-6]+" graden. ";
+  line="op "+' '.join(result[0][1:])+" in "+myline[0].lower();
+  line+=": "+' '.join(myline[1:][:-6])+" en "+myline[-6]+" graden. ";
   line+="de wind waait met "+myline[-3]+"m/s uit het "+myline[-4]+" en ";
   line+="je kunt "+myline[-2]+"m ver zien.";
   return line;
@@ -1655,13 +1656,13 @@ def temp(params):
   return line;
 
 def wiki(regel):
-  params=string.split(regel, ' ');
+  params=regel.split(' ');
   if (len(params)<1) or (len(params[0])==0):
     return "Misschien wil je wel eens een wiki parameter doen?";
   else:
-    regel = string.strip(parse(regel, False, True));
-    params=string.split(regel,' ');    
-  regel = string.strip(string.join(params,"%20"));
+    regel = parse(regel, False, True).strip();
+    params=regel.split(' ');    
+  regel = "%20".join(params).strip()
   cmd = "lynx -dump http://nl.wikipedia.org/w/wiki.phtml?search="+regel+"  |"+\
         "grep -A 20 Overeenkomst\ met\ v | grep -B 20 Overeenkomst\ met\ a |"+\
         "grep \"bytes)\"";
@@ -1670,17 +1671,17 @@ def wiki(regel):
   outp.close();
   inp.close();
   stderr.close();
-  result = string.split(result,'\n');
+  result = result.split('\n');
   returnline="";
   newurl="";
   if (len(result)>1):
     returnline="Ik heb de volgende items gevonden:";
     for a in result:
-      a=string.split(a,']');
+      a=a.split(']');
       if (len(a)>1):
-        a=string.split(a[1],'(');        
+        a=a[1].split('(');        
         returnline+="\n"+a[0];
-        if string.join(a[0].strip().split(' '),"%20").lower()==regel.lower():
+        if a[0].strip().replace(' ', "%20").lower() == regel.lower():
           newurl="http://nl.wikipedia.org/wiki/"+a[0].strip().replace(' ','_');
   if (newurl==""):
     return returnline;
@@ -1690,14 +1691,14 @@ def wiki(regel):
   outp.close();
   inp.close();
   stderr.close();
-  i = string.find(result,"<h1");
-  i = string.find(result,"<p>",i);
+  i = result.find("<h1");
+  i = result.find("<p>",i);
   result=result[i:];
-  while (string.find(result,"<table") > 0):
-    s = string.find(result,"<table");
-    e = string.find(result,"</table")+8; 
+  while (result.find("<table") > 0):
+    s = result.find("<table");
+    e = result.find("</table")+8; 
     result = result[:s]+result[e:];
-  result=result[:string.find(result,"<p>",500)];
+  result=result[:result.find("<p>",500)];
   result="<html><body>"+result+"</body></html>";
   f=open('temp', 'w');
   f.write(result);
@@ -1708,16 +1709,16 @@ def wiki(regel):
   outp.close();
   inp.close(); 
   stderr.close();  
-  if string.find(result,"Reference") > 0:
-    result = result[:string.rfind(result,"Reference")];
+  if result.find("Reference") > 0:
+    result = result[:result.rfind("Reference")];
   toreturn = "";
-  for line in string.split(result,'\n'):
-    toreturn += string.strip(line)+'\n';
-  return string.strip(toreturn);
+  for line in result.split('\n'):
+    toreturn += line.strip()+'\n';
+  return toreturn.strip();
 
 
 def temp2(regel):
-	print repr(regel)
+	print(repr(regel))
 	regel = regel.strip()
 	if not(regel):
 		raise pietlib.piet_exception("het is lekker knus en warm hier in m'n computerkast")
@@ -1729,7 +1730,7 @@ def temp2(regel):
 	else:
 		reqcity,rest = regel, ""
 	recurse_result=""
-	print repr((reqcity, rest, splitpos, regel))
+	print(repr((reqcity, rest, splitpos, regel)))
 	if rest:
 		recurse_result = temp2(rest)
 
@@ -1752,7 +1753,7 @@ def temp2(regel):
 
 	form = { 'submit': 'GO', 'u': '1', 'partner': 'accuweather' }
 	form['loccode']=reqcity
-	a = pietlib.get_url('http://www.accuweather.com/world-index-forecast.asp?'+ urllib.urlencode(form))
+	a = pietlib.get_url('http://www.accuweather.com/world-index-forecast.asp?'+ urllib.parse.urlencode(form))
 
 	current_temp = (re.findall('<div id="quicklook_current_temps">([^<]*)', a) or [""])[0].replace('&deg;', " graden ")
 	current_feeltemp = (re.findall('<div id="quicklook_current_rfval">([^<]*)', a) or [""])[0].replace('&deg;', " graden ")
@@ -1805,7 +1806,7 @@ def temp2(regel):
 		elif country=="Australia":
 			timezone = 'Australia/Sydney'
 
-		print "tijd op pagina voor %s was %s" % (city, t)
+		print("tijd op pagina voor %s was %s" % (city, t))
 		#t2 = re.match('^([0-9]+):([0-9]+)$', t)
 		#if timezone and t2: # convert the time on page to relative time for the user
 		#	os.environ['TZ'] = timezone;
@@ -1865,7 +1866,7 @@ def temp3(params):
 		return ''
 
 	form = { 'hl':'nl', 'weather':params.strip() }
-	url = 'http://www.google.com/ig/api?' + urllib.urlencode(form)
+	url = 'http://www.google.com/ig/api?' + urllib.parse.urlencode(form)
 	page = pietlib.get_url(url)
 
 	succes = False
@@ -1920,27 +1921,27 @@ def temp3(params):
 def temp4(regel):
 	reload(Distance)
 	def fail(reason):
-		print "openweathermap request FAILED:"
-		print " - url: %s" % url
-		print " - %s" % reason
+		print("openweathermap request FAILED:")
+		print(" - url: %s" % url)
+		print(" - %s" % reason)
 
 	try:
 		regel = regel.strip()
 		lat, lng = Distance.location(regel)
-		print "temp4(%s, %s)" % (lat, lng)
+		print("temp4(%s, %s)" % (lat, lng))
 	except Distance.PietLookupFailure:
 		return "sorry, maar '%s' kan ik niet vinden op mijn kaart" % regel
 
 	args = { 'lat':lat, 'lon':lng, 'cnt':1 }
-	url = 'http://openweathermap.org/data/2.0/find/city?' + urllib.urlencode(args)
-	print url
+	url = 'http://openweathermap.org/data/2.0/find/city?' + urllib.parse.urlencode(args)
+	print(url)
 	try:
 		result = simplejson.loads(pietlib.get_url(url, maxsize=10*1024*1024))
-	except Exception, e:
+	except Exception as e:
 		fail("exception: %r" % e)
 		return "meester, ik heb gefaald. je zult zelf moeten gaan kijken"
 
-	print "openweathermap result:"
+	print("openweathermap result:")
 	from pprint import pprint
 	pprint(result)
 
@@ -1951,13 +1952,13 @@ def temp4(regel):
 		temp = main['temp']
 		try:
 			rain = entries['rain']
-		except KeyError, e:
+		except KeyError as e:
 			rain = entries.get('snow', dict())
 		stationname = entries['name']
 		wind = entries['wind']
 		humidity = main['humidity']
 		weathers = entries['weather']
-	except KeyError, e:
+	except KeyError as e:
 		fail("missing %s" % str(e))
 		return "moeilijk weer, ik snap het niet.."
 
@@ -1971,7 +1972,7 @@ def temp4(regel):
 	for weather in weathers:
 		knowndescs[weather['main']] = weather['description']
 	with open("openweathermaps_descriptions.txt", "w") as f:
-		f.write('\n'.join('%s|%s' % v for v in knowndescs.iteritems()))
+		f.write('\n'.join('%s|%s' % v for v in knowndescs.items()))
 		f.write('\n')
 
 	result = []
@@ -1987,21 +1988,21 @@ def temp4(regel):
 			'Clear': 'blauwe lucht'
 			}.get(main, fallback))
 
-	prefix = u"in %s om %s" % (
+	prefix = "in %s om %s" % (
 			stationname, pietlib.format_localtijd(dt))
 	if temp > 0:
-		result.append(u"%.1f\xb0" % (temp - 273.15,))
+		result.append("%.1f\xb0" % (temp - 273.15,))
 	
-	for duration, amount in rain.iteritems():
+	for duration, amount in rain.items():
 		if amount > 0:
-			print "DEBUG: rainwaarde: %r" % rain
+			print("DEBUG: rainwaarde: %r" % rain)
 			piet.send("weary", "check debug log voor regenwaarde!")
 			piet.send("weary", repr(rain))
 
 	windstr = "het waaide %.1f mps" % wind['speed']
 	if 'deg' in wind:
 		deg = (wind['deg'] + 180.0) % 360
-		for i in xrange(0, 8):
+		for i in range(0, 8):
 			if deg <= 22.5 + 45 * i:
 				break
 		direc = [
@@ -2048,10 +2049,10 @@ def commando_tijd(regel):
   # zoek lokale tijd op, die moet voorop
   pietlib.timezone_reset();
   result=time.strftime("%H:%M", time.localtime());
-  if (tzcalc.has_key(result)): del tzcalc[result];
+  if (result in tzcalc): del tzcalc[result];
 
   result="bij mij is het "+result;
-  for t,tz in tzcalc.iteritems():
+  for t,tz in tzcalc.items():
     result=result+", en in "+tz.lower()+" is het "+t;
   return result+"\n";
 
@@ -2085,10 +2086,10 @@ def find_timezone(param, verbose):
       piet.send(channel,"hmm, ik kan kiezen uit "+pietlib.make_list(submatch));
     submatch.sort(lambda x,y: cmp(len(x),len(y)));
     return submatch[0];
-  raise "onbekende tijdzone";
+  raise Exception("onbekende tijdzone");
 
 def tijdzone(regel):
-  a=string.split(regel, ' ');
+  a=regel.split(' ');
   if (a==None or len(a)==0 or len(a[0])==0):
     matches=piet.db('SELECT name,timezone FROM auth');
     if (len(matches)<2): return "ik ken helemaal niemand!";
@@ -2098,7 +2099,7 @@ def tijdzone(regel):
         s[tz]=s[tz]+", "+n;
       else:
         s[tz]=n;
-    return string.join([tz+": "+ns for tz,ns in s.iteritems()], '\n');
+    return '\n'.join([tz+": "+ns for tz,ns in s.items()]);
   elif (len(a)==1):
     tz=pietlib.tijdzone_nick(a[0]);
     return a[0]+" huppelt rond in "+tz+"\n";
@@ -2127,17 +2128,17 @@ def tijdzone(regel):
   return "zeges, tiepgraag mannetje, 2 parameters is echt 't maximum hoor\n";
 
 def quote(regel):
-  a=string.split(regel, ' ');
+  a=regel.split(' ');
   if (len(a)==1):
     if (a[0]=="add"):
       return "te weinig tekst om toe te voegen aan de quote list";
     inf = open("quote.txt");
-    lines = string.split(inf.read(), '\n');
+    lines = inf.read().split('\n');
     lines=lines[0:len(lines)-1];
     inf.close();
     return random.choice(lines)+"\n";
   if (a[0]=="add"):
-    regel=string.strip(string.join(a[1:]," "));
+    regel=" ".join(a[1:]).strip()
     inf = open("quote.txt");
     lines = inf.read();
     inf.close();
@@ -2173,7 +2174,7 @@ def topic_cmds(params):
 
 	if not(topic):
 		raise pietlib.piet_exception("ik weet niks van 't topic, vraag het "+
-				random.choice([ i for i in nicks.keys() if i!=piet.nick()] or ["sinterklaas"])+
+				random.choice([ i for i in list(nicks.keys()) if i!=piet.nick()] or ["sinterklaas"])+
 				" eens")
 
 	if cmd in ["history", "geschiedenis", "his"]:
@@ -2289,7 +2290,7 @@ def tel(regel):
 	return fresult;    
 
 def geoip(params):
-  params=string.split(params," ")
+  params=params.split(" ")
   if (len(params)<1) or (len(params[0])==0):
     return "Heb een ip-adres nodig"
   address=params[0].split(".")
@@ -2329,10 +2330,10 @@ def ov9292_wrapper(params):
   return ov9292.ov9292(params,nick,channel);
 
 def reloadding(params):
-  params=string.split(params," ")
+  params=params.split(" ")
   def do_reload(lib):
-    reload(lib)
-    if lib.__dict__.has_key("piet_init"):
+    importlib.reload(lib)
+    if "piet_init" in lib.__dict__:
       lib.piet_init(functions)
 
   if (len(params)<1) or (len(params[0])==0):
@@ -2374,7 +2375,7 @@ def reloadding(params):
 def meer(params):
   a=meer_data[nick];
   if a and len(a)>0:
-    return string.join(a, '\n');
+    return '\n'.join(a);
   return "nah"
 
 def kookbalans_kookbalans(cmd):
@@ -2388,58 +2389,58 @@ def kookbalans_undo(cmd):
 def filemeldingen(params):
   result=pietlib.get_url("http://www.trafficnet.nl/traffic.asp?region=lijst")
   if params=="":
-    i1=string.find(result,"textplain")
-    i1=string.find(result,">",i1)+1
-    i2=string.find(result,"<",i1)
-    answer=string.replace(result[i1:i2],"&nbsp;"," ")+"\n"
-    i1=string.find(result,"textplain",i2)
-    i1=string.find(result,">",i1)+1
-    i2=string.find(result,"<",i1)
-    answer+=string.replace(string.strip(result[i1:i2]),"&nbsp;"," ")+"\n"
+    i1=result.find("textplain")
+    i1=result.find(">",i1)+1
+    i2=result.find("<",i1)
+    answer=result[i1:i2].replace("&nbsp;"," ")+"\n"
+    i1=result.find("textplain",i2)
+    i1=result.find(">",i1)+1
+    i2=result.find("<",i1)
+    answer+=result[i1:i2].strip().replace("&nbsp;"," ")+"\n"
     wegenlijst=[]
-    i1=string.find(result,"wegNrA",i1)
-    if string.find(result,"<strong>",i1)<0:
+    i1=result.find("wegNrA",i1)
+    if result.find("<strong>",i1)<0:
       i1=-1
     while i1>0:
-      i1=string.find(result,">",i1)+1
-      i2=string.find(result,"<",i1)
+      i1=result.find(">",i1)+1
+      i2=result.find("<",i1)
       wegenlijst.append(result[i1:i2])
-      i1=string.find(result,"wegNrA",i1)
-      if string.find(result,"<strong>",i1)<0:
+      i1=result.find("wegNrA",i1)
+      if result.find("<strong>",i1)<0:
         i1=-1
     if not(len(wegenlijst)):
-      return string.strip(answer)
+      return answer.strip()
     wegenlijst = list(set(wegenlijst))
     try:
       wegenlijst.sort(lambda x,y: cmp((x[0],int(x[1:])), (y[0],int(y[1:]))))
     except:
       traceback.print_exc();
     return answer+"Files op: "+(' '.join(wegenlijst))
-  i1=string.find(result,"wegNrA")
-  if string.find(result,"<strong>",i1)<0:
+  i1=result.find("wegNrA")
+  if result.find("<strong>",i1)<0:
     i1=-1
-  params=string.split(string.lower(params))
+  params=params.lower().split()
   answer=""
   while i1>0:
-    i1=string.find(result,">",i1)+1
-    i2=string.find(result,"<",i1)
-    if string.lower(result[i1:i2]) in params:
+    i1=result.find(">",i1)+1
+    i2=result.find("<",i1)
+    if result[i1:i2].lower() in params:
       answer+=result[i1:i2]+": "
-      s1=string.find(result,"<strong>",i1)+8
-      s2=string.find(result,"<",s1)
+      s1=result.find("<strong>",i1)+8
+      s2=result.find("<",s1)
       answer+=result[s1:s2]
-      s1=string.find(result,">",s2)+1
-      s1=string.find(result,">",s1)+1
-      s2=string.find(result,"</",s1)
+      s1=result.find(">",s2)+1
+      s1=result.find(">",s1)+1
+      s2=result.find("</",s1)
       desc=result[s1:s2]
-      for item in string.split(desc,"\n"):
+      for item in desc.split("\n"):
         answer+=item.replace("&nbsp;"," ").replace("<br>"," ").strip()+" ";
       answer+="\n"
-    i1=string.find(result,"wegNrA",i1)
-    if string.find(result,"<strong>",i1)<0:
+    i1=result.find("wegNrA",i1)
+    if result.find("<strong>",i1)<0:
       i1=-1
-  answer=string.replace(answer,"  "," ")
-  answer=string.replace(answer,"  "," ")
+  answer=answer.replace("  "," ")
+  answer=answer.replace("  "," ")
   if answer=="":
     return "Alles lijkt daar fijn te zijn"
   return answer
@@ -2476,7 +2477,7 @@ def formeer(regel):
       result+=check+"_"
   if (result[len(result)-1:])=="_":
     result=result[:len(result)-1:]
-  result=string.replace(result,"_",", ")
+  result=result.replace("_",", ")
   return str(seats)+" zetels voor "+result
 
 def verveel(regel):
@@ -2513,14 +2514,14 @@ def prime(n):
 		return True
 	if(not n%2):        # If the number is divisible by 2 the number is not prime
 		return False
-	for i in xrange(3,int(math.sqrt(n))+1,2): # Check for divisibility by each odd number from 3 to sqrt(n)
+	for i in range(3,int(math.sqrt(n))+1,2): # Check for divisibility by each odd number from 3 to sqrt(n)
 		if(not n%i):    # The number is divisible by some number so it is not prime.
 			return False
 	return True 
 
 
 def factorize(n,l):         # n is the number to be factorized, l is a list which holds the prime factors
-	for i in xrange(2,int(math.sqrt(n))+1): # Check each number from 2 to sqrt(n)
+	for i in range(2,int(math.sqrt(n))+1): # Check each number from 2 to sqrt(n)
 		if(not n%i):        # Some number i divides n
 			if(prime(i)):   # If it is prime then append it to the list
 				l.append(i)
@@ -2574,14 +2575,14 @@ def substitute_entity(match):
     
     if match.group(1) == "#":
         if match.group(2) == '':
-            return unichr(int(ent))
+            return chr(int(ent))
         elif match.group(2) == 'x':
-            return unichr(int('0x'+ent, 16))
+            return chr(int('0x'+ent, 16))
     else:
         cp = n2cp.get(ent)
 
         if cp:
-            return unichr(cp)
+            return chr(cp)
         else:
             return match.group()
 
@@ -2590,7 +2591,7 @@ def decode_htmlentities(string):
     return entity_re.subn(substitute_entity, string)[0]
 
 def imdb(query):
-    google_text = pietlib.get_url('http://www.google.com/search?q=' + urllib.quote(query + ' site:imdb.com'), agent='Mozilla/5.0')
+    google_text = pietlib.get_url('http://www.google.com/search?q=' + urllib.parse.quote(query + ' site:imdb.com'), agent='Mozilla/5.0')
     google_result = re.search('/title/tt(\d+)/"', google_text, re.S);
     if not google_result: return "NIKS!"
 
@@ -2763,7 +2764,7 @@ functions = {
 };
 
 # we just (re-)read the functions table. (re-)call all piet_init functions in imported modules
-for m in [i for i in globals().values() if type(i)==types.ModuleType]:
+for m in [i for i in list(globals().values()) if type(i)==types.ModuleType]:
 	if 'piet_init' in m.__dict__:
 		m.piet_init(functions)
 
@@ -2793,7 +2794,7 @@ def parse(param_org, first, magzeg):
     else:
       command="zeg";
   
-  print (command, params, int(auth));
+  print((command, params, int(auth)));
   
   functie=functions[command];
   if (int(auth)<functie[1]):
@@ -2809,7 +2810,7 @@ def parse(param_org, first, magzeg):
       funcmodule.channel = channel
       funcmodule.nick = nick
     else:
-      print "could not get function module for function"
+      print("could not get function module for function")
   except:
     traceback.print_exc();
   
@@ -2826,11 +2827,11 @@ def parse(param_org, first, magzeg):
   maxlines=10
   if type(r) == type(None):
     return "rare functie, kwam niks uit"
-  r2=[i for i in r.split('\n') if len(string.strip(i))>0]
+  r2=[i for i in r.split('\n') if len(i.strip())>0]
   if len(r2) > maxlines+1:
     l=str(len(r2));
     meer_data[nick]=r2[maxlines:];
-    r=string.join(r2[:maxlines], '\n')+\
+    r='\n'.join(r2[:maxlines])+\
       ('\n%s: %d van de %d regels vind ik zat, maar "meer" geeft meer\n' %
       (nick, int(maxlines), int(l)));
   return r;
@@ -2843,7 +2844,7 @@ def do_command(channel_, nick_, auth_, msg_):
   auth=int(auth_);
   channel=channel_;
   if (msg_[0:2]=="s/"):
-    regexparts=string.split(msg_,"/");
+    regexparts=msg_.split("/");
     if (len(regexparts)==3) or (len(regexparts)==4):
       if (prev_command=="niets"):
         piet.send(channel_, "geen vorig commando, wat wil je nou?\n");
@@ -2851,13 +2852,13 @@ def do_command(channel_, nick_, auth_, msg_):
       msg_=re.sub(regexparts[1], regexparts[2], prev_command);
 
   prev_command=msg_;
-  print "executing nick=%s, auth=%s, channel=%s, msg=%s" % (repr(nick), repr(auth), repr(channel), repr(msg_))
+  print("executing nick=%s, auth=%s, channel=%s, msg=%s" % (repr(nick), repr(auth), repr(channel), repr(msg_)))
   try:
     result=parse(msg_, True, True);
-    if type(result) == unicode:
+    if type(result) == str:
       result = result.encode('UTF-8')
     piet.send(channel_, result);
-  except pietlib.piet_exception, e:
+  except pietlib.piet_exception as e:
     piet.send(channel_, str(e))
 
 

@@ -14,9 +14,7 @@ namespace piet_intern
 void privmsg_t::send_one_line(const std::string &s_)
 {
 	assert(!s_.empty() && s_ != "\n" && *s_.rbegin()!='\n');
-	std::string pietnick = g_config.get_nick();
-	send(":%s PRIVMSG %s :%s\n", pietnick.c_str(),
-		 	d_channel.c_str(), s_.c_str());
+	send("PRIVMSG %s :%s\n", d_channel.c_str(), s_.c_str());
 }
 
 void threadlog_t::send_one_line(const std::string &s_)

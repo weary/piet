@@ -6,46 +6,45 @@
 #include "piet_py_handler.h"
 #include "privmsg_and_log.h"
 #include "sqlite3.h"
+#include <mutex>
 
 namespace
 {
 
-struct sqlite_singleton_t
+struct sqlite_db_t
 {
-	friend class locked_sqlite;
 public:
-	~sqlite_singleton_t()
- 	{
-		if (d_db) close_db();
+	sqlite_db_t()
+	{
+		open_db();
 	}
 
-protected:
-	sqlite3 *claim_locked()
+	~sqlite_db_t()
+ 	{
+		if (d_db)
+			close_db();
+	}
+
+	operator sqlite3 *()
 	{
-		pthread_mutex_lock(&d_mutex);
-		//threadlog() << "DB: database claimed";
-		if (!d_db) open_db();
+		if (!d_db)
+			throw std::runtime_error("Database not open");
+		if (d_mutex.try_lock())
+		{
+			d_mutex.unlock();
+			throw std::runtime_error("Database mutex was not locked");
+		}
 		return d_db;
 	}
 
-	void release()
-	{
-		//threadlog() << "DB: database released";
-		pthread_mutex_unlock(&d_mutex);
-	}
+	typedef std::unique_lock<std::mutex> lockguard_t;
 
-	static sqlite_singleton_t &instance()
+	lockguard_t lock_guard()
 	{
-		static sqlite_singleton_t g;
-		return g;
+		return lockguard_t(d_mutex);
 	}
 
 private:
-	sqlite_singleton_t() : d_db(NULL)
-	{
-		pthread_mutex_init(&d_mutex, NULL);
-	}
-
 	void open_db()
 	{
 		threadlog() << "DB: opening database";
@@ -54,7 +53,7 @@ private:
 		{
 			threadlog() << "DB: Can't open database: " << sqlite3_errmsg(d_db);
 			sqlite3_close(d_db);
-			d_db=NULL;
+			d_db = nullptr;
 		}
 	}
 
@@ -62,29 +61,14 @@ private:
 	{
 		threadlog() << "DB: closing database";
 		sqlite3_close(d_db);
-		d_db = NULL;
+		d_db = nullptr;
 	}
 
-	sqlite3 *d_db;
-	pthread_mutex_t d_mutex; // only one thread allowed to talk to the database
+	sqlite3 *d_db = nullptr;
+	std::mutex d_mutex;
 };
 
-struct locked_sqlite
-{
-	locked_sqlite() : d_db(sqlite_singleton_t::instance().claim_locked())
-	{
-	}
-
-	operator sqlite3 *() { return d_db; } // returns NULL if database failed to open
-
-	~locked_sqlite()
-	{
-		sqlite_singleton_t::instance().release();
-	}
-
-protected:
-	sqlite3 *d_db;
-};
+static sqlite_db_t g_sqlite_db;
 
 } // nameless namespace
 
@@ -101,14 +85,14 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 
 	std::string query(cp_query, query_len);
 
-	locked_sqlite dbhandle;
-	PY_ASSERT((sqlite3 *)dbhandle, "database openen was toch echt te moeilijk, andere keer beter");
+	sqlite_db_t::lockguard_t lg(g_sqlite_db.lock_guard());
+	PY_ASSERT((sqlite3 *)g_sqlite_db, "database openen was toch echt te moeilijk, andere keer beter");
 
 	int nrow,ncolumn;
 	char *err=NULL;
 	char **table=NULL;
 	int result=
-		sqlite3_get_table(dbhandle, query.c_str(), &table, &nrow, &ncolumn, &err);
+		sqlite3_get_table(g_sqlite_db, query.c_str(), &table, &nrow, &ncolumn, &err);
 	if (err)
 	{
 		threadlog() << "DB: query: " << query << " -> FAILED";
@@ -143,7 +127,7 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 			PyObject *fld = NULL;
 			if (*field)
 			{
-				fld = PyString_FromString(*(field));
+				fld = PyUnicode_FromString(*(field));
 			}
 			else
 			{
@@ -157,7 +141,7 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 		assert(r==0);
 	}
 	PyObject *repr = PyObject_Repr(list);
-	threadlog() << "DB: query: " << query << " -> " << PyString_AsString(repr);
+	threadlog() << "DB: query: " << query << " -> " << pyunicode_asstring(repr);
 	Py_DECREF(repr);
 	if (table) sqlite3_free_table(table);
 	return list;
@@ -167,8 +151,8 @@ PyObject * piet_db_query(PyObject *self, PyObject *args)
 
 std::string piet_db_get(const std::string &query_, const std::string &default_)
 {
-	locked_sqlite dbhandle;
-	if (!(sqlite3 *)dbhandle)
+	sqlite_db_t::lockguard_t lg(g_sqlite_db.lock_guard());
+	if (!(sqlite3 *)g_sqlite_db)
 	{
 		threadlog() << "DB: query: " << query_ << " -> FAILED";
 		threadlog() << "DB: database not opened, returning default";
@@ -179,7 +163,7 @@ std::string piet_db_get(const std::string &query_, const std::string &default_)
 	char *err=NULL;
 	char **table=NULL;
 	int result=
-		sqlite3_get_table(dbhandle, query_.c_str(), &table, &nrow, &ncolumn, &err);
+		sqlite3_get_table(g_sqlite_db, query_.c_str(), &table, &nrow, &ncolumn, &err);
 	if (err)
 	{
 		threadlog() << "DB: query: " << query_ << " -> FAILED";
@@ -212,15 +196,15 @@ void piet_db_set(const std::string &query_)
 {
 	threadlog() << "DB: query: " << query_;
 
-	locked_sqlite dbhandle;
-	if (!(sqlite3 *)dbhandle)
+	sqlite_db_t::lockguard_t lg(g_sqlite_db.lock_guard());
+	if (!(sqlite3 *)g_sqlite_db)
 		throw std::runtime_error("could not open database");
 
 	int nrow,ncolumn;
 	char *err=NULL;
 	char **table=NULL;
 	int result=
-		sqlite3_get_table(dbhandle, query_.c_str(), &table, &nrow, &ncolumn, &err);
+		sqlite3_get_table(g_sqlite_db, query_.c_str(), &table, &nrow, &ncolumn, &err);
 	if (table) sqlite3_free_table(table);
 	if (err)
 	{

@@ -16,11 +16,11 @@ class StationsNamen:
 			self.stations = dict(l.split(',',1) for l in lines if l)
 		else:
 			self.read_stations()
-		self.stations_inv = dict([(l.lower(),k) for k,l in self.stations.iteritems()])
+		self.stations_inv = dict([(l.lower(),k) for k,l in self.stations.items()])
 
 	def read_stations(self):
 		namen = []
-		for ci in xrange(0, 26):
+		for ci in range(0, 26):
 			c = chr(ord('A')+ci)
 			dumpname = "namen_%s.txt" % c
 			if debugpiet and os.path.exists(dumpname):
@@ -45,7 +45,7 @@ class StationsNamen:
 
 		# not found, assume longname is substring of a longname
 		betterlongname = None
-		for l,s in self.stations_inv.iteritems():
+		for l,s in self.stations_inv.items():
 			if l.find(longname)>=0:
 				if not betterlongname or len(betterlongname)>len(l):
 					betterlongname = l
@@ -202,7 +202,7 @@ def ns(regel, channel):
 		opm = [ "\002%s\002 voor %s" % (s,l) for s,l in opmerkingen ]
 		piet.send(channel, "%s was korter geweest" % pietlib.make_list(opm))
 
-	print "NS: van %s naar %s via %s %stijd %s" % (repr(van), repr(naar), repr(via), tijdtype and "vertrek" or "aankomst", repr(tijd))
+	print("NS: van %s naar %s via %s %stijd %s" % (repr(van), repr(naar), repr(via), tijdtype and "vertrek" or "aankomst", repr(tijd)))
 
 	# test ns site en haal cookies
 	cookies = []

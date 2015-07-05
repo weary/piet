@@ -13,13 +13,13 @@ namespace piet_py_intern
 	struct py_thread_t;
 	struct intern_lock_t;
 }
-
+std::string pyunicode_asstring(PyObject *unicode);
 typedef std::map<std::string,std::string> threadlocalmap_t;
 threadlocalmap_t &getthreadlocalmap();
 
 struct py_handler_t : public boost::noncopyable
 {
-	~py_handler_t() { if (!destructed) destruct(); }
+	~py_handler_t() { if (!d_destructed) destruct(); }
 	void destruct();
 
 	static py_handler_t &instance();
@@ -30,9 +30,11 @@ struct py_handler_t : public boost::noncopyable
 	std::list<std::string> threadlist() const;
 
 protected:
-	bool destructed;
+	bool d_destructed;
 	py_handler_t();
 	void export_piet_funcs();
+
+	PyThreadState *d_initial_threadstate = nullptr;
 };
 
 extern py_handler_t &g_python;

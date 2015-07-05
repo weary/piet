@@ -15,8 +15,7 @@
 #    - initiele versie met winterberg en soelden
 #
 
-import urllib
-from sets import Set
+import urllib.request, urllib.parse, urllib.error
 
 
 
@@ -50,12 +49,12 @@ def cmd_pistes(cmd):
   for teken in ",.;:\"'`!?()":
     cmd = cmd.replace(teken,"")
 
-  pistes = Set()
+  pistes = {}
   if (cmd == ""):
     for fs in overzicht:
       pistes.add(fs)
   else:
-    for naam in aliases.keys():
+    for naam in list(aliases.keys()):
       if (naam in cmd):
         pistes.union_update(aliases[naam])
     if (len(pistes) == 0):
@@ -80,10 +79,10 @@ def pistes_les2alpes():
     "IMG/ico_p_bleu.gif\" align=\"center\" />\x0d\n", \
     "IMG/ico_p_rouge.gif\" align=\"center\" />\x0d\n", \
     "IMG/ico_p_noir.gif\" align=\"center\" />\x0d\n" ]
-  i_liften, i_groen, i_blauw, i_rood, i_zwart = range(5)
+  i_liften, i_groen, i_blauw, i_rood, i_zwart = list(range(5))
 
   try:
-    sock = urllib.urlopen("http://www.les2alpes.com/asources/meteo/meteoaff.asp?lg=uk")
+    sock = urllib.request.urlopen("http://www.les2alpes.com/asources/meteo/meteoaff.asp?lg=uk")
 
     try:
       html = sock.read()
@@ -118,7 +117,7 @@ def pistes_les2alpes():
 
 def pistes_soelden():
   try:
-    sock = urllib.urlopen("http://www.soelden.com/main/EN/WI/WetterSchnee/Heute/index,method=main.html")
+    sock = urllib.request.urlopen("http://www.soelden.com/main/EN/WI/WetterSchnee/Heute/index,method=main.html")
 
     try:
       html = sock.read()
@@ -153,7 +152,7 @@ def pistes_soelden():
 
 def pistes_winterberg():
   try:
-    sock = urllib.urlopen("http://www2.winterberg.de/de/snow-fun/schneehoehen_alpin.php")
+    sock = urllib.request.urlopen("http://www2.winterberg.de/de/snow-fun/schneehoehen_alpin.php")
 
     try:
       html = sock.read()
@@ -177,7 +176,7 @@ def pistes_winterberg():
 
 def pistes_winterberg_skiliftkarussell():
   try:
-    sock = urllib.urlopen("http://univers.skiliftkarussell.de/schnee-info.htm")
+    sock = urllib.request.urlopen("http://univers.skiliftkarussell.de/schnee-info.htm")
 
     try:
       html = sock.read()

@@ -5,17 +5,47 @@
 #include "bot.h"
 #include "piet_db.h"
 #include <boost/lexical_cast.hpp>
+#include <boost/scope_exit.hpp>
 #include <iostream>
 #include <stdexcept>
 #include <map>
 #include <signal.h>
+#include <mutex>
+#include <thread>
+#include <pythread.h>
+
+std::string pyunicode_asstring(PyObject *unicode)
+{
+	Py_ssize_t size = 0;
+	const char *s = PyUnicode_AsUTF8AndSize(
+			unicode, &size);
+	if (!s)
+		throw std::runtime_error("unicode string is not a unicode string");
+	return std::string(s, size);
+}
+
+struct GILstate_ensure_t
+{
+	GILstate_ensure_t() :
+		d_gstate(PyGILState_Ensure())
+	{}
+
+	~GILstate_ensure_t()
+	{
+		PyGILState_Release(d_gstate);
+	}
+
+protected:
+	PyGILState_STATE d_gstate;
+};
 
 namespace piet_py_intern
 {
 
+static thread_local std::map<std::string, std::string> t_threadlocalmap;
+
 // protects threadslist and modification map
-static pthread_mutex_t g_mutex;
-static pthread_key_t g_threadlocalkey;
+static std::mutex g_mutex;
 typedef std::list<piet_py_intern::py_thread_t *> threadlist_t;
 static threadlist_t g_threads;
 
@@ -25,18 +55,11 @@ static modification_map_t g_modification_map;
 static PyThreadState *g_main_thread_state = NULL;
 
 
-std::string pystring_asstring(PyObject *obj_)
-{
-	char *data;
-	Py_ssize_t len;
-	PyString_AsStringAndSize(obj_, &data, &len);
-	return std::string(data, len);
-}
 std::string py_repr(PyObject *obj_)
 {
 	if (!obj_) return "NULLrepr";
 	PyObject *s = PyObject_Repr(obj_);
-	std::string r = pystring_asstring(s);
+	std::string r = pyunicode_asstring(s);
 	Py_XDECREF(s);
 	return r;
 }
@@ -44,7 +67,7 @@ std::string py_str(PyObject *obj_)
 {
 	if (!obj_) return "NULLstr";
 	PyObject *s = PyObject_Str(obj_);
-	std::string r = pystring_asstring(s);
+	std::string r = pyunicode_asstring(s);
 	Py_XDECREF(s);
 	return r;
 }
@@ -53,40 +76,17 @@ void print_traceback(PyObject *tb_)
 {
 	assert(PyTraceBack_Check(tb_));
 
-	PyObject *pystdout =
-		PyDict_GetItemString(
-				PyModule_GetDict(
-					PyDict_GetItemString(
-						PyImport_GetModuleDict(),
-						"sys")),
-				"stdout");
+	PyObject *pystdout = PySys_GetObject("stdout");
+	if (!pystdout)
+	{
+		threadlog() << "Cannot print traceback, sys.stdout not found\n";
+		return;
+	}
+	threadlog() << "Writing traceback\n";
 	PyTraceBack_Print(tb_, pystdout);
 }
 
-struct GIL_lock : public boost::noncopyable
-{
-	GIL_lock(const std::string &occasion_) : d_occasion(occasion_) { PyEval_AcquireLock(); }
-	~GIL_lock() { PyEval_ReleaseLock(); }
-	std::string d_occasion;
-};
-
-struct lock_guard_t // simple lock-wrapper
-{
-	lock_guard_t() : d_locked_mutex(&g_mutex)
- 	{
-		pthread_mutex_lock(d_locked_mutex);
-	}
-	~lock_guard_t() { unlock(); }
-
-	void unlock() {
-		if (d_locked_mutex) {
-			pthread_mutex_unlock(d_locked_mutex);
-			d_locked_mutex = NULL;
-		}
-	}
-protected:
-	pthread_mutex_t *d_locked_mutex;
-};
+typedef std::lock_guard<std::mutex> lock_guard_t;
 
 
 std::string mystrerror(int errnum)
@@ -106,44 +106,42 @@ void *py_thread_t_run(void *self);
 
 struct py_thread_t
 {
-	py_thread_t(const std::string &channel_, const std::string &nick_, uint32_t auth_, const std::string &cmd_, const std::string &args_) :
-		d_channel(channel_), d_nick(nick_), d_auth(auth_), d_cmd(cmd_), d_args(args_), d_count(g_count++)
+	py_thread_t(
+			const std::string &channel_, const std::string &nick_,
+			uint32_t auth_, const std::string &cmd_, const std::string &args_) :
+		d_thread_id(0),
+		d_channel(channel_), d_nick(nick_), d_auth(auth_), d_cmd(cmd_),
+		d_args(args_), d_our_tid(g_count++)
 	{
-		lock_guard_t guard;
+		lock_guard_t guard(g_mutex);
 
-		int result = pthread_create(&d_thread, NULL, &py_thread_t::staticrun, this);
-		if (result)
-			throw std::runtime_error("failed to create thread, error code " + boost::lexical_cast<std::string>(result) + " "
-					"(" + mystrerror(result) + ")");
+		d_thread = std::thread([this](){this->run();});
 
 		g_threads.push_back(this);
 
-		pthread_detach(d_thread);
+		d_thread.detach();
 	}
 	~py_thread_t()
 	{
-		lock_guard_t guard;
+		lock_guard_t guard(g_mutex);
 		g_threads.remove(this);
 	}
 
-	static void *staticrun(void *self)
-	{
-		return reinterpret_cast<py_thread_t *>(self)->run();
-	}
-	void *run();
+	void run();
 
-	void kill() { pthread_kill(d_thread, SIGTERM); }
+	long thread_id() const { return d_thread_id; };
 
-	std::string str() const { return "[" + to_str(d_count) + ": " + d_cmd + "(" + d_args + ")]"; }
+	std::string str() const { return "[" + to_str(d_our_tid) + ": " + d_cmd + "(" + d_args + ")]"; }
 
 protected:
-	pthread_t d_thread;
+	std::thread d_thread;
+	long d_thread_id;  // python thread id
 	std::string d_channel;
 	std::string d_nick;
 	uint32_t d_auth;
 	std::string d_cmd;
 	std::string d_args;
-	uint32_t d_count;
+	uint32_t d_our_tid;  // our thread id
 	static uint32_t g_count;
 };
 uint32_t py_thread_t::g_count = 0;
@@ -158,68 +156,60 @@ struct terminate_thread_exception_t : public std::exception
 } // end namespace piet_py_intern
 using namespace piet_py_intern;
 
-static void delete_thread_local(void *p)
-{
-	delete static_cast<threadlocalmap_t *>(p);
-}
-
 // make sure the threading is initialised early
 py_handler_t &g_python = py_handler_t::instance();
 
-py_handler_t::py_handler_t() : destructed(false)
+py_handler_t::py_handler_t() : d_destructed(false)
 {
-	pthread_mutex_init(&g_mutex, NULL);
-	pthread_key_create(&g_threadlocalkey, &delete_thread_local);
+	printf("py_handler_t initialiser\n");
 
-	getthreadlocalmap()["tid"] = "main";
-	getthreadlocalmap()["nick"] = "system";
-	getthreadlocalmap()["auth"] = "0";
+	t_threadlocalmap["tid"] = "main";
+	t_threadlocalmap["nick"] = "system";
+	t_threadlocalmap["auth"] = "0";
+
+	export_piet_funcs();
 
 	Py_Initialize();
 	PyEval_InitThreads();
 
 	g_main_thread_state = PyThreadState_Get();
+	assert(PyGILState_Check());
 
-	PyEval_ReleaseLock();
-
-	export_piet_funcs();
-}
-
-void sigtermhandler(int sig) // will be called in thread-context
-{
-	throw terminate_thread_exception_t();
+	// release GIL
+	d_initial_threadstate = PyEval_SaveThread();
 }
 
 void py_handler_t::destruct()
 {
-	if (destructed) return;
-	destructed = true;
+	if (d_destructed) return;
+	d_destructed = true;
+
+	PyEval_RestoreThread(d_initial_threadstate);  // re-acquire GIL
+
 	threadlog() << "python handler destructed, cleaning up threads";
 	{
-		sighandler_t oldhandler = signal(SIGTERM, sigtermhandler);
-
+		lock_guard_t guard(g_mutex);
+		for(auto &thread: g_threads)
 		{
-			lock_guard_t guard;
-			for(threadlist_t::iterator i = g_threads.begin(); i != g_threads.end(); ++i)
-				(*i)->kill();
+			PyThreadState_SetAsyncExc(thread->thread_id(),
+					PyExc_SystemExit);
 		}
 
+		PyThreadState *_save; _save = PyEval_SaveThread();
 		while (1) // wait until threads actually finished
 	 	{
 			{
-				lock_guard_t guard;
-				if (g_threads.empty()) break;
+				lock_guard_t guard(g_mutex);
+				if (g_threads.empty())
+					break;
 			}
 			usleep(100);
 		}
-		signal(SIGTERM, oldhandler);
+		PyEval_RestoreThread(_save);
 	}
 
-	PyEval_AcquireLock();
-	PyThreadState_Swap(g_main_thread_state);
+	assert(PyGILState_Check());
 	Py_Finalize();
-
-	pthread_mutex_destroy(&g_mutex);
 }
 
 
@@ -231,7 +221,7 @@ py_handler_t &py_handler_t::py_handler_t::instance()
 
 void py_handler_t::read_file_if_changed(const std::string &channel_, const std::string &filename_)
 {
-	assert(!destructed);
+	assert(!d_destructed);
 	struct stat st;
 	int r=stat(filename_.c_str(), &st);
 	if (r!=0)
@@ -241,7 +231,7 @@ void py_handler_t::read_file_if_changed(const std::string &channel_, const std::
 	}
 	else
 	{
-		lock_guard_t guard1;
+		std::unique_lock<std::mutex> guard1(g_mutex);
 		modification_map_t::iterator i = g_modification_map.find(filename_);
 		bool readit=false;
 		if (i == g_modification_map.end())
@@ -265,10 +255,9 @@ void py_handler_t::read_file_if_changed(const std::string &channel_, const std::
 				privmsg(channel_) << "ik kan " << filename_ << " niet openen!";
 			else
 			{
-				GIL_lock guard2(__func__);
-				PyThreadState_Swap(g_main_thread_state);
+				GILstate_ensure_t gs;
+
 				PyRun_SimpleFile(f, filename_.c_str());
-				PyThreadState_Swap(NULL);
 				fclose(f);
 			}
 		}
@@ -278,7 +267,7 @@ void py_handler_t::read_file_if_changed(const std::string &channel_, const std::
 
 void py_handler_t::exec(const std::string &channel_, const std::string &nick_, uint32_t auth_, const std::string &cmd_, const std::string &args_)
 {
-	assert(!destructed);
+	assert(!d_destructed);
 	try
 	{
 		new py_thread_t(channel_, nick_, auth_, cmd_, args_);
@@ -292,7 +281,7 @@ void py_handler_t::exec(const std::string &channel_, const std::string &nick_, u
 std::list<std::string> py_handler_t::threadlist() const
 {
 	std::list<std::string> result;
-	lock_guard_t guard;
+	lock_guard_t guard(g_mutex);
 	for (threadlist_t::const_iterator i = g_threads.begin(); i!=g_threads.end(); ++i)
 		result.push_back((*i)->str());
 	return result;
@@ -300,37 +289,20 @@ std::list<std::string> py_handler_t::threadlist() const
 
 threadlocalmap_t &getthreadlocalmap()
 {
-	void *p = pthread_getspecific(g_threadlocalkey);
-	if (!p)
-	{
-		p = new threadlocalmap_t;
-		pthread_setspecific(g_threadlocalkey, p);
-	}
-#if 0
-	{
-		std::cout << "threadmap: ";
-		threadlocalmap_t &tm = *static_cast<threadlocalmap_t *>(p);
-		for (threadlocalmap_t::const_iterator i=tm.begin(); i!=tm.end(); ++i)
-		{
-			std::cout << "(" << i->first << "," << i->second << ") ";
-		}
-		std::cout << "\n" << std::flush;
-	}
-#endif
-	return *static_cast<threadlocalmap_t *>(p);
+	return t_threadlocalmap;
 }
 
-void *py_thread_t::run()
+void py_thread_t::run()
 {
 	threadlocalmap_t &locmap = getthreadlocalmap();
-	locmap["tid"] = to_str(d_count);
-	threadlog() << "thread started\n";
+	locmap["tid"] = to_str(d_our_tid);
+	threadlog() << "thread started for " << d_cmd << "\n";
 	{
-		GIL_lock guard(__func__);// boost::lexical_cast<std::string>(d_count)+":");
+		GILstate_ensure_t gs;
 
-		PyThreadState *threadstate = PyThreadState_New(g_main_thread_state->interp);
-		assert(threadstate);
-		PyThreadState_Swap(threadstate);
+		d_thread_id = PyThread_get_thread_ident();
+		assert(d_thread_id != 0);
+
 		try
 		{
 			PyObject *func =
@@ -345,10 +317,10 @@ void *py_thread_t::run()
 			Py_XINCREF(func);
 
 			PyObject *args = PyTuple_New(4);
-			PyTuple_SetItem(args, 0, PyString_FromStringAndSize(d_channel.data(), d_channel.size()));
-			PyTuple_SetItem(args, 1, PyString_FromStringAndSize(d_nick.data(), d_nick.size()));
-			PyTuple_SetItem(args, 2, PyInt_FromLong(d_auth));
-			PyTuple_SetItem(args, 3, PyString_FromStringAndSize(d_args.data(), d_args.size()));
+			PyTuple_SetItem(args, 0, PyUnicode_FromStringAndSize(d_channel.data(), d_channel.size()));
+			PyTuple_SetItem(args, 1, PyUnicode_FromStringAndSize(d_nick.data(), d_nick.size()));
+			PyTuple_SetItem(args, 2, PyLong_FromLong(d_auth));
+			PyTuple_SetItem(args, 3, PyUnicode_FromStringAndSize(d_args.data(), d_args.size()));
 			locmap["channel"] = d_channel;
 			locmap["nick"] = d_channel;
 			locmap["auth"] = to_str(d_auth);
@@ -370,9 +342,19 @@ void *py_thread_t::run()
 				std::string errvalue = py_repr(value_o);
 				privmsg(d_channel) << "ACTION kijkt gestoord op en roept: " << errvalue << ", en gaat daarna weer verder";
 				threadlog() << "PY: ERROR: " << errvalue << " " << (type_o ? py_repr(type_o) : "");
-				if (value_o) { Py_XDECREF(value_o); }
-				if (type_o) { Py_XDECREF(type_o); }
-				if (traceback_o) { print_traceback(traceback_o); Py_XDECREF(traceback_o); }
+				if (value_o)
+				{
+					Py_XDECREF(value_o);
+				}
+				if (type_o)
+				{
+					Py_XDECREF(type_o);
+				}
+				if (traceback_o)
+				{
+					print_traceback(traceback_o);
+					Py_XDECREF(traceback_o);
+				}
 			}
 		}
 		catch(const std::exception &e)
@@ -380,13 +362,9 @@ void *py_thread_t::run()
 			threadlog() << "exception in thread: " << e.what();
 			privmsg(d_channel) << "ACTION schoffelt een '" << e.what() << "'-melding onder het tapijt";
 		}
-		PyThreadState_Swap(NULL);
-		PyThreadState_Clear(threadstate);
-		PyThreadState_Delete(threadstate);
 	}
 	threadlog() << "thread ended";
 	delete this; // note: delete myself
-	return NULL;
 }
 
 #define PY_ASSERT(cond, msg) \
@@ -413,7 +391,7 @@ static PyObject * piet_send(PyObject *self, PyObject *args)
 		else if (strncmp(line.c_str(), "NICK ", 5)==0)
 		{
 			privmsg(channel) << "wuh? nieuwe nick? wat is dit voor nonsens";
-			send(":%s NICK :%s\n", g_config.get_nick().c_str(), line.c_str()+5);
+			send("NICK :%s\n", line.c_str()+5);
 		}
 		else if (strncmp(line.c_str(), "TOPIC ", 6)==0)
 			send("TOPIC %s :%s\n", channel.c_str(), line.c_str()+6);
@@ -431,7 +409,7 @@ static PyObject * piet_names(PyObject *self, PyObject *args)
 	if (!PyArg_Parse(args, "(s)", &cp_channel))
 		return NULL;
 
-	send(":%s NAMES %s\n", g_config.get_nick().c_str(), cp_channel);
+	send("NAMES %s\n", cp_channel);
 
 	Py_INCREF( Py_None );
 	return Py_None;
@@ -445,9 +423,9 @@ static PyObject * piet_nick(PyObject *self, PyObject *args)
 	PY_ASSERT(n==0 || n==1, "need either no arguments or one");
 
 	if (n==0)
-		return PyString_FromString(g_config.get_nick().c_str());
+		return PyUnicode_FromString(g_config.get_nick().c_str());
 
-	std::string nick = pystring_asstring(PyTuple_GetItem(args, 0));
+	std::string nick = pyunicode_asstring(PyTuple_GetItem(args, 0));
 	g_config.set_nick(nick);
 
 	Py_INCREF( Py_None );
@@ -476,9 +454,8 @@ static PyObject * piet_thread(PyObject *self, PyObject *args_)
 	std::string args(cp_args, args_len);
 	threadlocalmap_t &map = getthreadlocalmap();
 
-	threadlocalmap_t::const_iterator i = map.find("nick");
-	PY_ASSERT(map.find("nick") != map.end(), "cannot find nick in pthread-environment");
-	PY_ASSERT(map.find("auth") != map.end(), "cannot find auth in pthread-environment");
+	PY_ASSERT(map.find("nick") != map.end(), "cannot find nick in threadlocal-environment");
+	PY_ASSERT(map.find("auth") != map.end(), "cannot find auth in threadlocal-environment");
 	std::string nick = map["nick"];
 	uint32_t auth = boost::lexical_cast<uint32_t>(map["auth"]);
 
@@ -509,27 +486,27 @@ static PyObject * piet_op(PyObject *self, PyObject *args)
 	PY_ASSERT(PyTuple_Check(args), "need tuple argument");
 
 	PY_ASSERT(PyTuple_Size(args), "need 2 arguments, a channel and a list of names");
-	PY_ASSERT(PyString_Check(PyTuple_GetItem(args, 0)), "1st argument should be a string");
+	PY_ASSERT(PyUnicode_Check(PyTuple_GetItem(args, 0)), "1st argument should be a string");
 	PY_ASSERT(PyList_Check(PyTuple_GetItem(args, 1)), "2nd argument should be list of names");
-	std::string channel=pystring_asstring(PyTuple_GetItem(args, 0));
+	std::string channel=pyunicode_asstring(PyTuple_GetItem(args, 0));
 	PyObject *oblist = PyTuple_GetItem(args, 1);
 	
 	std::string nm;
 	int n=0;
 	for (int m=0; m<PyList_Size(oblist); ++m)
 	{
-		nm+=std::string(" ")+pystring_asstring(PyList_GetItem(oblist, m));
+		nm +=" "+pyunicode_asstring(PyList_GetItem(oblist, m));
 		++n;
 		if (n>=3)
 		{ // full, send away
-			send(":%s MODE %s +%s%s\n", g_config.get_nick().c_str(), channel.c_str(),
+			send("MODE %s +%s%s\n", channel.c_str(),
 					std::string(n, 'o').c_str(), nm.c_str());
 			nm.clear(); n=0;
 		}
 
 	}
 	if (n)
-		send(":%s MODE %s +%s%s\n", g_config.get_nick().c_str(), channel.c_str(),
+		send("MODE %s +%s%s\n", channel.c_str(),
 				std::string(n, 'o').c_str(), nm.c_str());
 
 	Py_INCREF(Py_None);
@@ -548,15 +525,27 @@ static PyMethodDef piet_methods[] =
 	{NULL, NULL, 0, NULL}
 };
 
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	"piet",              /* m_name */
+	NULL,                /* m_doc */
+	-1,                  /* m_size */
+	piet_methods,        /* m_methods */
+	NULL,                /* m_reload */
+	NULL,                /* m_traverse */
+	NULL,                /* m_clear */
+	NULL,                /* m_free */
+};
 
-
-
+static PyObject *PyInit_piet()
+{
+	return PyModule_Create(&moduledef);
+}
 
 void py_handler_t::export_piet_funcs()
 {
-	GIL_lock guard(__func__);
-
-	PyImport_AddModule("piet");
-	Py_InitModule("piet", piet_methods);
+	int r = PyImport_AppendInittab("piet", &PyInit_piet);
+	if (r != 0)
+		throw std::runtime_error("Could not export piet library");
 }
 

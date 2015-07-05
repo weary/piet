@@ -43,7 +43,7 @@ sslsocket_t::sslsocket_t(
 		const std::string &host,
 		const std::string &service,
 		const std::string &servercert) :
-	d_ssl_ctx(ssl::context::sslv23),
+	d_ssl_ctx(ssl::context::tlsv12),
 	d_ssl_socket(io_service, d_ssl_ctx)
 {
 	if (!servercert.empty())
